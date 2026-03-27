@@ -1,5 +1,5 @@
 // src/ai/index.ts
-import { AIProvider } from './provider';
+import type { AIProvider } from './provider';
 import { MiniMaxProvider, MiniMaxConfig } from './minimax-provider';
 import { OllamaProvider, OllamaConfig } from './ollama-provider';
 import { ClaudeProvider, ClaudeConfig } from './claude-provider';
@@ -44,5 +44,5 @@ export function createProvider(config: ProviderConfig): AIProvider {
   }
 }
 
-export { AIProvider, ErrorContext, CommandExplanation, CompletionContext, Suggestion } from './provider';
+export type { AIProvider, ErrorContext, CommandExplanation, CompletionContext, Suggestion } from './provider';
 export { PROMPTS } from './prompts';
