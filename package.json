@@ -1,0 +1,45 @@
+{
+  "name": "nexterm",
+  "version": "0.2.0",
+  "description": "AI Native Windows Terminal",
+  "main": "dist/main/index.js",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
+    "package": "electron-builder"
+  },
+  "dependencies": {
+    "@xterm/xterm": "^5.3.0",
+    "@xterm/addon-fit": "^0.8.0",
+    "@xterm/addon-web-links": "^0.9.0",
+    "electron-store": "^8.1.0",
+    "keytar": "^7.9.0",
+    "node-pty": "^1.0.0",
+    "zustand": "^4.5.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.0",
+    "electron-vite": "^2.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "typescript": "^5.3.0",
+    "vite": "^5.0.0"
+  },
+  "build": {
+    "appId": "com.nexterm.app",
+    "productName": "NexTerm",
+    "directories": {
+      "output": "release"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}
