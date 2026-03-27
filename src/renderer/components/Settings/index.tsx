@@ -53,7 +53,7 @@ export function Settings({ open, defaultTab = 'ai', onClose }: SettingsProps) {
           top: 0;
           right: 0;
           bottom: 0;
-          width: 320px;
+          width: 300px;
           background: var(--bg2);
           border-left: 1px solid var(--border);
           display: flex;
@@ -137,11 +137,23 @@ function SystemSettings() {
   );
 }
 
-function ToggleRow({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
+export function ToggleRow({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
   return (
     <div className="toggle-row">
       <span className="toggle-label">{label}</span>
-      <div className={`toggle ${checked ? 'on' : ''}`} onClick={() => onChange(!checked)}>
+      <div
+        className={`toggle ${checked ? 'on' : ''}`}
+        onClick={() => onChange(!checked)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onChange(!checked);
+          }
+        }}
+        role="switch"
+        aria-checked={checked}
+        tabIndex={0}
+      >
         <div className="toggle-knob" />
       </div>
       <style>{`
