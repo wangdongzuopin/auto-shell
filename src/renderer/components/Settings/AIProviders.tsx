@@ -13,6 +13,8 @@ export function AIProviders() {
   const { aiSettings, setProvider, setAISettings } = useSettingsStore();
   const [apiKey, setApiKey] = useState(aiSettings.apiKey);
   const [saving, setSaving] = useState(false);
+  const [available, setAvailable] = useState<Record<string, boolean>>({});
+  const [checking, setChecking] = useState(false);
 
   useEffect(() => {
     // Load API key from secure storage
@@ -20,6 +22,34 @@ export function AIProviders() {
       if (key) setApiKey(key);
     });
   }, [aiSettings.provider]);
+
+  // Check provider availability
+  useEffect(() => {
+    if (aiSettings.provider === 'ollama') {
+      // Ollama doesn't need API key check
+      setAvailable(prev => ({ ...prev, ollama: true }));
+      return;
+    }
+
+    if (!apiKey) {
+      setAvailable(prev => ({ ...prev, [aiSettings.provider]: false }));
+      return;
+    }
+
+    const checkAvailability = async () => {
+      setChecking(true);
+      try {
+        const isAvailable = await window.api.checkAIAvailable();
+        setAvailable(prev => ({ ...prev, [aiSettings.provider]: isAvailable }));
+      } catch {
+        setAvailable(prev => ({ ...prev, [aiSettings.provider]: false }));
+      } finally {
+        setChecking(false);
+      }
+    };
+
+    checkAvailability();
+  }, [aiSettings.provider, apiKey]);
 
   const handleProviderChange = (id: typeof PROVIDERS[number]['id']) => {
     setProvider(id);
@@ -89,6 +119,21 @@ export function AIProviders() {
         <FeatureToggles />
       </div>
 
+      <div className="settings-section">
+        <div className="section-title">连接状态</div>
+        <div className="status-pills">
+          {PROVIDERS.map(p => (
+            <span
+              key={p.id}
+              className={`status-pill ${available[p.id] ? 'ok' : 'off'}`}
+            >
+              <span className="status-dot" />
+              {p.name} {available[p.id] ? '正常' : '未连接'}
+            </span>
+          ))}
+        </div>
+      </div>
+
       <style>{`
         .ai-providers { }
         .settings-section { margin-bottom: 22px; }
@@ -145,6 +190,32 @@ export function AIProviders() {
         .api-key-save:hover { opacity: .85; }
         .api-key-save:disabled { opacity: 0.5; cursor: not-allowed; }
         .api-key-hint { font-size: 11px; color: var(--text3); }
+        .status-pills { display: flex; gap: 8px; flex-wrap: wrap; }
+        .status-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          padding: 3px 8px;
+          border-radius: 99px;
+          font-size: 11px;
+        }
+        .status-pill.ok {
+          background: rgba(74,222,128,.12);
+          color: var(--green);
+          border: 1px solid rgba(74,222,128,.25);
+        }
+        .status-pill.off {
+          background: var(--bg4);
+          color: var(--text3);
+          border: 1px solid var(--border);
+        }
+        .status-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+        }
+        .status-pill.ok .status-dot { background: var(--green); }
+        .status-pill.off .status-dot { background: var(--text3); }
       `}</style>
     </div>
   );
