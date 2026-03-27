@@ -2,9 +2,12 @@ import { useCallback, useRef, useEffect } from 'react';
 import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import { WebLinksAddon } from '@xterm/addon-web-links';
-import { useTabsStore } from '../store/tabs';
 
-export function useTerminal(containerRef: React.RefObject<HTMLDivElement | null>, tabId: string) {
+export function useTerminal(
+  containerRef: React.RefObject<HTMLDivElement | null>,
+  tabId: string,
+  onSelectionChange?: (selection: string, position: { x: number; y: number }) => void
+) {
   const terminalRef = useRef<Terminal | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
 
@@ -17,8 +20,7 @@ export function useTerminal(containerRef: React.RefObject<HTMLDivElement | null>
   }, []);
 
   const focusInput = useCallback(() => {
-    // This would typically focus the input bar component
-    // For now, just ensure terminal is visible
+    // Focus input bar component
   }, []);
 
   useEffect(() => {
@@ -44,6 +46,23 @@ export function useTerminal(containerRef: React.RefObject<HTMLDivElement | null>
     term.loadAddon(fitAddon);
     term.loadAddon(webLinksAddon);
 
+    // Handle text selection
+    if (onSelectionChange) {
+      let selectionTimeout: ReturnType<typeof setTimeout>;
+      term.onSelectionChange(() => {
+        clearTimeout(selectionTimeout);
+        selectionTimeout = setTimeout(() => {
+          const selection = term.getSelection().trim();
+          if (selection && selection.length >= 3) {
+            // Get cursor position for tooltip placement
+            const cursorX = term.buffer.active.cursorX;
+            const cursorY = term.buffer.active.cursorY;
+            onSelectionChange(selection, { x: cursorX * 8, y: cursorY * 20 });
+          }
+        }, 300);
+      });
+    }
+
     term.open(containerRef.current);
     fitAddon.fit();
 
@@ -61,7 +80,7 @@ export function useTerminal(containerRef: React.RefObject<HTMLDivElement | null>
       term.dispose();
       terminalRef.current = null;
     };
-  }, [containerRef]);
+  }, [containerRef, onSelectionChange]);
 
   const resize = useCallback(() => {
     fitAddonRef.current?.fit();

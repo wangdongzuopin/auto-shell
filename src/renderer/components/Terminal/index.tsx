@@ -1,19 +1,31 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { useTerminal } from '../../hooks/useTerminal';
 import { useAIStore } from '../../store/ai';
 import { useTabsStore } from '../../store/tabs';
 import { InputBar } from './InputBar';
 import { AICard } from '../AICard';
+import { ExplainTooltip } from '../ExplainTooltip';
 
 export function Terminal() {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [tooltip, setTooltip] = useState<{ text: string; position: { x: number; y: number } } | null>(null);
+
   const activeTabId = useTabsStore(s => s.activeTabId);
   const tabs = useTabsStore(s => s.tabs);
   const activeTab = tabs.find(t => t.id === activeTabId);
 
-  const { writeOutput, resize } = useTerminal(containerRef, activeTabId || '1');
+  const handleSelectionChange = useCallback((selection: string, position: { x: number; y: number }) => {
+    setTooltip({ text: selection, position });
+  }, []);
+
+  const { writeOutput, resize } = useTerminal(containerRef, activeTabId || '1', handleSelectionChange);
 
   const errorCardOpen = useAIStore(s => s.errorCardOpen);
+
+  useEffect(() => {
+    // Clear tooltip when tab changes
+    setTooltip(null);
+  }, [activeTabId]);
 
   useEffect(() => {
     // Handle terminal output from PTY
@@ -48,6 +60,13 @@ export function Terminal() {
       </div>
       <div className="terminal-output" ref={containerRef} />
       {errorCardOpen && <AICard />}
+      {tooltip && (
+        <ExplainTooltip
+          selectedText={tooltip.text}
+          position={tooltip.position}
+          onClose={() => setTooltip(null)}
+        />
+      )}
       <InputBar tabId={activeTab.id} shell={activeTab.shell} />
       <style>{`
         .terminal-container {

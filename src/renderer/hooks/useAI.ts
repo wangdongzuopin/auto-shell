@@ -21,16 +21,18 @@ export function useAI() {
 
     try {
       const generator = await window.api.explainError(ctx);
+      let fullResponse = '';
       for await (const chunk of generator) {
         appendErrorStreaming(chunk);
+        fullResponse += chunk;
       }
       // Parse final result
       try {
-        const analysis = JSON.parse(errorStreaming + errorStreaming);
+        const analysis = JSON.parse(fullResponse);
         setErrorAnalysis(analysis);
       } catch {
         // If streaming is not complete JSON, try to find JSON in the text
-        const match = (errorStreaming).match(/\{[\s\S]*\}/);
+        const match = fullResponse.match(/\{[\s\S]*\}/);
         if (match) {
           setErrorAnalysis(JSON.parse(match[0]));
         }
@@ -39,7 +41,7 @@ export function useAI() {
       console.error('AI explain error failed:', e);
       setErrorCard(false);
     }
-  }, [setErrorCard, clearErrorStreaming, appendErrorStreaming, setErrorAnalysis, errorStreaming]);
+  }, [setErrorCard, clearErrorStreaming, appendErrorStreaming, setErrorAnalysis]);
 
   const naturalToCommand = useCallback(async (input: string, shell: string) => {
     setNLMode(true, '');
