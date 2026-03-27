@@ -3,6 +3,7 @@ import { TabBar } from './components/TabBar';
 import { Terminal } from './components/Terminal';
 import { Settings } from './components/Settings';
 import { QuickCommands } from './components/QuickCommands';
+import { ToastContainer } from './components/Toast';
 import { useSettingsStore } from './store/settings';
 import { useTabsStore } from './store/tabs';
 
@@ -28,6 +29,7 @@ export default function App() {
         defaultTab={settingsTab}
         onClose={() => setSettingsOpen(false)}
       />
+      <ToastContainer />
       <style>{`
         .app { display: grid; grid-template-rows: var(--tab-h) 1fr; height: 100vh; }
         .main { display: flex; overflow: hidden; position: relative; }
