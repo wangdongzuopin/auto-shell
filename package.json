@@ -33,6 +33,7 @@
   "build": {
     "appId": "com.autoshell.app",
     "productName": "Auto Shell",
+    "icon": "logo.png",
     "directories": {
       "output": "release"
     },
