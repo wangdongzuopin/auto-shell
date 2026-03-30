@@ -80,6 +80,18 @@ src/
     └── types.ts
 ```
 
+## Sponsor
+
+如果你觉得这个项目对你有帮助，可以扫码赞助：
+
+### 微信支付
+
+![微信支付](wechat-pay-qr.jpg)
+
+### 支付宝
+
+![支付宝](alipay-qr.jpg)
+
 ## License
 
 MIT
