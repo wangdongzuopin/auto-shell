@@ -1,3 +1,5 @@
+import type { ChatMessage } from '../shared/types';
+
 export interface ErrorContext {
   command: string;
   exitCode: number;
@@ -29,8 +31,10 @@ export interface Suggestion {
 export interface AIProvider {
   name: string;
   isAvailable(): Promise<boolean>;
-  explainError(ctx: ErrorContext): AsyncGenerator<string>;
-  naturalToCommand(input: string, shell: string): AsyncGenerator<string>;
+  chat(messages: ChatMessage[]): Promise<string>;
+  streamChat(messages: ChatMessage[], onChunk: (chunk: string) => void): Promise<string>;
+  explainError(ctx: ErrorContext): Promise<string>;
+  naturalToCommand(input: string, shell: string): Promise<string>;
   explainCommand(command: string): Promise<CommandExplanation>;
   suggestCompletion(ctx: CompletionContext): Promise<Suggestion[]>;
 }

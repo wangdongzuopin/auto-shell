@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
-import { AIProviders } from './AIProviders';
+import React, { useEffect, useState } from 'react';
 import { ThemeSelector } from './ThemeSelector';
-import { FeatureToggles } from './FeatureToggles';
+import { AIProviders } from './AIProviders';
 
 interface SettingsProps {
   open: boolean;
@@ -12,34 +11,34 @@ interface SettingsProps {
 export function Settings({ open, defaultTab = 'ai', onClose }: SettingsProps) {
   const [activeTab, setActiveTab] = useState<'appearance' | 'ai' | 'system'>(defaultTab);
 
+  useEffect(() => {
+    if (open) {
+      setActiveTab(defaultTab);
+    }
+  }, [defaultTab, open]);
+
   if (!open) return null;
 
   return (
     <div className="settings-panel">
       <div className="settings-header">
-        <span className="settings-title">
-          {activeTab === 'ai' ? 'AI 设置' : activeTab === 'appearance' ? '外观' : '系统集成'}
-        </span>
+        <div>
+          <div className="settings-title">
+            {activeTab === 'ai' ? 'AI 与模型' : activeTab === 'appearance' ? '外观主题' : '系统偏好'}
+          </div>
+          <div className="settings-subtitle">调整终端样式、模型供应商和辅助能力。</div>
+        </div>
         <button className="close-btn" onClick={onClose}>×</button>
       </div>
       <div className="settings-tabs">
-        <button
-          className={`settings-tab ${activeTab === 'appearance' ? 'active' : ''}`}
-          onClick={() => setActiveTab('appearance')}
-        >
+        <button className={`settings-tab ${activeTab === 'appearance' ? 'active' : ''}`} onClick={() => setActiveTab('appearance')}>
           外观
         </button>
-        <button
-          className={`settings-tab ${activeTab === 'ai' ? 'active' : ''}`}
-          onClick={() => setActiveTab('ai')}
-        >
-          AI 设置
+        <button className={`settings-tab ${activeTab === 'ai' ? 'active' : ''}`} onClick={() => setActiveTab('ai')}>
+          AI
         </button>
-        <button
-          className={`settings-tab ${activeTab === 'system' ? 'active' : ''}`}
-          onClick={() => setActiveTab('system')}
-        >
-          系统集成
+        <button className={`settings-tab ${activeTab === 'system' ? 'active' : ''}`} onClick={() => setActiveTab('system')}>
+          系统
         </button>
       </div>
       <div className="settings-body">
@@ -50,144 +49,172 @@ export function Settings({ open, defaultTab = 'ai', onClose }: SettingsProps) {
       <style>{`
         .settings-panel {
           position: absolute;
-          top: 0;
-          right: 0;
-          bottom: 0;
-          width: 300px;
-          background: var(--bg2);
-          border-left: 1px solid var(--border);
+          top: 16px;
+          right: 16px;
+          bottom: 16px;
+          width: min(420px, calc(100vw - 32px));
+          background: linear-gradient(180deg, rgba(19,25,36,0.98), rgba(12,16,24,0.98));
+          border: 1px solid var(--border2);
+          border-radius: 18px;
           display: flex;
           flex-direction: column;
-          z-index: 10;
+          z-index: 20;
+          box-shadow: 0 28px 80px rgba(0,0,0,0.45);
+          overflow: hidden;
         }
         .settings-header {
           display: flex;
-          align-items: center;
+          align-items: flex-start;
           justify-content: space-between;
-          padding: 14px 16px;
+          gap: 16px;
+          padding: 20px 20px 16px;
           border-bottom: 1px solid var(--border);
         }
-        .settings-title { font-size: 13px; font-weight: 500; }
-        .close-btn {
-          background: none;
-          border: none;
-          color: var(--text2);
+        .settings-title {
           font-size: 18px;
-          cursor: pointer;
-          padding: 0;
-          line-height: 1;
+          font-weight: 700;
+          color: var(--text);
         }
-        .close-btn:hover { color: var(--text); }
+        .settings-subtitle {
+          margin-top: 6px;
+          font-size: 12px;
+          color: var(--text2);
+        }
+        .close-btn {
+          width: 34px;
+          height: 34px;
+          border-radius: 10px;
+          border: 1px solid var(--border);
+          background: rgba(255,255,255,0.03);
+          color: var(--text2);
+          font-size: 20px;
+          cursor: pointer;
+        }
+        .close-btn:hover {
+          background: rgba(255,255,255,0.06);
+          color: var(--text);
+        }
         .settings-tabs {
           display: flex;
-          gap: 2px;
-          padding: 8px 10px;
-          border-bottom: 1px solid var(--border);
+          gap: 8px;
+          padding: 12px 16px 0;
         }
         .settings-tab {
           flex: 1;
-          text-align: center;
-          padding: 5px;
-          border-radius: 5px;
-          font-size: 12px;
+          border: 1px solid var(--border);
+          background: rgba(255,255,255,0.02);
           color: var(--text2);
-          background: none;
-          border: none;
+          border-radius: 10px;
+          padding: 10px 0;
           cursor: pointer;
-          transition: background .1s, color .1s;
         }
-        .settings-tab:hover { background: var(--bg3); color: var(--text); }
-        .settings-tab.active { background: var(--bg3); color: var(--text); }
-        .settings-body { flex: 1; overflow-y: auto; padding: 12px 16px; }
+        .settings-tab.active {
+          color: var(--text);
+          border-color: rgba(76,141,255,0.35);
+          background: rgba(76,141,255,0.08);
+        }
+        .settings-body {
+          flex: 1;
+          overflow-y: auto;
+          padding: 18px 16px 20px;
+        }
       `}</style>
     </div>
   );
 }
 
 function SystemSettings() {
-  const [toggles, setToggles] = useState({
-    contextMenu: true,
-    darkMode: true,
-    notifications: true,
-    jumpList: true
-  });
-
   return (
     <div className="system-settings">
-      <div className="settings-section">
-        <div className="section-title">Windows 集成</div>
-        <ToggleRow label="右键菜单" checked={toggles.contextMenu} onChange={(v) => setToggles(s => ({...s, contextMenu: v}))} />
-        <ToggleRow label="跟随系统深色模式" checked={toggles.darkMode} onChange={(v) => setToggles(s => ({...s, darkMode: v}))} />
-        <ToggleRow label="命令完成通知（>10s）" checked={toggles.notifications} onChange={(v) => setToggles(s => ({...s, notifications: v}))} />
-        <ToggleRow label="任务栏跳转列表" checked={toggles.jumpList} onChange={(v) => setToggles(s => ({...s, jumpList: v}))} />
+      <div className="system-card">
+        <div className="system-title">Windows 风格优先</div>
+        <div className="system-copy">
+          当前版本已移除顶部的 mac 彩色控制按钮，并统一改为更接近 Windows 桌面应用的标题栏和标签视觉。
+        </div>
+      </div>
+      <div className="system-card">
+        <div className="system-title">模型配置即时生效</div>
+        <div className="system-copy">
+          调整 Base URL、模型名或当前 Provider 后，会立即持久化并在下次请求时重建 AI Provider。
+        </div>
       </div>
       <style>{`
-        .system-settings { }
-        .settings-section { margin-bottom: 22px; }
-        .section-title {
-          font-size: 10px;
-          letter-spacing: .08em;
-          text-transform: uppercase;
-          color: var(--text3);
-          font-weight: 500;
-          margin-bottom: 10px;
+        .system-settings {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+        .system-card {
+          border: 1px solid var(--border);
+          background: rgba(255,255,255,0.02);
+          border-radius: 12px;
+          padding: 14px;
+        }
+        .system-title {
+          font-size: 13px;
+          font-weight: 600;
+          color: var(--text);
+        }
+        .system-copy {
+          margin-top: 8px;
+          font-size: 12px;
+          line-height: 1.6;
+          color: var(--text2);
         }
       `}</style>
     </div>
   );
 }
 
-export function ToggleRow({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
+export function ToggleRow({ label, checked, onChange }: { label: string; checked: boolean; onChange: (value: boolean) => void }) {
   return (
     <div className="toggle-row">
       <span className="toggle-label">{label}</span>
-      <div
+      <button
         className={`toggle ${checked ? 'on' : ''}`}
         onClick={() => onChange(!checked)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            onChange(!checked);
-          }
-        }}
         role="switch"
         aria-checked={checked}
-        tabIndex={0}
       >
         <div className="toggle-knob" />
-      </div>
+      </button>
       <style>{`
         .toggle-row {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 6px 0;
+          gap: 12px;
+          padding: 12px 0;
           border-bottom: 1px solid var(--border);
         }
         .toggle-row:last-child { border-bottom: none; }
-        .toggle-label { font-size: 12px; color: var(--text2); }
+        .toggle-label {
+          font-size: 12px;
+          color: var(--text2);
+        }
         .toggle {
-          width: 32px;
-          height: 18px;
-          background: var(--bg4);
-          border-radius: 9px;
-          position: relative;
-          cursor: pointer;
-          transition: background .2s;
+          width: 42px;
+          height: 24px;
+          border-radius: 999px;
           border: 1px solid var(--border2);
+          background: var(--bg4);
+          padding: 2px;
+          cursor: pointer;
         }
-        .toggle.on { background: var(--accent); border-color: var(--accent); }
+        .toggle.on {
+          background: rgba(76,141,255,0.22);
+          border-color: rgba(76,141,255,0.48);
+        }
         .toggle-knob {
-          position: absolute;
-          top: 2px;
-          left: 2px;
-          width: 12px;
-          height: 12px;
-          background: white;
+          width: 18px;
+          height: 18px;
           border-radius: 50%;
-          transition: transform .2s;
+          background: white;
+          transition: transform .18s ease;
         }
-        .toggle.on .toggle-knob { transform: translateX(14px); }
+        .toggle.on .toggle-knob {
+          transform: translateX(18px);
+        }
       `}</style>
     </div>
   );

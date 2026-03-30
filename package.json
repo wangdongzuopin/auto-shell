@@ -1,7 +1,7 @@
 {
-  "name": "nexterm",
+  "name": "auto-shell",
   "version": "0.2.0",
-  "description": "AI Native Windows Terminal",
+  "description": "Auto Shell for Windows",
   "main": "dist/main/index.js",
   "scripts": {
     "dev": "electron-vite dev",
@@ -31,8 +31,8 @@
     "vite": "^5.0.0"
   },
   "build": {
-    "appId": "com.nexterm.app",
-    "productName": "NexTerm",
+    "appId": "com.autoshell.app",
+    "productName": "Auto Shell",
     "directories": {
       "output": "release"
     },

@@ -1,8 +1,7 @@
-import React, { useRef, useEffect, useState, useCallback } from 'react';
-import { useTerminal } from '../../hooks/useTerminal';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useAIStore } from '../../store/ai';
-import { useTabsStore } from '../../store/tabs';
-import { InputBar } from './InputBar';
+import { shellNames, useTabsStore } from '../../store/tabs';
+import { useTerminal } from '../../hooks/useTerminal';
 import { AICard } from '../AICard';
 import { ExplainTooltip } from '../ExplainTooltip';
 
@@ -10,44 +9,29 @@ export function Terminal() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [tooltip, setTooltip] = useState<{ text: string; position: { x: number; y: number } } | null>(null);
 
-  const activeTabId = useTabsStore(s => s.activeTabId);
-  const tabs = useTabsStore(s => s.tabs);
-  const activeTab = tabs.find(t => t.id === activeTabId);
+  const activeTabId = useTabsStore((state) => state.activeTabId);
+  const tabs = useTabsStore((state) => state.tabs);
+  const activeTab = tabs.find((tab) => tab.id === activeTabId);
+  const errorCardOpen = useAIStore((state) => state.errorCardOpen);
 
   const handleSelectionChange = useCallback((selection: string, position: { x: number; y: number }) => {
     setTooltip({ text: selection, position });
   }, []);
 
-  const { writeOutput, resize } = useTerminal(containerRef, activeTabId || '1', handleSelectionChange);
-
-  const errorCardOpen = useAIStore(s => s.errorCardOpen);
+  const { focus } = useTerminal(
+    containerRef,
+    activeTabId || '1',
+    activeTab?.shell,
+    activeTab?.cwd,
+    handleSelectionChange
+  );
 
   useEffect(() => {
-    // Clear tooltip when tab changes
     setTooltip(null);
   }, [activeTabId]);
 
-  useEffect(() => {
-    // Handle terminal output from PTY
-    const handleOutput = (id: string, data: string) => {
-      if (id === activeTabId) {
-        writeOutput(data);
-      }
-    };
-
-    window.api.onPtyOutput(handleOutput);
-
-    // Handle window resize
-    const handleResize = () => resize();
-    window.addEventListener('resize', handleResize);
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
-  }, [activeTabId, writeOutput, resize]);
-
   if (!activeTab) {
-    return <div className="terminal-empty">No active terminal</div>;
+    return <div className="terminal-empty">没有活动终端</div>;
   }
 
   return (
@@ -57,8 +41,13 @@ export function Terminal() {
           <div className="shell-dot" />
           {activeTab.name}
         </div>
+        <div className="shell-meta">
+          <span className="shell-kind">{shellNames[activeTab.shell]}</span>
+          <span className="shell-hint">直接在终端中输入命令</span>
+          <span className="shell-path">{activeTab.cwd === '~' ? '默认目录' : activeTab.cwd}</span>
+        </div>
       </div>
-      <div className="terminal-output" ref={containerRef} />
+      <div className="terminal-output" ref={containerRef} onMouseDown={() => focus()} />
       {errorCardOpen && <AICard />}
       {tooltip && (
         <ExplainTooltip
@@ -67,43 +56,89 @@ export function Terminal() {
           onClose={() => setTooltip(null)}
         />
       )}
-      <InputBar tabId={activeTab.id} shell={activeTab.shell} />
       <style>{`
         .terminal-container {
           flex: 1;
           display: flex;
           flex-direction: column;
-          background: var(--bg);
+          background: rgba(10, 13, 18, 0.84);
           overflow: hidden;
           position: relative;
         }
         .shell-bar {
           display: flex;
           align-items: center;
-          gap: 8px;
-          padding: 0 16px;
-          height: 34px;
+          justify-content: space-between;
+          gap: 12px;
+          padding: 0 18px;
+          min-height: 38px;
           border-bottom: 1px solid var(--border);
-          background: var(--bg2);
+          background: rgba(255,255,255,0.02);
         }
         .shell-chip {
-          display: flex;
+          display: inline-flex;
           align-items: center;
-          gap: 5px;
-          padding: 3px 10px;
-          border-radius: 99px;
+          gap: 7px;
+          padding: 4px 12px;
+          border-radius: 999px;
           font-size: 11px;
           font-family: var(--mono);
-          cursor: pointer;
-          transition: background .12s, color .12s;
-          color: var(--text2);
-          border: 1px solid transparent;
+          color: var(--text);
+          border: 1px solid rgba(76,141,255,0.2);
+          background: rgba(76,141,255,0.08);
         }
-        .shell-chip:hover { background: var(--bg3); color: var(--text); }
-        .shell-chip.active { background: var(--bg4); color: var(--text); border-color: var(--border2); }
-        .shell-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
-        .terminal-output { flex: 1; padding: 14px 20px 0; font-family: 'IBM Plex Mono', monospace; font-size: 13.5px; line-height: 1.65; overflow-y: auto; }
-        .terminal-empty { flex: 1; display: flex; align-items: center; justify-content: center; color: var(--text2); }
+        .shell-dot {
+          width: 7px;
+          height: 7px;
+          border-radius: 50%;
+          background: var(--green);
+        }
+        .shell-meta {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          min-width: 0;
+        }
+        .shell-kind {
+          padding: 3px 8px;
+          border-radius: 999px;
+          background: rgba(76,141,255,0.08);
+          border: 1px solid rgba(76,141,255,0.18);
+          color: var(--accent);
+          font-size: 10px;
+          font-family: var(--mono);
+          flex-shrink: 0;
+        }
+        .shell-hint {
+          font-size: 11px;
+          color: var(--text3);
+          white-space: nowrap;
+        }
+        .shell-path {
+          font-size: 11px;
+          color: var(--text3);
+          font-family: var(--mono);
+          min-width: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .terminal-output {
+          flex: 1;
+          padding: 14px 18px;
+          overflow: hidden;
+          cursor: text;
+        }
+        .terminal-output .xterm {
+          height: 100%;
+        }
+        .terminal-empty {
+          flex: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: var(--text2);
+        }
       `}</style>
     </div>
   );

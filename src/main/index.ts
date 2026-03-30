@@ -1,7 +1,8 @@
-import { app, BrowserWindow, shell } from 'electron';
+import { app, BrowserWindow, shell, ipcMain } from 'electron';
 import * as path from 'path';
 import { registerIpcHandlers } from './ipc-handlers';
 import { registerPtyHandlers } from './pty-manager';
+import { IPC } from '@shared/ipc-channels';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -16,10 +17,10 @@ function createWindow() {
       nodeIntegration: false,
       contextIsolation: true,
       sandbox: false,
-      preload: path.join(__dirname, '../preload.js')
+      preload: path.join(__dirname, '../preload/index.js')
     },
     show: false,
-    titleBarStyle: 'hidden'
+    frame: false
   });
 
   // Show when ready
@@ -53,6 +54,17 @@ app.whenReady().then(() => {
 
   // Create the main window
   createWindow();
+
+  // Register window control handlers
+  ipcMain.on(IPC.WINDOW_MINIMIZE, () => mainWindow?.minimize());
+  ipcMain.on(IPC.WINDOW_MAXIMIZE, () => {
+    if (mainWindow?.isMaximized()) {
+      mainWindow.unmaximize();
+    } else {
+      mainWindow?.maximize();
+    }
+  });
+  ipcMain.on(IPC.WINDOW_CLOSE, () => mainWindow?.close());
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {

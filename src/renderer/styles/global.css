@@ -1,55 +1,92 @@
 :root {
-  --bg: #0e0f11;
-  --bg2: #141519;
-  --bg3: #1c1e24;
-  --bg4: #23262e;
-  --bg5: #2a2d37;
-  --border: rgba(255,255,255,0.07);
-  --border2: rgba(255,255,255,0.13);
-  --text: #c9cdd6;
-  --text2: #6b7280;
-  --text3: #3d4049;
-  --accent: #7c6af7;
-  --accent-dim: rgba(124,106,247,0.15);
-  --green: #4ade80;
-  --yellow: #fbbf24;
-  --red: #f87171;
-  --cyan: #67e8f9;
-  --ai-bg: rgba(124,106,247,0.08);
-  --ai-border: rgba(124,106,247,0.25);
+  --bg: #0f1115;
+  --bg2: #151922;
+  --bg3: #1d2430;
+  --bg4: #263142;
+  --bg5: #314055;
+  --border: rgba(255, 255, 255, 0.08);
+  --border2: rgba(255, 255, 255, 0.16);
+  --text: #d8dee9;
+  --text2: #9aa8bc;
+  --text3: #6c7891;
+  --accent: #4c8dff;
+  --accent-dim: rgba(76, 141, 255, 0.14);
+  --green: #47d16c;
+  --yellow: #ffb84d;
+  --red: #ff6a6a;
+  --cyan: #60d8ff;
+  --ai-bg: rgba(76, 141, 255, 0.08);
+  --ai-border: rgba(76, 141, 255, 0.28);
   --tab-h: 40px;
-  --sidebar-w: 220px;
+  --sidebar-w: 236px;
+  --sans: 'Segoe UI', 'IBM Plex Sans', 'Microsoft YaHei UI', sans-serif;
+  --mono: 'Consolas', 'IBM Plex Mono', 'Cascadia Mono', monospace;
+  --shadow-soft: 0 12px 30px rgba(0, 0, 0, 0.26);
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
-html, body, #root {
+html,
+body,
+#root {
   height: 100%;
-  background: var(--bg);
+  background:
+    radial-gradient(circle at top right, rgba(76, 141, 255, 0.1), transparent 28%),
+    linear-gradient(180deg, #11151d 0%, #0f1115 100%);
   color: var(--text);
-  font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--sans);
   font-size: 14px;
   overflow: hidden;
 }
 
-::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 4px; }
+body {
+  letter-spacing: 0.01em;
+}
 
-/* ── Accessibility: Focus States ── */
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border: 2px solid transparent;
+  border-radius: 99px;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.18);
+  background-clip: padding-box;
+}
+
 :focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid rgba(76, 141, 255, 0.9);
   outline-offset: 2px;
 }
 
 button:focus-visible,
 input:focus-visible,
+textarea:focus-visible,
 [tabindex]:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid rgba(76, 141, 255, 0.9);
   outline-offset: 2px;
 }
 
-/* ── Accessibility: Reduced Motion ── */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -59,26 +96,4 @@ input:focus-visible,
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
-}
-
-/* ── Accessibility: Skip Link ── */
-.skip-link {
-  position: absolute;
-  top: -40px;
-  left: 0;
-  background: var(--accent);
-  color: white;
-  padding: 8px 16px;
-  z-index: 1000;
-  text-decoration: none;
-  border-radius: 0 0 4px 0;
-}
-
-.skip-link:focus {
-  top: 0;
-}
-
-/* ── Smooth Scroll ── */
-html {
-  scroll-behavior: smooth;
 }

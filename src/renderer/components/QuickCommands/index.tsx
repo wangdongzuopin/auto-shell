@@ -1,118 +1,180 @@
-import React, { useState } from 'react';
-import { useTabsStore } from '../../store/tabs';
+import React, { useMemo, useState } from 'react';
+import { shellNames, useTabsStore } from '../../store/tabs';
+import { toast } from '../Toast';
 
-const DEFAULT_COMMANDS = [
-  { group: 'Git', commands: [
-    { name: '状态检查', cmd: 'git status' },
-    { name: '最近提交', cmd: 'git log --oneline -10' },
-    { name: '拉取主分支', cmd: 'git pull origin main' },
-    { name: '推送到远程', cmd: 'git push origin HEAD' }
-  ]},
-  { group: '服务', commands: [
-    { name: '启动开发服务', cmd: 'npm run dev' },
-    { name: '构建生产包', cmd: 'npm run build' },
-    { name: '安装依赖', cmd: 'npm install' }
-  ]},
-  { group: '系统', commands: [
-    { name: '网络信息', cmd: 'ipconfig /all' },
-    { name: '清理屏幕', cmd: 'cls' },
-    { name: '查看进程', cmd: 'tasklist' }
-  ]}
+const PROJECT_PATHS = [
+  { name: 'auto-shell', path: 'D:\\Agent\\auto-shell' },
+  { name: 'anysign-jsgovsource_backend', path: 'D:\\Center\\backend\\anysign-jsgovsource_backend' },
+  { name: 'Center', path: 'D:\\Center' }
+];
+
+const BASE_COMMANDS = [
+  {
+    group: 'Git',
+    commands: [
+      { name: '查看状态', cmd: 'git status' },
+      { name: '最近提交', cmd: 'git log --oneline -10' },
+      { name: '拉取主分支', cmd: 'git pull origin main' },
+      { name: '推送当前分支', cmd: 'git push origin HEAD' }
+    ]
+  },
+  {
+    group: 'Node',
+    commands: [
+      { name: '启动开发环境', cmd: 'npm run dev' },
+      { name: '构建产物', cmd: 'npm run build' },
+      { name: '安装依赖', cmd: 'npm install' }
+    ]
+  },
+  {
+    group: '系统',
+    commands: [
+      { name: '网络信息', cmd: 'ipconfig /all' },
+      { name: '清屏', cmd: 'cls' },
+      { name: '查看进程', cmd: 'tasklist' }
+    ]
+  }
 ];
 
 export function QuickCommands() {
   const [filter, setFilter] = useState('');
-  const sidebarOpen = useTabsStore(s => s.sidebarOpen);
+  const sidebarOpen = useTabsStore((state) => state.sidebarOpen);
+  const activeTabId = useTabsStore((state) => state.activeTabId);
+  const tabs = useTabsStore((state) => state.tabs);
+  const setTabCwd = useTabsStore((state) => state.setTabCwd);
+  const activeTab = tabs.find((tab) => tab.id === activeTabId) ?? null;
 
-  const filteredCommands = DEFAULT_COMMANDS.map(group => ({
-    ...group,
-    commands: group.commands.filter(c =>
-      c.name.toLowerCase().includes(filter.toLowerCase()) ||
-      c.cmd.toLowerCase().includes(filter.toLowerCase())
-    )
-  })).filter(g => g.commands.length > 0);
+  const allCommands = useMemo(() => {
+    const projectCommands = activeTab
+      ? [
+          {
+            group: '项目切换',
+            commands: PROJECT_PATHS.map((project) => ({
+              name: `进入 ${project.name}`,
+              cmd: buildCdCommand(activeTab.shell, project.path)
+            }))
+          }
+        ]
+      : [];
+
+    return [...projectCommands, ...BASE_COMMANDS];
+  }, [activeTab]);
+
+  const filteredCommands = useMemo(
+    () =>
+      allCommands
+        .map((group) => ({
+          ...group,
+          commands: group.commands.filter((command) =>
+            command.name.toLowerCase().includes(filter.toLowerCase()) ||
+            command.cmd.toLowerCase().includes(filter.toLowerCase())
+          )
+        }))
+        .filter((group) => group.commands.length > 0),
+    [allCommands, filter]
+  );
 
   const handleRun = (cmd: string) => {
-    const activeTabId = useTabsStore.getState().activeTabId;
-    if (activeTabId) {
-      window.api.writePty(activeTabId, cmd + '\r');
+    if (!activeTabId || !activeTab) {
+      toast('当前没有可执行命令的终端');
+      return;
+    }
+
+    window.api.writePty(activeTabId, `${cmd}\r`);
+
+    const nextCwd = parseCwdCommand(cmd);
+    if (nextCwd) {
+      setTabCwd(activeTabId, nextCwd);
     }
   };
 
   return (
     <div id="sidebar" className={sidebarOpen ? '' : 'collapsed'}>
       <div className="sb-head">
-        <span className="sb-title">快捷命令</span>
-        <div className="icon-btn" title="新增命令" onClick={() => {}}>
-          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-            <path d="M6.5 1v11M1 6.5h11" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
-          </svg>
+        <div>
+          <span className="sb-title">快捷命令</span>
+          <div className="sb-meta">
+            {activeTab ? `${shellNames[activeTab.shell]} · ${activeTab.name}` : '未关联终端'}
+          </div>
         </div>
       </div>
       <div className="cmd-search">
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-          <circle cx="5" cy="5" r="3.5" stroke="currentColor" strokeWidth="1.2"/>
-          <path d="M8.5 8.5L11 11" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+          <circle cx="5" cy="5" r="3.5" stroke="currentColor" strokeWidth="1.2" />
+          <path d="M8.5 8.5L11 11" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
         </svg>
         <input
-          placeholder="搜索命令…"
+          placeholder="搜索命令"
           value={filter}
-          onChange={(e) => setFilter(e.target.value)}
+          onChange={(event) => setFilter(event.target.value)}
         />
       </div>
       <div className="cmd-list">
-        {filteredCommands.map(group => (
+        {filteredCommands.map((group) => (
           <React.Fragment key={group.group}>
             <div className="cmd-gl">{group.group}</div>
-            {group.commands.map((item, idx) => (
-              <div key={idx} className="cmd-item" onClick={() => handleRun(item.cmd)}>
+            {group.commands.map((item, index) => (
+              <button
+                key={`${item.cmd}-${index}`}
+                className="cmd-item"
+                onClick={() => handleRun(item.cmd)}
+                title={`在当前终端执行：${item.cmd}`}
+              >
                 <span className="cmd-name">{item.name}</span>
                 <span className="cmd-preview">{item.cmd}</span>
-                <span className="cmd-run">↵</span>
-              </div>
+                <span className="cmd-run">执行到当前终端</span>
+              </button>
             ))}
           </React.Fragment>
         ))}
-        {filteredCommands.length === 0 && (
-          <div className="cmd-empty">没有找到匹配的命令</div>
-        )}
+        {filteredCommands.length === 0 && <div className="cmd-empty">没有匹配的命令</div>}
       </div>
       <style>{`
         #sidebar {
           width: var(--sidebar-w);
-          background: var(--bg2);
+          background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
           border-right: 1px solid var(--border);
           display: flex;
           flex-direction: column;
           flex-shrink: 0;
-          transition: width .2s ease, opacity .2s ease;
+          transition: width .18s ease, opacity .18s ease;
           overflow: hidden;
         }
-        #sidebar.collapsed { width: 0; opacity: 0; }
+        #sidebar.collapsed {
+          width: 0;
+          opacity: 0;
+        }
         .sb-head {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 14px 14px 10px;
+          padding: 16px 14px 12px;
           border-bottom: 1px solid var(--border);
         }
         .sb-title {
           font-size: 11px;
-          font-weight: 500;
+          font-weight: 700;
           letter-spacing: .08em;
           text-transform: uppercase;
+          color: var(--text3);
+        }
+        .sb-meta {
+          margin-top: 6px;
+          font-size: 11px;
           color: var(--text2);
+          font-family: var(--mono);
         }
         .cmd-search {
-          margin: 10px 10px 6px;
-          background: var(--bg3);
+          margin: 12px 10px 8px;
+          background: rgba(255,255,255,0.03);
           border: 1px solid var(--border);
-          border-radius: 6px;
+          border-radius: 10px;
           display: flex;
           align-items: center;
-          gap: 6px;
+          gap: 8px;
           padding: 0 10px;
-          height: 30px;
+          height: 36px;
+          color: var(--text3);
         }
         .cmd-search input {
           background: none;
@@ -123,69 +185,103 @@ export function QuickCommands() {
           font-size: 12px;
           flex: 1;
         }
-        .cmd-search input::placeholder { color: var(--text3); }
-        .cmd-list { flex: 1; overflow-y: auto; padding: 4px 6px 10px; }
+        .cmd-list {
+          flex: 1;
+          overflow-y: auto;
+          padding: 4px 8px 12px;
+        }
         .cmd-gl {
           font-size: 10px;
-          letter-spacing: .06em;
+          letter-spacing: .08em;
           text-transform: uppercase;
           color: var(--text3);
-          padding: 10px 8px 4px;
-          font-weight: 500;
+          padding: 12px 8px 6px;
+          font-weight: 700;
         }
         .cmd-item {
+          width: 100%;
           display: flex;
           align-items: center;
-          padding: 7px 8px;
-          border-radius: 6px;
+          gap: 8px;
+          padding: 9px 10px;
+          border-radius: 10px;
+          border: 1px solid transparent;
+          background: transparent;
           cursor: pointer;
-          transition: background .1s;
-          gap: 6px;
+          text-align: left;
         }
-        .cmd-item:hover { background: var(--bg3); }
-        .cmd-item:hover .cmd-run { opacity: 1; }
+        .cmd-item:hover {
+          background: rgba(255,255,255,0.04);
+          border-color: var(--border);
+        }
         .cmd-name {
           font-size: 12px;
           color: var(--text);
-          white-space: nowrap;
+          flex: 1;
           overflow: hidden;
           text-overflow: ellipsis;
-          flex: 1;
+          white-space: nowrap;
         }
         .cmd-preview {
           font-family: var(--mono);
           font-size: 10px;
           color: var(--text2);
-          white-space: nowrap;
+          max-width: 120px;
           overflow: hidden;
           text-overflow: ellipsis;
-          max-width: 90px;
+          white-space: nowrap;
         }
         .cmd-run {
-          opacity: 0;
           font-size: 10px;
           color: var(--accent);
-          transition: opacity .1s;
+          white-space: nowrap;
         }
         .cmd-empty {
           font-size: 12px;
           color: var(--text3);
           text-align: center;
-          padding: 20px;
+          padding: 24px 12px;
         }
-        .icon-btn {
-          width: 28px;
-          height: 28px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 6px;
-          color: var(--text2);
-          cursor: pointer;
-          transition: background .12s, color .12s;
-        }
-        .icon-btn:hover { background: var(--bg3); color: var(--text); }
       `}</style>
     </div>
   );
+}
+
+function buildCdCommand(shell: string, targetPath: string): string {
+  const quotedPath = `"${targetPath.replace(/"/g, '\\"')}"`;
+
+  switch (shell) {
+    case 'powershell':
+      return `Set-Location -LiteralPath ${quotedPath}`;
+    case 'cmd':
+      return `cd /d ${quotedPath}`;
+    case 'wsl':
+    case 'git-bash':
+      return `cd ${quotedPath}`;
+    default:
+      return `cd ${quotedPath}`;
+  }
+}
+
+function parseCwdCommand(command: string): string | null {
+  const trimmed = command.trim();
+  const patterns = [
+    /^(?:cd\s+\/d|cd|Set-Location\s+-LiteralPath|Set-Location)\s+(.+)$/i
+  ];
+
+  for (const pattern of patterns) {
+    const match = trimmed.match(pattern);
+    if (match?.[1]) {
+      return stripWrappingQuotes(match[1].trim());
+    }
+  }
+
+  return null;
+}
+
+function stripWrappingQuotes(value: string): string {
+  if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+    return value.slice(1, -1);
+  }
+  return value;
 }

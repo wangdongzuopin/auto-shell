@@ -3,6 +3,11 @@ import { resolve } from 'path';
 
 export default defineConfig({
   main: {
+    resolve: {
+      alias: {
+        '@shared': resolve(__dirname, 'src/shared')
+      }
+    },
     build: {
       outDir: 'dist/main',
       rollupOptions: {
@@ -11,6 +16,11 @@ export default defineConfig({
     }
   },
   preload: {
+    resolve: {
+      alias: {
+        '@shared': resolve(__dirname, 'src/shared')
+      }
+    },
     build: {
       outDir: 'dist/preload',
       rollupOptions: {

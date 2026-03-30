@@ -12,7 +12,6 @@ interface AIState {
   currentError: ErrorContext | null;
   errorAnalysis: ErrorAnalysis | null;
   errorLoading: boolean;
-  errorStreaming: string;
 
   // Natural language
   nlMode: boolean;
@@ -27,8 +26,7 @@ interface AIState {
   // Actions
   setErrorCard: (open: boolean, error?: ErrorContext | null) => void;
   setErrorAnalysis: (analysis: ErrorAnalysis | null) => void;
-  appendErrorStreaming: (chunk: string) => void;
-  clearErrorStreaming: () => void;
+  setErrorLoading: (loading: boolean) => void;
   setNLMode: (mode: boolean, suggestion?: string) => void;
   setExplainPopup: (popup: AIState['explainPopup']) => void;
   setExplainResult: (result: ErrorAnalysis | null) => void;
@@ -40,7 +38,6 @@ export const useAIStore = create<AIState>((set) => ({
   currentError: null,
   errorAnalysis: null,
   errorLoading: false,
-  errorStreaming: '',
 
   nlMode: false,
   nlSuggestion: '',
@@ -53,17 +50,13 @@ export const useAIStore = create<AIState>((set) => ({
   setErrorCard: (open, error = null) => set({
     errorCardOpen: open,
     currentError: error,
-    errorAnalysis: open ? null : null,
-    errorStreaming: open ? '' : ''
+    errorAnalysis: null,
+    errorLoading: open
   }),
 
   setErrorAnalysis: (analysis) => set({ errorAnalysis: analysis, errorLoading: false }),
 
-  appendErrorStreaming: (chunk) => set(state => ({
-    errorStreaming: state.errorStreaming + chunk
-  })),
-
-  clearErrorStreaming: () => set({ errorStreaming: '' }),
+  setErrorLoading: (loading) => set({ errorLoading: loading }),
 
   setNLMode: (mode, suggestion = '') => set({
     nlMode: mode,

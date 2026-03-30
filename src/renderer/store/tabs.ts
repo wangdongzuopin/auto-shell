@@ -7,23 +7,33 @@ export interface Tab {
   cwd: string;
 }
 
+export type TabShell = Tab['shell'];
+
 interface TabsState {
   tabs: Tab[];
   activeTabId: string | null;
   sidebarOpen: boolean;
-  addTab: (shell?: Tab['shell']) => void;
+  addTab: (shell?: TabShell) => void;
   closeTab: (id: string) => void;
   setActiveTab: (id: string) => void;
+  setTabCwd: (id: string, cwd: string) => void;
   renameTab: (id: string, name: string) => void;
   toggleSidebar: () => void;
 }
 
-const shellNames: Record<Tab['shell'], string> = {
+export const shellNames: Record<TabShell, string> = {
   powershell: 'PowerShell',
   cmd: 'CMD',
   wsl: 'WSL',
   'git-bash': 'Git Bash'
 };
+
+export const shellOptions: Array<{ id: TabShell; label: string; description: string }> = [
+  { id: 'powershell', label: 'PowerShell', description: 'Windows 默认 shell，适合系统管理和脚本。' },
+  { id: 'cmd', label: 'CMD', description: '经典命令提示符，兼容老式命令。' },
+  { id: 'wsl', label: 'WSL', description: '进入 Linux 子系统环境。' },
+  { id: 'git-bash', label: 'Git Bash', description: '更接近 Unix 的 Bash 体验。' }
+];
 
 let tabCounter = 1;
 
@@ -52,6 +62,10 @@ export const useTabsStore = create<TabsState>((set, get) => ({
   },
 
   setActiveTab: (id) => set({ activeTabId: id }),
+
+  setTabCwd: (id, cwd) => set((state) => ({
+    tabs: state.tabs.map((tab) => tab.id === id ? { ...tab, cwd } : tab)
+  })),
 
   renameTab: (id, name) => set(state => ({
     tabs: state.tabs.map(t => t.id === id ? { ...t, name } : t)

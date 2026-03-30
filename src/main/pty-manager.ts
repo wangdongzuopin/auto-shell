@@ -1,25 +1,38 @@
-// PTY Manager stub - 实现请参考 TDD 文档
 import { ipcMain } from 'electron';
+import * as os from 'os';
 import * as pty from 'node-pty';
-import { IPC } from '../shared/ipc-channels';
 
 interface PtyInstance {
   id: string;
   pty: pty.IPty;
-  output: string;
 }
 
 const instances = new Map<string, PtyInstance>();
 
-export function registerPtyHandlers() {
-  ipcMain.handle('pty:create', async (event, shell: string, cwd: string) => {
-    const id = Math.random().toString(36).slice(2);
+function resolveCwd(cwd: string): string {
+  if (!cwd || cwd === '~') {
+    return os.homedir();
+  }
+  if (cwd.startsWith('~')) {
+    return cwd.replace('~', os.homedir());
+  }
+  return cwd;
+}
 
-    const shellProgram = getShellProgram(shell);
-    const ptyProcess = pty.spawn(shellProgram, [], {
-      cwd,
+export function registerPtyHandlers() {
+  ipcMain.handle('pty:create', async (event, id: string, shell: string, cwd: string) => {
+    const existing = instances.get(id);
+    if (existing) {
+      existing.pty.kill();
+      instances.delete(id);
+    }
+
+    const { file, args } = getShellLaunchConfig(shell);
+    const ptyProcess = pty.spawn(file, args, {
+      cwd: resolveCwd(cwd),
       cols: 80,
-      rows: 24
+      rows: 24,
+      name: 'xterm-256color'
     });
 
     ptyProcess.onData((data) => {
@@ -31,44 +44,65 @@ export function registerPtyHandlers() {
       instances.delete(id);
     });
 
-    instances.set(id, { id, pty: ptyProcess, output: '' });
+    instances.set(id, { id, pty: ptyProcess });
     return id;
   });
 
-  ipcMain.on('pty:input', (event, id: string, data: string) => {
-    const instance = instances.get(id);
-    if (instance) {
-      instance.pty.write(data);
-    }
+  ipcMain.on('pty:input', (_event, id: string, data: string) => {
+    instances.get(id)?.pty.write(data);
   });
 
-  ipcMain.on('pty:resize', (event, id: string, cols: number, rows: number) => {
-    const instance = instances.get(id);
-    if (instance) {
-      instance.pty.resize(cols, rows);
-    }
+  ipcMain.on('pty:resize', (_event, id: string, cols: number, rows: number) => {
+    instances.get(id)?.pty.resize(cols, rows);
   });
 
-  ipcMain.on('pty:kill', (event, id: string) => {
+  ipcMain.on('pty:kill', (_event, id: string) => {
     const instance = instances.get(id);
-    if (instance) {
-      instance.pty.kill();
-      instances.delete(id);
+    if (!instance) {
+      return;
     }
+
+    instance.pty.kill();
+    instances.delete(id);
   });
 }
 
-function getShellProgram(shell: string): string {
+function getShellLaunchConfig(shell: string): { file: string; args: string[] } {
   switch (shell) {
     case 'powershell':
-      return 'powershell.exe';
+      return {
+        file: 'powershell.exe',
+        args: [
+          '-NoLogo',
+          '-NoExit',
+          '-Command',
+          "[Console]::InputEncoding=[System.Text.UTF8Encoding]::new(); [Console]::OutputEncoding=[System.Text.UTF8Encoding]::new(); chcp 65001 > $null"
+        ]
+      };
     case 'cmd':
-      return 'cmd.exe';
+      return {
+        file: 'cmd.exe',
+        args: ['/k', 'chcp', '65001']
+      };
     case 'wsl':
-      return 'wsl.exe';
+      return {
+        file: 'wsl.exe',
+        args: []
+      };
     case 'git-bash':
-      return 'bash.exe';
+      return {
+        file: 'bash.exe',
+        args: ['--login']
+      };
     default:
-      return 'powershell.exe';
+      return {
+        file: 'powershell.exe',
+        args: [
+          '-NoLogo',
+          '-NoExit',
+          '-Command',
+          "[Console]::InputEncoding=[System.Text.UTF8Encoding]::new(); [Console]::OutputEncoding=[System.Text.UTF8Encoding]::new(); chcp 65001 > $null"
+        ]
+      };
   }
 }

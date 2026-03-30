@@ -1,59 +1,42 @@
 import { useCallback } from 'react';
-import { useAIStore } from '../store/ai';
+import type { ChatMessage } from '../../shared/types';
 import { ErrorContext } from '../../ai/provider';
+import { useAIStore } from '../store/ai';
 
 export function useAI() {
   const {
     setErrorCard,
     setErrorAnalysis,
-    appendErrorStreaming,
-    clearErrorStreaming,
+    setErrorLoading,
     setNLMode,
     setExplainPopup,
     setExplainResult,
-    setExplainLoading,
-    errorStreaming
+    setExplainLoading
   } = useAIStore();
 
   const explainError = useCallback(async (ctx: ErrorContext) => {
     setErrorCard(true, ctx);
-    clearErrorStreaming();
+    setErrorLoading(true);
 
     try {
-      const generator = await window.api.explainError(ctx);
-      let fullResponse = '';
-      for await (const chunk of generator) {
-        appendErrorStreaming(chunk);
-        fullResponse += chunk;
-      }
-      // Parse final result
-      try {
-        const analysis = JSON.parse(fullResponse);
-        setErrorAnalysis(analysis);
-      } catch {
-        // If streaming is not complete JSON, try to find JSON in the text
-        const match = fullResponse.match(/\{[\s\S]*\}/);
-        if (match) {
-          setErrorAnalysis(JSON.parse(match[0]));
-        }
-      }
-    } catch (e) {
-      console.error('AI explain error failed:', e);
+      const response = await window.api.explainError(ctx);
+      const match = response.match(/\{[\s\S]*\}/);
+      const analysis = JSON.parse(match ? match[0] : response);
+      setErrorAnalysis(analysis);
+    } catch (error) {
+      console.error('AI explain error failed:', error);
       setErrorCard(false);
+      setErrorLoading(false);
     }
-  }, [setErrorCard, clearErrorStreaming, appendErrorStreaming, setErrorAnalysis]);
+  }, [setErrorAnalysis, setErrorCard, setErrorLoading]);
 
   const naturalToCommand = useCallback(async (input: string, shell: string) => {
     setNLMode(true, '');
     try {
-      const generator = await window.api.naturalToCommand(input, shell);
-      let result = '';
-      for await (const chunk of generator) {
-        result += chunk;
-        setNLMode(true, result.trim());
-      }
-    } catch (e) {
-      console.error('Natural to command failed:', e);
+      const result = await window.api.naturalToCommand(input, shell);
+      setNLMode(true, result.trim());
+    } catch (error) {
+      console.error('Natural to command failed:', error);
       setNLMode(false);
     }
   }, [setNLMode]);
@@ -64,11 +47,25 @@ export function useAI() {
     try {
       const result = await window.api.explainCommand(command);
       setExplainResult(result);
-    } catch (e) {
-      console.error('Explain command failed:', e);
+    } catch (error) {
+      console.error('Explain command failed:', error);
       setExplainPopup(null);
+      setExplainLoading(false);
     }
-  }, [setExplainPopup, setExplainLoading, setExplainResult]);
+  }, [setExplainLoading, setExplainPopup, setExplainResult]);
+
+  const chat = useCallback(async (messages: ChatMessage[]) => {
+    return window.api.chatWithAI(messages);
+  }, []);
+
+  const streamChat = useCallback((messages: ChatMessage[], callbacks: {
+    onChunk: (chunk: string) => void;
+    onDone: () => void;
+    onError: (message: string) => void;
+  }) => {
+    const requestId = `chat-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    return window.api.streamChatWithAI(requestId, messages, callbacks);
+  }, []);
 
   const checkAvailability = useCallback(async () => {
     try {
@@ -79,6 +76,8 @@ export function useAI() {
   }, []);
 
   return {
+    chat,
+    streamChat,
     explainError,
     naturalToCommand,
     explainCommand,

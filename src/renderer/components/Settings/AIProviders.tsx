@@ -1,221 +1,218 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import type { ProviderType } from '../../store/settings';
 import { useSettingsStore } from '../../store/settings';
+import { toast } from '../Toast';
 import { FeatureToggles } from './FeatureToggles';
+import { ModelConfigDialog } from './ModelConfigDialog';
 
-const PROVIDERS = [
-  { id: 'minimax', name: 'MiniMax (推荐)', desc: '云端', color: '#FF6B6B' },
-  { id: 'claude', name: 'Claude (Anthropic)', desc: '云端', color: '#FF6B6B' },
-  { id: 'openai', name: 'OpenAI', desc: '云端', color: '#FF6B6B' },
-  { id: 'ollama', name: 'Ollama (本地)', desc: '离线', color: '#4ade80' }
-] as const;
+const PROVIDERS: Array<{
+  id: ProviderType;
+  name: string;
+  desc: string;
+  apiKeyRequired: boolean;
+}> = [
+  { id: 'minimax', name: 'MiniMax', desc: 'Anthropic 兼容接入', apiKeyRequired: true },
+  { id: 'glm', name: 'GLM', desc: '智谱开放平台', apiKeyRequired: true },
+  { id: 'claude', name: 'Claude', desc: 'Anthropic', apiKeyRequired: true },
+  { id: 'openai', name: 'OpenAI', desc: '官方接口', apiKeyRequired: true },
+  { id: 'ollama', name: 'Ollama', desc: '本地模型服务', apiKeyRequired: false },
+  { id: 'openaiCompatible', name: '兼容接口', desc: '任意 OpenAI 兼容网关', apiKeyRequired: true }
+];
 
 export function AIProviders() {
-  const { aiSettings, setProvider, setAISettings } = useSettingsStore();
-  const [apiKey, setApiKey] = useState(aiSettings.apiKey);
-  const [saving, setSaving] = useState(false);
-  const [available, setAvailable] = useState<Record<string, boolean>>({});
+  const { aiSettings, setProvider } = useSettingsStore();
+  const activeProvider = aiSettings.provider;
+  const [available, setAvailable] = useState(false);
   const [checking, setChecking] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  const activeProviderMeta = useMemo(
+    () => PROVIDERS.find((provider) => provider.id === activeProvider),
+    [activeProvider]
+  );
 
   useEffect(() => {
-    // Load API key from secure storage
-    window.api.getKey(aiSettings.provider).then(key => {
-      if (key) setApiKey(key);
-    });
-  }, [aiSettings.provider]);
-
-  // Check provider availability
-  useEffect(() => {
-    if (aiSettings.provider === 'ollama') {
-      // Ollama doesn't need API key check
-      setAvailable(prev => ({ ...prev, ollama: true }));
-      return;
-    }
-
-    if (!apiKey) {
-      setAvailable(prev => ({ ...prev, [aiSettings.provider]: false }));
-      return;
-    }
-
-    const checkAvailability = async () => {
+    const run = async () => {
       setChecking(true);
       try {
-        const isAvailable = await window.api.checkAIAvailable();
-        setAvailable(prev => ({ ...prev, [aiSettings.provider]: isAvailable }));
+        setAvailable(await window.api.checkAIAvailable());
       } catch {
-        setAvailable(prev => ({ ...prev, [aiSettings.provider]: false }));
+        setAvailable(false);
       } finally {
         setChecking(false);
       }
     };
 
-    checkAvailability();
-  }, [aiSettings.provider, apiKey]);
+    void run();
+  }, [activeProvider, aiSettings.configs]);
 
-  const handleProviderChange = (id: typeof PROVIDERS[number]['id']) => {
-    setProvider(id);
-    // Update baseUrl and model based on provider
-    const configs: Record<string, { baseUrl: string; model: string }> = {
-      minimax: { baseUrl: 'https://api.minimaxi.com/v1', model: 'MiniMax-M2.7' },
-      claude: { baseUrl: 'https://api.anthropic.com', model: 'claude-sonnet-4-20250514' },
-      openai: { baseUrl: 'https://api.openai.com/v1', model: 'gpt-4o' },
-      ollama: { baseUrl: 'http://localhost:11434', model: 'llama3' }
-    };
-    setAISettings(configs[id]);
-    setApiKey('');
-  };
-
-  const handleSaveKey = async () => {
-    setSaving(true);
-    try {
-      await window.api.saveKey(aiSettings.provider, apiKey);
-    } finally {
-      setSaving(false);
-    }
+  const handleSelectProvider = async (provider: ProviderType) => {
+    await setProvider(provider);
+    toast(`当前模型已切换为 ${PROVIDERS.find((item) => item.id === provider)?.name ?? provider}`);
   };
 
   return (
     <div className="ai-providers">
       <div className="settings-section">
-        <div className="section-title">AI 提供商</div>
-        <div className="provider-grid">
-          {PROVIDERS.map(p => (
-            <div
-              key={p.id}
-              className={`provider-item ${aiSettings.provider === p.id ? 'active' : ''}`}
-              onClick={() => handleProviderChange(p.id)}
-            >
-              <div className="provider-dot" style={{ background: aiSettings.provider === p.id ? 'var(--accent)' : 'var(--border2)' }} />
-              <span className="provider-name">{p.name}</span>
-              <span className="provider-desc">{p.desc}</span>
+        <div className="section-title">当前模型</div>
+        <div className="current-provider-card">
+          <div>
+            <div className="current-provider-name">{activeProviderMeta?.name}</div>
+            <div className="current-provider-desc">{activeProviderMeta?.desc}</div>
+            <div className="current-provider-model">
+              {aiSettings.configs[activeProvider].model}
             </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="settings-section">
-        <div className="section-title">API Key</div>
-        <div className="api-key-row">
-          <input
-            type="password"
-            className="api-key-input"
-            placeholder={aiSettings.provider === 'ollama' ? '无需 API Key（本地模型）' : 'sk-...'}
-            value={apiKey}
-            onChange={(e) => setApiKey(e.target.value)}
-            disabled={aiSettings.provider === 'ollama'}
-          />
-          <button
-            className="api-key-save"
-            onClick={handleSaveKey}
-            disabled={saving || aiSettings.provider === 'ollama'}
-          >
-            {saving ? '保存中...' : '保存'}
+          </div>
+          <button className="open-config-btn" onClick={() => setDialogOpen(true)}>
+            配置模型
           </button>
         </div>
-        <div className="api-key-hint">Key 使用系统密钥链加密存储，不会上传</div>
       </div>
 
       <div className="settings-section">
-        <div className="section-title">功能开关</div>
-        <FeatureToggles />
+        <div className="section-title">快速切换</div>
+        <div className="provider-grid">
+          {PROVIDERS.map((provider) => (
+            <button
+              key={provider.id}
+              className={`provider-item ${activeProvider === provider.id ? 'active' : ''}`}
+              onClick={() => void handleSelectProvider(provider.id)}
+            >
+              <span className="provider-name">{provider.name}</span>
+              <span className="provider-desc">{provider.desc}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="settings-section">
         <div className="section-title">连接状态</div>
-        <div className="status-pills">
-          {PROVIDERS.map(p => (
-            <span
-              key={p.id}
-              className={`status-pill ${available[p.id] ? 'ok' : 'off'}`}
-            >
-              <span className="status-dot" />
-              {p.name} {available[p.id] ? '正常' : '未连接'}
-            </span>
-          ))}
+        <div className={`status-card ${available ? 'ok' : 'off'}`}>
+          <div className="status-dot" />
+          <div>
+            <div className="status-title">
+              {checking ? '正在检测模型连接...' : available ? '模型连接正常' : '模型暂不可用'}
+            </div>
+            <div className="status-desc">
+              {activeProviderMeta?.apiKeyRequired
+                ? '请确认 API Key、Base URL 和模型名是否填写正确。'
+                : '请确认 Ollama 服务已启动，并且本机可访问。'}
+            </div>
+          </div>
         </div>
       </div>
 
+      <div className="settings-section">
+        <div className="section-title">AI 功能</div>
+        <FeatureToggles />
+      </div>
+
+      <ModelConfigDialog open={dialogOpen} onClose={() => setDialogOpen(false)} />
+
       <style>{`
-        .ai-providers { }
-        .settings-section { margin-bottom: 22px; }
+        .ai-providers { display: flex; flex-direction: column; gap: 18px; }
+        .settings-section { display: flex; flex-direction: column; gap: 12px; }
         .section-title {
-          font-size: 10px;
+          font-size: 11px;
           letter-spacing: .08em;
           text-transform: uppercase;
           color: var(--text3);
-          font-weight: 500;
-          margin-bottom: 10px;
+          font-weight: 700;
         }
-        .provider-grid { display: flex; flex-direction: column; gap: 6px; }
+        .current-provider-card,
+        .status-card {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 14px;
+          padding: 14px;
+          border: 1px solid var(--border);
+          border-radius: 12px;
+          background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+        }
+        .current-provider-name,
+        .status-title {
+          font-size: 14px;
+          font-weight: 600;
+          color: var(--text);
+        }
+        .current-provider-desc,
+        .status-desc {
+          font-size: 12px;
+          color: var(--text2);
+          line-height: 1.5;
+        }
+        .current-provider-model {
+          margin-top: 6px;
+          font-family: var(--mono);
+          font-size: 11px;
+          color: #8cb3ff;
+        }
+        .open-config-btn {
+          border: 1px solid rgba(76,141,255,0.35);
+          background: rgba(76,141,255,0.12);
+          color: var(--text);
+          border-radius: 10px;
+          padding: 10px 14px;
+          cursor: pointer;
+          white-space: nowrap;
+        }
+        .open-config-btn:hover {
+          background: rgba(76,141,255,0.18);
+        }
+        .provider-grid {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 8px;
+        }
         .provider-item {
           display: flex;
           align-items: center;
-          gap: 10px;
-          padding: 10px 12px;
-          border-radius: 6px;
-          background: var(--bg3);
+          justify-content: space-between;
+          gap: 12px;
+          width: 100%;
           border: 1px solid var(--border);
-          cursor: pointer;
-          transition: border-color .12s;
-        }
-        .provider-item:hover { border-color: var(--border2); }
-        .provider-item.active { border-color: var(--accent); }
-        .provider-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-        .provider-name { font-size: 12px; color: var(--text); font-weight: 500; flex: 1; }
-        .provider-desc { font-size: 11px; color: var(--text3); margin-left: auto; }
-        .api-key-row { display: flex; gap: 6px; margin-bottom: 8px; }
-        .api-key-input {
-          flex: 1;
           background: var(--bg3);
-          border: 1px solid var(--border);
-          border-radius: 6px;
           color: var(--text);
-          font-family: var(--mono);
-          font-size: 11px;
-          padding: 6px 10px;
-          outline: none;
-        }
-        .api-key-input:focus { border-color: var(--border2); }
-        .api-key-input:disabled { opacity: 0.5; cursor: not-allowed; }
-        .api-key-save {
-          background: var(--accent);
-          color: white;
-          border: none;
-          border-radius: 6px;
-          padding: 6px 12px;
-          font-size: 11px;
+          padding: 12px 14px;
+          border-radius: 10px;
           cursor: pointer;
-          white-space: nowrap;
-          transition: opacity .12s;
+          text-align: left;
         }
-        .api-key-save:hover { opacity: .85; }
-        .api-key-save:disabled { opacity: 0.5; cursor: not-allowed; }
-        .api-key-hint { font-size: 11px; color: var(--text3); }
-        .status-pills { display: flex; gap: 8px; flex-wrap: wrap; }
-        .status-pill {
-          display: inline-flex;
-          align-items: center;
-          gap: 5px;
-          padding: 3px 8px;
-          border-radius: 99px;
+        .provider-item:hover {
+          border-color: rgba(76,141,255,0.28);
+        }
+        .provider-item.active {
+          border-color: rgba(76,141,255,0.45);
+          background: rgba(76,141,255,0.08);
+        }
+        .provider-name {
+          font-size: 13px;
+          font-weight: 600;
+        }
+        .provider-desc {
           font-size: 11px;
+          color: var(--text2);
         }
-        .status-pill.ok {
-          background: rgba(74,222,128,.12);
-          color: var(--green);
-          border: 1px solid rgba(74,222,128,.25);
+        .status-card {
+          justify-content: flex-start;
+          align-items: flex-start;
         }
-        .status-pill.off {
-          background: var(--bg4);
-          color: var(--text3);
-          border: 1px solid var(--border);
+        .status-card.ok {
+          border-color: rgba(71,209,108,0.28);
+          background: rgba(71,209,108,0.08);
+        }
+        .status-card.off {
+          border-color: rgba(255,255,255,0.08);
         }
         .status-dot {
-          width: 6px;
-          height: 6px;
+          width: 10px;
+          height: 10px;
           border-radius: 50%;
+          margin-top: 5px;
+          background: ${available ? 'var(--green)' : 'var(--yellow)'};
+          box-shadow: 0 0 0 4px rgba(255,255,255,0.04);
         }
-        .status-pill.ok .status-dot { background: var(--green); }
-        .status-pill.off .status-dot { background: var(--text3); }
       `}</style>
     </div>
   );

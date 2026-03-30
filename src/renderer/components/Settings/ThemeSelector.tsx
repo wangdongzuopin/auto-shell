@@ -10,58 +10,69 @@ export function ThemeSelector() {
       <div className="settings-section">
         <div className="section-title">主题</div>
         <div className="theme-grid">
-          {themes.map(theme => (
-            <div
+          {themes.map((theme) => (
+            <button
               key={theme.name}
               className={`theme-swatch ${currentTheme.name === theme.name ? 'active' : ''}`}
               onClick={() => applyTheme(theme)}
             >
               <div className="swatch-preview" style={{ background: theme.background }}>
-                <div className="swatch-bar" style={{ background: theme.accent, width: '70%' }} />
-                <div className="swatch-bar" style={{ background: theme.foreground, width: '50%', opacity: 0.5 }} />
+                <div className="swatch-bar" style={{ background: theme.accent, width: '72%' }} />
+                <div className="swatch-bar" style={{ background: theme.foreground, width: '48%', opacity: 0.52 }} />
               </div>
               <div className="swatch-name">{theme.name}</div>
-            </div>
+            </button>
           ))}
         </div>
       </div>
 
       <style>{`
-        .theme-selector { }
-        .settings-section { margin-bottom: 22px; }
+        .theme-selector { display: flex; flex-direction: column; gap: 16px; }
+        .settings-section { display: flex; flex-direction: column; gap: 12px; }
         .section-title {
-          font-size: 10px;
+          font-size: 11px;
           letter-spacing: .08em;
           text-transform: uppercase;
           color: var(--text3);
-          font-weight: 500;
-          margin-bottom: 10px;
+          font-weight: 700;
         }
-        .theme-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+        .theme-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 10px;
+        }
         .theme-swatch {
-          border-radius: 6px;
+          border-radius: 12px;
           overflow: hidden;
           cursor: pointer;
-          border: 2px solid transparent;
-          transition: border-color .12s;
+          border: 1px solid var(--border);
+          background: rgba(255,255,255,0.03);
+          padding: 0;
         }
-        .theme-swatch:hover { border-color: var(--border2); }
-        .theme-swatch.active { border-color: var(--accent); }
+        .theme-swatch:hover {
+          border-color: rgba(76,141,255,0.28);
+        }
+        .theme-swatch.active {
+          border-color: rgba(76,141,255,0.48);
+          box-shadow: inset 0 0 0 1px rgba(76,141,255,0.12);
+        }
         .swatch-preview {
-          height: 40px;
+          height: 56px;
           display: flex;
           flex-direction: column;
           justify-content: center;
-          padding: 6px 8px;
-          gap: 4px;
+          padding: 8px 10px;
+          gap: 6px;
         }
-        .swatch-bar { height: 3px; border-radius: 2px; }
+        .swatch-bar {
+          height: 4px;
+          border-radius: 999px;
+        }
         .swatch-name {
-          font-size: 10px;
+          font-size: 11px;
           color: var(--text2);
-          padding: 4px 8px;
-          background: var(--bg3);
-          text-align: center;
+          padding: 8px 10px 10px;
+          text-align: left;
         }
       `}</style>
     </div>
