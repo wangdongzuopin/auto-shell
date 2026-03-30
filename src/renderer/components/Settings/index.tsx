@@ -137,13 +137,13 @@ function SystemSettings() {
       <div className="system-card">
         <div className="system-title">跨平台界面</div>
         <div className="system-copy">
-          当前界面不再强调 Windows 优先描述，主题与窗口内容统一按全局设计变量渲染，便于继续扩展到 macOS。
+          当前界面已经移除 Windows 优先描述，主题与窗口内容统一按全局设计变量渲染，便于同时兼容 Windows 和 macOS。
         </div>
       </div>
       <div className="system-card">
         <div className="system-title">打包方式</div>
         <div className="system-copy">
-          项目已经补上 macOS 打包配置，可在 macOS 环境执行对应打包命令生成安装包。
+          项目已补充 Windows 和 macOS 的打包配置。Windows 可直接打包，macOS 需要在 mac 主机上执行打包命令。
         </div>
       </div>
       <style>{`

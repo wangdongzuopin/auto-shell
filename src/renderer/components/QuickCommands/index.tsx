@@ -2,39 +2,45 @@ import React, { useMemo, useState } from 'react';
 import { shellNames, useTabsStore } from '../../store/tabs';
 import { toast } from '../Toast';
 
-const PROJECT_PATHS = [
-  { name: 'auto-shell', path: 'D:\\Agent\\auto-shell' },
-  { name: 'anysign-jsgovsource_backend', path: 'D:\\Center\\backend\\anysign-jsgovsource_backend' },
-  { name: 'Center', path: 'D:\\Center' }
-];
+type AppPlatform = 'windows' | 'macos' | 'linux';
 
-const BASE_COMMANDS = [
-  {
-    group: 'Git',
-    commands: [
-      { name: '查看状态', cmd: 'git status' },
-      { name: '最近提交', cmd: 'git log --oneline -10' },
-      { name: '拉取主分支', cmd: 'git pull origin main' },
-      { name: '推送当前分支', cmd: 'git push origin HEAD' }
-    ]
-  },
-  {
-    group: 'Node',
-    commands: [
-      { name: '启动开发环境', cmd: 'npm run dev' },
-      { name: '构建产物', cmd: 'npm run build' },
-      { name: '安装依赖', cmd: 'npm install' }
-    ]
-  },
-  {
+const BASE_COMMANDS = {
+  common: [
+    {
+      group: 'Git',
+      commands: [
+        { name: '查看状态', cmd: 'git status' },
+        { name: '最近提交', cmd: 'git log --oneline -10' },
+        { name: '拉取主分支', cmd: 'git pull origin main' },
+        { name: '推送当前分支', cmd: 'git push origin HEAD' }
+      ]
+    },
+    {
+      group: 'Node',
+      commands: [
+        { name: '启动开发环境', cmd: 'npm run dev' },
+        { name: '构建产物', cmd: 'npm run build' },
+        { name: '安装依赖', cmd: 'npm install' }
+      ]
+    }
+  ],
+  windows: {
     group: '系统',
     commands: [
       { name: '网络信息', cmd: 'ipconfig /all' },
       { name: '清屏', cmd: 'cls' },
       { name: '查看进程', cmd: 'tasklist' }
     ]
+  },
+  unix: {
+    group: '系统',
+    commands: [
+      { name: '网络信息', cmd: 'ifconfig || ip addr' },
+      { name: '清屏', cmd: 'clear' },
+      { name: '查看进程', cmd: 'ps aux' }
+    ]
   }
-];
+};
 
 export function QuickCommands() {
   const [filter, setFilter] = useState('');
@@ -43,13 +49,14 @@ export function QuickCommands() {
   const tabs = useTabsStore((state) => state.tabs);
   const setTabCwd = useTabsStore((state) => state.setTabCwd);
   const activeTab = tabs.find((tab) => tab.id === activeTabId) ?? null;
+  const platform = useMemo(() => detectPlatform(), []);
 
   const allCommands = useMemo(() => {
     const projectCommands = activeTab
       ? [
           {
             group: '项目切换',
-            commands: PROJECT_PATHS.map((project) => ({
+            commands: getProjectPaths(platform).map((project) => ({
               name: `进入 ${project.name}`,
               cmd: buildCdCommand(activeTab.shell, project.path)
             }))
@@ -57,8 +64,9 @@ export function QuickCommands() {
         ]
       : [];
 
-    return [...projectCommands, ...BASE_COMMANDS];
-  }, [activeTab]);
+    const systemCommands = platform === 'windows' ? BASE_COMMANDS.windows : BASE_COMMANDS.unix;
+    return [...projectCommands, ...BASE_COMMANDS.common, systemCommands];
+  }, [activeTab, platform]);
 
   const filteredCommands = useMemo(
     () =>
@@ -247,6 +255,22 @@ export function QuickCommands() {
   );
 }
 
+function getProjectPaths(platform: AppPlatform) {
+  if (platform === 'windows') {
+    return [
+      { name: 'Home', path: '~' },
+      { name: 'auto-shell', path: 'D:\\Agent\\auto-shell' },
+      { name: 'Center', path: 'D:\\Center' }
+    ];
+  }
+
+  return [
+    { name: 'Home', path: '~' },
+    { name: 'Desktop', path: '~/Desktop' },
+    { name: 'Projects', path: '~/Projects' }
+  ];
+}
+
 function buildCdCommand(shell: string, targetPath: string): string {
   const quotedPath = `"${targetPath.replace(/"/g, '\\"')}"`;
 
@@ -254,12 +278,14 @@ function buildCdCommand(shell: string, targetPath: string): string {
     case 'powershell':
       return `Set-Location -LiteralPath ${quotedPath}`;
     case 'cmd':
-      return `cd /d ${quotedPath}`;
+      return targetPath === '~' ? 'cd /d %USERPROFILE%' : `cd /d ${quotedPath}`;
     case 'wsl':
     case 'git-bash':
-      return `cd ${quotedPath}`;
+    case 'zsh':
+    case 'bash':
+      return targetPath === '~' ? 'cd ~' : `cd ${quotedPath}`;
     default:
-      return `cd ${quotedPath}`;
+      return targetPath === '~' ? 'cd ~' : `cd ${quotedPath}`;
   }
 }
 
@@ -284,4 +310,18 @@ function stripWrappingQuotes(value: string): string {
     return value.slice(1, -1);
   }
   return value;
+}
+
+function detectPlatform(): AppPlatform {
+  const value = typeof navigator === 'undefined' ? '' : navigator.userAgent.toLowerCase();
+
+  if (value.includes('mac')) {
+    return 'macos';
+  }
+
+  if (value.includes('win')) {
+    return 'windows';
+  }
+
+  return 'linux';
 }

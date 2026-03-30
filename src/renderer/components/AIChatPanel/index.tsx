@@ -10,6 +10,8 @@ interface AIChatPanelProps {
   onClose: () => void;
 }
 
+type AppPlatform = 'windows' | 'macos' | 'linux';
+
 export function AIChatPanel({ open, onClose }: AIChatPanelProps) {
   const { streamChat } = useAI();
   const provider = useSettingsStore((state) => state.aiSettings.provider);
@@ -22,18 +24,26 @@ export function AIChatPanel({ open, onClose }: AIChatPanelProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: 'assistant',
-      content: '我是终端助手。你可以直接问我命令、报错原因、脚本写法，也可以让我帮你切换到当前机器上的某个项目目录。'
+      content: '我是终端助手。你可以直接问命令、报错原因、脚本写法，也可以让我帮你切换到当前机器上的某个项目目录。'
     }
   ]);
   const [loading, setLoading] = useState(false);
 
+  const platform = useMemo(() => detectPlatform(), []);
   const modelLabel = useMemo(() => `${provider} / ${configs[provider].model}`, [configs, provider]);
   const tabLabel = useMemo(() => {
     if (!activeTab) {
       return '未关联终端';
     }
+
     return `${shellNames[activeTab.shell]} · ${activeTab.cwd === '~' ? '默认目录' : activeTab.cwd}`;
   }, [activeTab]);
+
+  const placeholder = useMemo(() => {
+    return platform === 'windows'
+      ? '例如：帮我写一个 PowerShell 脚本，或输入“切换到 D:\\Agent\\auto-shell”直接让当前终端切目录'
+      : '例如：帮我写一个 zsh 脚本，或输入“切换到 ~/projects/auto-shell”直接让当前终端切目录';
+  }, [platform]);
 
   if (!open) return null;
 
@@ -66,15 +76,15 @@ export function AIChatPanel({ open, onClose }: AIChatPanelProps) {
     setLoading(true);
 
     try {
-      const requestMessages = [
+      const requestMessages: ChatMessage[] = [
         {
           role: 'system',
           content: [
-            '你是一个中文 Windows 终端助手，回答要直接、可执行、准确。',
-            '你服务于当前激活的终端窗口，给命令时优先基于当前 shell 和当前工作目录。',
+            `你是一个中文终端助手，当前服务的平台是 ${platformLabel(platform)}。`,
+            '回答要直接、可执行、准确，优先给出当前平台和当前 shell 可直接执行的命令。',
             `当前 shell: ${shellNames[activeTab.shell]}`,
             `当前工作目录: ${activeTab.cwd}`,
-            '如果用户表达的是切换项目或切换目录，优先直接给出明确的切换命令。'
+            '如果用户表达的是切换目录或切换项目，优先直接给出明确的 cd / Set-Location / zsh 可执行命令。'
           ].join('\n')
         },
         ...nextMessages
@@ -175,7 +185,7 @@ export function AIChatPanel({ open, onClose }: AIChatPanelProps) {
               void handleSend();
             }
           }}
-          placeholder="例如：帮我写一个 PowerShell 脚本，或输入“切换到 D:\\Agent\\auto-shell”直接让当前终端切目录"
+          placeholder={placeholder}
         />
         <button className="send-btn" onClick={() => void handleSend()} disabled={loading || !input.trim()}>
           发送
@@ -329,6 +339,8 @@ function buildChangeDirectoryCommand(shell: string, targetPath: string): string 
       return `cd /d ${quotedPath}`;
     case 'wsl':
     case 'git-bash':
+    case 'zsh':
+    case 'bash':
       return `cd ${quotedPath}`;
     default:
       return `cd ${quotedPath}`;
@@ -340,4 +352,29 @@ function stripWrappingQuotes(value: string): string {
     return value.slice(1, -1);
   }
   return value;
+}
+
+function detectPlatform(): AppPlatform {
+  const value = typeof navigator === 'undefined' ? '' : navigator.userAgent.toLowerCase();
+
+  if (value.includes('mac')) {
+    return 'macos';
+  }
+
+  if (value.includes('win')) {
+    return 'windows';
+  }
+
+  return 'linux';
+}
+
+function platformLabel(platform: AppPlatform): string {
+  switch (platform) {
+    case 'macos':
+      return 'macOS';
+    case 'linux':
+      return 'Linux';
+    default:
+      return 'Windows';
+  }
 }

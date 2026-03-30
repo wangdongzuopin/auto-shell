@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Auto Shell | Windows AI Terminal</title>
+  <meta name="description" content="Auto Shell 是一款为 Windows 开发者打造的 AI 终端，支持 MiniMax、GLM、Claude、OpenAI、Ollama 等模型，兼顾终端效率与自然语言协作。">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #08101d;
+      --bg-soft: #0e1726;
+      --panel: rgba(13, 24, 40, 0.88);
+      --panel-strong: rgba(18, 31, 51, 0.96);
+      --line: rgba(146, 180, 255, 0.18);
+      --line-strong: rgba(146, 180, 255, 0.32);
+      --text: #eef6ff;
+      --muted: #9cb1cf;
+      --subtle: #6881a5;
+      --sky: #38bdf8;
+      --blue: #0ea5e9;
+      --orange: #f97316;
+      --green: #47d16c;
+      --shadow: 0 32px 80px rgba(0, 0, 0, 0.34);
+      --radius-xl: 28px;
+      --radius-lg: 18px;
+      --radius-md: 14px;
+      --radius-sm: 10px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      font-family: "IBM Plex Sans", "Segoe UI", "Microsoft YaHei UI", sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(56, 189, 248, 0.14), transparent 28%),
+        radial-gradient(circle at top right, rgba(14, 165, 233, 0.12), transparent 32%),
+        linear-gradient(180deg, #09111e 0%, #060c16 100%);
+      color: var(--text);
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    img {
+      max-width: 100%;
+      display: block;
+    }
+
+    button,
+    .btn {
+      cursor: pointer;
+      transition: transform 0.22s ease, border-color 0.22s ease, background 0.22s ease, box-shadow 0.22s ease;
+    }
+
+    .page-shell {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .page-shell::before,
+    .page-shell::after {
+      content: "";
+      position: absolute;
+      inset: auto;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .page-shell::before {
+      width: 540px;
+      height: 540px;
+      top: -140px;
+      right: -90px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(56, 189, 248, 0.18), transparent 62%);
+      filter: blur(18px);
+    }
+
+    .page-shell::after {
+      width: 420px;
+      height: 420px;
+      left: -100px;
+      top: 480px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(249, 115, 22, 0.12), transparent 65%);
+      filter: blur(10px);
+    }
+
+    .content {
+      position: relative;
+      z-index: 1;
+      width: min(1180px, calc(100vw - 40px));
+      margin: 0 auto;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 28px 0 10px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-mark {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(56, 189, 248, 0.2), rgba(14, 165, 233, 0.08));
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.1);
+      padding: 8px;
+    }
+
+    .brand-meta strong {
+      display: block;
+      font-size: 18px;
+      letter-spacing: 0.01em;
+    }
+
+    .brand-meta span {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .nav a:hover {
+      color: var(--text);
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(420px, 0.95fr);
+      gap: 42px;
+      align-items: center;
+      padding: 54px 0 40px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(56, 189, 248, 0.22);
+      background: rgba(56, 189, 248, 0.08);
+      font-size: 12px;
+      color: #c3ecff;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 0 5px rgba(71, 209, 108, 0.12);
+    }
+
+    h1 {
+      margin: 20px 0 18px;
+      font-size: clamp(40px, 6vw, 78px);
+      line-height: 0.98;
+      letter-spacing: -0.04em;
+    }
+
+    .hero-copy {
+      max-width: 640px;
+      color: var(--muted);
+      font-size: 18px;
+      line-height: 1.72;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-top: 28px;
+    }
+
+    .btn {
+      min-height: 52px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 0 22px;
+      border-radius: 14px;
+      border: 1px solid transparent;
+      font-weight: 600;
+      font-size: 15px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(180deg, var(--orange), #dd5f12);
+      color: #fff;
+      box-shadow: 0 14px 28px rgba(249, 115, 22, 0.24);
+    }
+
+    .btn-secondary {
+      background: rgba(255,255,255,0.04);
+      border-color: var(--line);
+      color: var(--text);
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .hero-metrics {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 28px;
+    }
+
+    .metric {
+      padding: 16px 18px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.03);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+    }
+
+    .metric strong {
+      display: block;
+      font-size: 24px;
+      color: #dff4ff;
+    }
+
+    .metric span {
+      display: block;
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .hero-visual {
+      position: relative;
+    }
+
+    .window {
+      position: relative;
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(10, 18, 31, 0.96), rgba(8, 14, 24, 0.96));
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .window-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.03);
+    }
+
+    .window-chip-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .window-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      height: 34px;
+      padding: 0 14px;
+      border-radius: 12px 12px 0 0;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.03);
+      color: #cfe5ff;
+      font-size: 13px;
+    }
+
+    .window-chip::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
+      background: var(--sky);
+    }
+
+    .window-actions {
+      display: inline-flex;
+      gap: 8px;
+    }
+
+    .window-actions span {
+      width: 28px;
+      height: 28px;
+      border-radius: 9px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.03);
+    }
+
+    .window-body {
+      display: grid;
+      grid-template-columns: 1.12fr 0.88fr;
+      min-height: 520px;
+    }
+
+    .terminal-column {
+      padding: 22px 22px 18px;
+      border-right: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .shell-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      height: 34px;
+      padding: 0 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(56, 189, 248, 0.24);
+      background: rgba(56, 189, 248, 0.08);
+      color: #dcf6ff;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 12px;
+    }
+
+    .shell-pill::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+    }
+
+    .terminal-screen {
+      margin-top: 18px;
+      padding: 18px;
+      border-radius: 20px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.015), transparent 20%),
+        #070c14;
+      border: 1px solid rgba(255,255,255,0.05);
+      min-height: 360px;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 13px;
+      color: #c0d8ff;
+      line-height: 1.72;
+    }
+
+    .terminal-line {
+      display: block;
+      color: #8fb3ea;
+    }
+
+    .terminal-line strong {
+      color: #f3f8ff;
+      font-weight: 500;
+    }
+
+    .terminal-highlight {
+      color: #ffe0bf;
+    }
+
+    .input-preview {
+      margin-top: 20px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.03);
+      font-family: "JetBrains Mono", monospace;
+      color: #d7e5fb;
+    }
+
+    .input-preview span {
+      color: var(--orange);
+      margin-right: 10px;
+    }
+
+    .assistant-column {
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.015));
+    }
+
+    .assistant-card {
+      padding: 16px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(8, 16, 27, 0.82);
+    }
+
+    .assistant-card h3 {
+      margin: 0 0 10px;
+      font-size: 13px;
+      color: #cfe8ff;
+      letter-spacing: 0.02em;
+    }
+
+    .assistant-card p,
+    .assistant-card li {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .assistant-card ul {
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    .provider-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .provider-item {
+      padding: 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.03);
+    }
+
+    .provider-item strong {
+      display: block;
+      font-size: 13px;
+    }
+
+    .provider-item span {
+      display: block;
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .section {
+      padding: 42px 0;
+    }
+
+    .section-head {
+      max-width: 760px;
+      margin-bottom: 22px;
+    }
+
+    .section-eyebrow {
+      color: var(--sky);
+      font-size: 12px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-family: "JetBrains Mono", monospace;
+    }
+
+    .section h2 {
+      margin: 12px 0 0;
+      font-size: clamp(30px, 3.5vw, 48px);
+      line-height: 1.05;
+      letter-spacing: -0.04em;
+    }
+
+    .section-desc {
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.76;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .feature-card,
+    .story-card,
+    .download-card {
+      padding: 22px;
+      border-radius: 20px;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+    }
+
+    .feature-card strong,
+    .story-card strong,
+    .download-card strong {
+      display: block;
+      font-size: 18px;
+    }
+
+    .feature-card p,
+    .story-card p,
+    .download-card p {
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.74;
+    }
+
+    .feature-icon {
+      width: 44px;
+      height: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 14px;
+      border: 1px solid rgba(56, 189, 248, 0.18);
+      background: rgba(56, 189, 248, 0.08);
+      margin-bottom: 18px;
+    }
+
+    .story-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .story-step {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      background: rgba(249, 115, 22, 0.14);
+      border: 1px solid rgba(249, 115, 22, 0.22);
+      color: #ffc692;
+      font-family: "JetBrains Mono", monospace;
+      margin-bottom: 16px;
+    }
+
+    .testimonial-row {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 16px;
+    }
+
+    .quote {
+      font-size: clamp(22px, 3vw, 34px);
+      line-height: 1.36;
+      letter-spacing: -0.03em;
+      color: #f3f8ff;
+    }
+
+    .quote-meta {
+      margin-top: 22px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .quote-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .quote-badges span {
+      display: inline-flex;
+      align-items: center;
+      min-height: 38px;
+      padding: 0 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.03);
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .download-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .download-card code {
+      display: inline-block;
+      margin-top: 12px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.04);
+      color: #cae8ff;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 12px;
+      word-break: break-all;
+    }
+
+    .download-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .footer {
+      padding: 20px 0 48px;
+      color: var(--subtle);
+      font-size: 13px;
+      text-align: center;
+    }
+
+    :focus-visible {
+      outline: 2px solid var(--sky);
+      outline-offset: 3px;
+    }
+
+    @media (max-width: 1100px) {
+      .hero,
+      .window-body,
+      .feature-grid,
+      .story-grid,
+      .testimonial-row,
+      .download-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .hero {
+        gap: 26px;
+      }
+
+      .hero-metrics {
+        grid-template-columns: 1fr;
+      }
+
+      .provider-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .content {
+        width: min(100vw - 28px, 1180px);
+      }
+
+      .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .nav {
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      h1 {
+        font-size: 42px;
+      }
+
+      .hero-copy,
+      .section-desc {
+        font-size: 16px;
+      }
+
+      .window-bar,
+      .terminal-column,
+      .assistant-column {
+        padding-left: 16px;
+        padding-right: 16px;
+      }
+
+      .feature-card,
+      .story-card,
+      .download-card {
+        padding: 18px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-shell">
+    <div class="content">
+      <header class="topbar">
+        <a class="brand" href="#top">
+          <img class="brand-mark" src="./logo.png" alt="Auto Shell Logo">
+          <div class="brand-meta">
+            <strong>Auto Shell</strong>
+            <span>Windows AI Terminal for Builders</span>
+          </div>
+        </a>
+        <nav class="nav" aria-label="站点导航">
+          <a href="#features">能力</a>
+          <a href="#workflow">流程</a>
+          <a href="#download">下载</a>
+        </nav>
+      </header>
+
+      <main id="top">
+        <section class="hero">
+          <div>
+            <div class="eyebrow">为 Windows 开发者重做的 AI 终端</div>
+            <h1>把终端、模型配置和自然语言协作放进同一个工作台。</h1>
+            <p class="hero-copy">
+              Auto Shell 不是把聊天框贴在终端旁边，而是把真正可落地的开发流程重组成一体：
+              多标签终端、模型切换、自然语言转命令、命令解释、AI 对话，以及适合 Windows 桌面环境的交互风格。
+            </p>
+            <div class="hero-actions">
+              <a class="btn btn-primary" href="./autoShell.exe" download>下载 Windows 安装包</a>
+              <a class="btn btn-secondary" href="#download">查看部署地址</a>
+            </div>
+            <div class="hero-metrics" aria-label="关键指标">
+              <div class="metric">
+                <strong>6+</strong>
+                <span>内置模型入口，覆盖 MiniMax、GLM、Claude、OpenAI、Ollama 与兼容网关</span>
+              </div>
+              <div class="metric">
+                <strong>即时</strong>
+                <span>切换 Provider、Base URL 与 Model 后，下次请求立即生效</span>
+              </div>
+              <div class="metric">
+                <strong>Windows</strong>
+                <span>标题栏、标签栏和桌面语义重新校准，不再走 mac 式视觉</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="hero-visual" aria-label="Auto Shell 产品界面示意">
+            <div class="window">
+              <div class="window-bar">
+                <div class="window-chip-row">
+                  <div class="window-chip">PowerShell</div>
+                  <div class="window-chip">Deploy</div>
+                </div>
+                <div class="window-actions">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+              </div>
+              <div class="window-body">
+                <div class="terminal-column">
+                  <div class="shell-pill">PowerShell · Active</div>
+                  <div class="terminal-screen">
+                    <span class="terminal-line"><strong>PS D:\workspace\auto-shell&gt;</strong> # 帮我生成上传安装包到服务器的命令</span>
+                    <span class="terminal-line terminal-highlight">AI 命令建议已生成，按 Enter 应用</span>
+                    <span class="terminal-line"><strong>PS D:\workspace\auto-shell&gt;</strong> npm run package:win</span>
+                    <span class="terminal-line">Packaging Windows NSIS installer...</span>
+                    <span class="terminal-line">Output: release\Auto Shell Setup 0.2.0.exe</span>
+                    <span class="terminal-line"><strong>PS D:\workspace\auto-shell&gt;</strong> upload ./autoShell.exe root@192.144.130.162</span>
+                    <span class="terminal-line">Remote path: /autoShell/autoShell.exe</span>
+                  </div>
+                  <div class="input-preview"><span>&gt;</span> 输入命令，或以 # 开头让 AI 帮你生成命令</div>
+                </div>
+                <div class="assistant-column">
+                  <div class="assistant-card">
+                    <h3>AI 对话面板</h3>
+                    <p>直接问命令、报错原因、脚本写法，或者让模型整理部署步骤。</p>
+                  </div>
+                  <div class="assistant-card">
+                    <h3>模型配置中心</h3>
+                    <p>支持选择当前模型、修改 Base URL、填写 API Key、切换默认 Model，并即时应用。</p>
+                  </div>
+                  <div class="assistant-card">
+                    <h3>支持的模型入口</h3>
+                    <div class="provider-grid">
+                      <div class="provider-item">
+                        <strong>MiniMax</strong>
+                        <span>国内云端模型</span>
+                      </div>
+                      <div class="provider-item">
+                        <strong>GLM</strong>
+                        <span>智谱开放平台</span>
+                      </div>
+                      <div class="provider-item">
+                        <strong>Claude</strong>
+                        <span>Anthropic</span>
+                      </div>
+                      <div class="provider-item">
+                        <strong>OpenAI</strong>
+                        <span>官方与兼容接口</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="features">
+          <div class="section-head">
+            <div class="section-eyebrow">Why Auto Shell</div>
+            <h2>不是加一个 AI 图标，而是把终端工作流真正串起来。</h2>
+            <p class="section-desc">
+              从命令输入到模型切换，再到自然语言协作和下载交付，Auto Shell 更像一张给开发者准备的“工作台桌面”，而不是又一个浏览器式壳子。
+            </p>
+          </div>
+          <div class="feature-grid">
+            <article class="feature-card">
+              <div class="feature-icon">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                  <path d="M4 5.5 8 9.5 4 13.5M10 14h6" stroke="#67E8F9" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+              </div>
+              <strong>自然语言直达命令</strong>
+              <p>通过 `#` 描述目标，直接获得可执行命令建议，适合频繁切换上下文的开发和运维场景。</p>
+            </article>
+            <article class="feature-card">
+              <div class="feature-icon">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                  <path d="M10 3 16 6.2v7.6L10 17 4 13.8V6.2L10 3Z" stroke="#67E8F9" stroke-width="1.6"></path>
+                  <path d="M10 7.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5Z" stroke="#67E8F9" stroke-width="1.6"></path>
+                </svg>
+              </div>
+              <strong>模型配置即时生效</strong>
+              <p>Provider、Base URL、Model 和 API Key 分离管理，切换后下一次请求立即使用新配置。</p>
+            </article>
+            <article class="feature-card">
+              <div class="feature-icon">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                  <rect x="3.5" y="4" width="13" height="12" rx="2.5" stroke="#67E8F9" stroke-width="1.6"></rect>
+                  <path d="M6.5 8.5h7M6.5 11.5h4.5" stroke="#67E8F9" stroke-width="1.6" stroke-linecap="round"></path>
+                </svg>
+              </div>
+              <strong>终端与对话并排工作</strong>
+              <p>一边跑命令，一边向 AI 追问报错原因、脚本实现或部署步骤，不需要在多个软件之间反复切换。</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section" id="workflow">
+          <div class="section-head">
+            <div class="section-eyebrow">Workflow Story</div>
+            <h2>从“我想做什么”，到“命令已经跑起来”。</h2>
+          </div>
+          <div class="story-grid">
+            <article class="story-card">
+              <div class="story-step">01</div>
+              <strong>先说目标</strong>
+              <p>直接对 AI 描述你的需求，例如“列出最近修改的文件”“生成部署命令”或“解释这段 PowerShell”。</p>
+            </article>
+            <article class="story-card">
+              <div class="story-step">02</div>
+              <strong>再选模型</strong>
+              <p>根据任务随时切换到 Claude、GLM、MiniMax、OpenAI、Ollama，或者接入你自己的 OpenAI 兼容网关。</p>
+            </article>
+            <article class="story-card">
+              <div class="story-step">03</div>
+              <strong>最后落地执行</strong>
+              <p>拿到命令建议、报错解释或完整回复后，直接回到终端执行，不打断原本的开发节奏。</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="testimonial-row">
+            <article class="download-card">
+              <div class="section-eyebrow">Built For Windows</div>
+              <div class="quote">“如果你每天都在 PowerShell、部署脚本、模型 API 和下载交付之间切换，Auto Shell 会让这套流程终于像一个完整产品。”</div>
+              <div class="quote-meta">多标签终端、AI 对话、命令解释、模型设置、Windows 风格桌面语义，全部放在同一工作区。</div>
+              <div class="quote-badges">
+                <span>PowerShell First</span>
+                <span>AI Providers Ready</span>
+                <span>Desktop Native Feel</span>
+              </div>
+            </article>
+            <article class="download-card">
+              <div class="section-eyebrow">Release</div>
+              <strong>当前版本可直接下载 Windows 安装包</strong>
+              <p>宣传页与安装包部署在同一目录下，点击按钮即可获取可安装的 `.exe` 文件。</p>
+              <div class="download-actions">
+                <a class="btn btn-primary" href="./autoShell.exe" download>立即下载</a>
+                <a class="btn btn-secondary" href="https://dmfighting.top/autoShell/autoShell.exe">直接访问链接</a>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="section" id="download">
+          <div class="section-head">
+            <div class="section-eyebrow">Deployment</div>
+            <h2>一个目录，既能展示，也能下载。</h2>
+            <p class="section-desc">
+              线上页面与安装包统一部署到同一目录，便于传播、更新与版本替换。
+            </p>
+          </div>
+          <div class="download-grid">
+            <article class="download-card">
+              <strong>官网入口</strong>
+              <p>访问公开地址即可看到产品介绍、核心能力和下载入口。</p>
+              <code>https://dmfighting.top/autoShell</code>
+            </article>
+            <article class="download-card">
+              <strong>安装包地址</strong>
+              <p>Windows 用户点击后即可直接下载当前可安装版本。</p>
+              <code>https://dmfighting.top/autoShell/autoShell.exe</code>
+            </article>
+          </div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        Auto Shell · Windows AI Terminal · Ready for multi-model workflows
+      </footer>
+    </div>
+  </div>
+</body>
+</html>

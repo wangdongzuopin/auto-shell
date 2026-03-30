@@ -26,31 +26,26 @@ const os__namespace = /* @__PURE__ */ _interopNamespaceDefault(os);
 const pty__namespace = /* @__PURE__ */ _interopNamespaceDefault(pty);
 const PROMPTS = {
   explainError: (ctx) => `
-你是一个 Windows 终端助手。用户在 ${ctx.shell} 中执行命令后报错了。
+你是一个终端助手。用户在 ${ctx.shell} 中执行命令后报错了。
 命令: ${ctx.command}
 退出码: ${ctx.exitCode}
 当前目录: ${ctx.cwd}
 标准错误输出:
 ${ctx.stderr.slice(-1200)}
 
-请用中文严格返回 JSON：
-{
+请用中文严格返回 JSON：{
   "reason": "一句话解释错误原因",
   "fixes": [
     { "description": "修复建议", "command": "具体命令" }
   ]
 }
-只输出 JSON，不要附加说明。
-`,
+只输出 JSON，不要附加说明。`,
   naturalToCommand: (input, shell) => `
-请把下面这句自然语言转换成可直接执行的 ${shell} 命令。
-只输出命令本身，不要解释。
-
+请把下面这句自然语言转换成可直接执行的 ${shell} 命令。只输出命令本身，不要解释。
 描述: ${input}
 `,
   explainCommand: (command) => `
-请用中文解释下面的终端命令，并严格返回 JSON：
-{
+请用中文解释下面的终端命令，并严格返回 JSON：{
   "summary": "一句话说明命令作用",
   "parts": [
     { "token": "命令或参数", "meaning": "含义" }
@@ -58,8 +53,7 @@ ${ctx.stderr.slice(-1200)}
 }
 
 命令: ${command}
-只输出 JSON。
-`
+只输出 JSON。`
 };
 class ClaudeProvider {
   constructor(config) {
@@ -879,17 +873,37 @@ function registerPtyHandlers() {
   });
 }
 function getShellLaunchConfig(shell) {
+  if (process.platform === "darwin") {
+    switch (shell) {
+      case "bash":
+        return {
+          file: "/bin/bash",
+          args: ["--login"]
+        };
+      case "zsh":
+      default:
+        return {
+          file: "/bin/zsh",
+          args: ["-l"]
+        };
+    }
+  }
+  if (process.platform === "linux") {
+    switch (shell) {
+      case "zsh":
+        return {
+          file: "/bin/zsh",
+          args: ["-l"]
+        };
+      case "bash":
+      default:
+        return {
+          file: "/bin/bash",
+          args: ["--login"]
+        };
+    }
+  }
   switch (shell) {
-    case "powershell":
-      return {
-        file: "powershell.exe",
-        args: [
-          "-NoLogo",
-          "-NoExit",
-          "-Command",
-          "[Console]::InputEncoding=[System.Text.UTF8Encoding]::new(); [Console]::OutputEncoding=[System.Text.UTF8Encoding]::new(); chcp 65001 > $null"
-        ]
-      };
     case "cmd":
       return {
         file: "cmd.exe",
@@ -901,10 +915,12 @@ function getShellLaunchConfig(shell) {
         args: []
       };
     case "git-bash":
+    case "bash":
       return {
         file: "bash.exe",
         args: ["--login"]
       };
+    case "powershell":
     default:
       return {
         file: "powershell.exe",

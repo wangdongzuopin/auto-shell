@@ -7257,26 +7257,25 @@ function useAI() {
     checkAvailability
   };
 }
+const platform = detectPlatform$2();
+const defaultShell = getDefaultShell(platform);
 const shellNames = {
   powershell: "PowerShell",
   cmd: "CMD",
   wsl: "WSL",
-  "git-bash": "Git Bash"
+  "git-bash": "Git Bash",
+  zsh: "Zsh",
+  bash: "Bash"
 };
-const shellOptions = [
-  { id: "powershell", label: "PowerShell", description: "Windows 默认 shell，适合系统管理和脚本。" },
-  { id: "cmd", label: "CMD", description: "经典命令提示符，兼容老式命令。" },
-  { id: "wsl", label: "WSL", description: "进入 Linux 子系统环境。" },
-  { id: "git-bash", label: "Git Bash", description: "更接近 Unix 的 Bash 体验。" }
-];
+const shellOptions = getShellOptions(platform);
 let tabCounter = 1;
 const useTabsStore = create((set, get) => ({
   tabs: [
-    { id: "1", name: "PowerShell", shell: "powershell", cwd: "~" }
+    { id: "1", name: shellNames[defaultShell], shell: defaultShell, cwd: "~" }
   ],
   activeTabId: "1",
   sidebarOpen: false,
-  addTab: (shell = "powershell") => {
+  addTab: (shell = defaultShell) => {
     const id2 = String(++tabCounter);
     const name = shellNames[shell];
     set((state) => ({
@@ -7296,10 +7295,51 @@ const useTabsStore = create((set, get) => ({
     tabs: state.tabs.map((tab) => tab.id === id2 ? { ...tab, cwd } : tab)
   })),
   renameTab: (id2, name) => set((state) => ({
-    tabs: state.tabs.map((t2) => t2.id === id2 ? { ...t2, name } : t2)
+    tabs: state.tabs.map((tab) => tab.id === id2 ? { ...tab, name } : tab)
   })),
   toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen }))
 }));
+function detectPlatform$2() {
+  const value = typeof navigator === "undefined" ? "" : navigator.userAgent.toLowerCase();
+  if (value.includes("mac")) {
+    return "macos";
+  }
+  if (value.includes("win")) {
+    return "windows";
+  }
+  return "linux";
+}
+function getDefaultShell(currentPlatform) {
+  switch (currentPlatform) {
+    case "macos":
+      return "zsh";
+    case "linux":
+      return "bash";
+    default:
+      return "powershell";
+  }
+}
+function getShellOptions(currentPlatform) {
+  switch (currentPlatform) {
+    case "macos":
+      return [
+        { id: "zsh", label: "Zsh", description: "macOS 默认 shell，适合日常开发和命令行工作。" },
+        { id: "bash", label: "Bash", description: "经典 Unix shell，兼容多数脚本场景。" }
+      ];
+    case "linux":
+      return [
+        { id: "bash", label: "Bash", description: "Linux 默认 shell，适合常规命令和脚本。" },
+        { id: "zsh", label: "Zsh", description: "更现代的交互式 shell 体验。" }
+      ];
+    default:
+      return [
+        { id: "powershell", label: "PowerShell", description: "Windows 默认 shell，适合系统管理和脚本。" },
+        { id: "cmd", label: "CMD", description: "经典命令提示符，兼容老式命令。" },
+        { id: "wsl", label: "WSL", description: "进入 Linux 子系统环境。" },
+        { id: "git-bash", label: "Git Bash", description: "更接近 Unix 的 Bash 体验。" }
+      ];
+  }
+}
 const defaultTheme = {
   name: "Auto Shell Dark",
   background: "#0f1115",
@@ -7550,10 +7590,11 @@ function AIChatPanel({ open, onClose }) {
   const [messages, setMessages] = reactExports.useState([
     {
       role: "assistant",
-      content: "我是终端助手。你可以直接问我命令、报错原因、脚本写法，也可以让我帮你切换到当前机器上的某个项目目录。"
+      content: "我是终端助手。你可以直接问命令、报错原因、脚本写法，也可以让我帮你切换到当前机器上的某个项目目录。"
     }
   ]);
   const [loading, setLoading] = reactExports.useState(false);
+  const platform2 = reactExports.useMemo(() => detectPlatform$1(), []);
   const modelLabel = reactExports.useMemo(() => `${provider} / ${configs[provider].model}`, [configs, provider]);
   const tabLabel = reactExports.useMemo(() => {
     if (!activeTab) {
@@ -7561,6 +7602,9 @@ function AIChatPanel({ open, onClose }) {
     }
     return `${shellNames[activeTab.shell]} · ${activeTab.cwd === "~" ? "默认目录" : activeTab.cwd}`;
   }, [activeTab]);
+  const placeholder = reactExports.useMemo(() => {
+    return platform2 === "windows" ? "例如：帮我写一个 PowerShell 脚本，或输入“切换到 D:\\Agent\\auto-shell”直接让当前终端切目录" : "例如：帮我写一个 zsh 脚本，或输入“切换到 ~/projects/auto-shell”直接让当前终端切目录";
+  }, [platform2]);
   if (!open) return null;
   const handleSend = async () => {
     const trimmed = input.trim();
@@ -7591,11 +7635,11 @@ function AIChatPanel({ open, onClose }) {
         {
           role: "system",
           content: [
-            "你是一个中文 Windows 终端助手，回答要直接、可执行、准确。",
-            "你服务于当前激活的终端窗口，给命令时优先基于当前 shell 和当前工作目录。",
+            `你是一个中文终端助手，当前服务的平台是 ${platformLabel(platform2)}。`,
+            "回答要直接、可执行、准确，优先给出当前平台和当前 shell 可直接执行的命令。",
             `当前 shell: ${shellNames[activeTab.shell]}`,
             `当前工作目录: ${activeTab.cwd}`,
-            "如果用户表达的是切换项目或切换目录，优先直接给出明确的切换命令。"
+            "如果用户表达的是切换目录或切换项目，优先直接给出明确的 cd / Set-Location / zsh 可执行命令。"
           ].join("\n")
         },
         ...nextMessages
@@ -7690,7 +7734,7 @@ function AIChatPanel({ open, onClose }) {
               void handleSend();
             }
           },
-          placeholder: "例如：帮我写一个 PowerShell 脚本，或输入“切换到 D:\\\\Agent\\\\auto-shell”直接让当前终端切目录"
+          placeholder
         }
       ),
       /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "send-btn", onClick: () => void handleSend(), disabled: loading || !input.trim(), children: "发送" })
@@ -7837,6 +7881,8 @@ function buildChangeDirectoryCommand(shell, targetPath) {
       return `cd /d ${quotedPath}`;
     case "wsl":
     case "git-bash":
+    case "zsh":
+    case "bash":
       return `cd ${quotedPath}`;
     default:
       return `cd ${quotedPath}`;
@@ -7848,38 +7894,63 @@ function stripWrappingQuotes$1(value) {
   }
   return value;
 }
-const PROJECT_PATHS = [
-  { name: "auto-shell", path: "D:\\Agent\\auto-shell" },
-  { name: "anysign-jsgovsource_backend", path: "D:\\Center\\backend\\anysign-jsgovsource_backend" },
-  { name: "Center", path: "D:\\Center" }
-];
-const BASE_COMMANDS = [
-  {
-    group: "Git",
-    commands: [
-      { name: "查看状态", cmd: "git status" },
-      { name: "最近提交", cmd: "git log --oneline -10" },
-      { name: "拉取主分支", cmd: "git pull origin main" },
-      { name: "推送当前分支", cmd: "git push origin HEAD" }
-    ]
-  },
-  {
-    group: "Node",
-    commands: [
-      { name: "启动开发环境", cmd: "npm run dev" },
-      { name: "构建产物", cmd: "npm run build" },
-      { name: "安装依赖", cmd: "npm install" }
-    ]
-  },
-  {
+function detectPlatform$1() {
+  const value = typeof navigator === "undefined" ? "" : navigator.userAgent.toLowerCase();
+  if (value.includes("mac")) {
+    return "macos";
+  }
+  if (value.includes("win")) {
+    return "windows";
+  }
+  return "linux";
+}
+function platformLabel(platform2) {
+  switch (platform2) {
+    case "macos":
+      return "macOS";
+    case "linux":
+      return "Linux";
+    default:
+      return "Windows";
+  }
+}
+const BASE_COMMANDS = {
+  common: [
+    {
+      group: "Git",
+      commands: [
+        { name: "查看状态", cmd: "git status" },
+        { name: "最近提交", cmd: "git log --oneline -10" },
+        { name: "拉取主分支", cmd: "git pull origin main" },
+        { name: "推送当前分支", cmd: "git push origin HEAD" }
+      ]
+    },
+    {
+      group: "Node",
+      commands: [
+        { name: "启动开发环境", cmd: "npm run dev" },
+        { name: "构建产物", cmd: "npm run build" },
+        { name: "安装依赖", cmd: "npm install" }
+      ]
+    }
+  ],
+  windows: {
     group: "系统",
     commands: [
       { name: "网络信息", cmd: "ipconfig /all" },
       { name: "清屏", cmd: "cls" },
       { name: "查看进程", cmd: "tasklist" }
     ]
+  },
+  unix: {
+    group: "系统",
+    commands: [
+      { name: "网络信息", cmd: "ifconfig || ip addr" },
+      { name: "清屏", cmd: "clear" },
+      { name: "查看进程", cmd: "ps aux" }
+    ]
   }
-];
+};
 function QuickCommands() {
   const [filter, setFilter] = reactExports.useState("");
   const sidebarOpen = useTabsStore((state) => state.sidebarOpen);
@@ -7887,18 +7958,20 @@ function QuickCommands() {
   const tabs = useTabsStore((state) => state.tabs);
   const setTabCwd = useTabsStore((state) => state.setTabCwd);
   const activeTab = tabs.find((tab) => tab.id === activeTabId) ?? null;
+  const platform2 = reactExports.useMemo(() => detectPlatform(), []);
   const allCommands = reactExports.useMemo(() => {
     const projectCommands = activeTab ? [
       {
         group: "项目切换",
-        commands: PROJECT_PATHS.map((project) => ({
+        commands: getProjectPaths(platform2).map((project) => ({
           name: `进入 ${project.name}`,
           cmd: buildCdCommand(activeTab.shell, project.path)
         }))
       }
     ] : [];
-    return [...projectCommands, ...BASE_COMMANDS];
-  }, [activeTab]);
+    const systemCommands = platform2 === "windows" ? BASE_COMMANDS.windows : BASE_COMMANDS.unix;
+    return [...projectCommands, ...BASE_COMMANDS.common, systemCommands];
+  }, [activeTab, platform2]);
   const filteredCommands = reactExports.useMemo(
     () => allCommands.map((group) => ({
       ...group,
@@ -8074,18 +8147,34 @@ function QuickCommands() {
       ` })
   ] });
 }
+function getProjectPaths(platform2) {
+  if (platform2 === "windows") {
+    return [
+      { name: "Home", path: "~" },
+      { name: "auto-shell", path: "D:\\Agent\\auto-shell" },
+      { name: "Center", path: "D:\\Center" }
+    ];
+  }
+  return [
+    { name: "Home", path: "~" },
+    { name: "Desktop", path: "~/Desktop" },
+    { name: "Projects", path: "~/Projects" }
+  ];
+}
 function buildCdCommand(shell, targetPath) {
   const quotedPath = `"${targetPath.replace(/"/g, '\\"')}"`;
   switch (shell) {
     case "powershell":
       return `Set-Location -LiteralPath ${quotedPath}`;
     case "cmd":
-      return `cd /d ${quotedPath}`;
+      return targetPath === "~" ? "cd /d %USERPROFILE%" : `cd /d ${quotedPath}`;
     case "wsl":
     case "git-bash":
-      return `cd ${quotedPath}`;
+    case "zsh":
+    case "bash":
+      return targetPath === "~" ? "cd ~" : `cd ${quotedPath}`;
     default:
-      return `cd ${quotedPath}`;
+      return targetPath === "~" ? "cd ~" : `cd ${quotedPath}`;
   }
 }
 function parseCwdCommand(command) {
@@ -8106,6 +8195,16 @@ function stripWrappingQuotes(value) {
     return value.slice(1, -1);
   }
   return value;
+}
+function detectPlatform() {
+  const value = typeof navigator === "undefined" ? "" : navigator.userAgent.toLowerCase();
+  if (value.includes("mac")) {
+    return "macos";
+  }
+  if (value.includes("win")) {
+    return "windows";
+  }
+  return "linux";
 }
 const BUILT_IN_THEMES = [
   {
@@ -8828,11 +8927,11 @@ function SystemSettings() {
     ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "system-card", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "system-title", children: "跨平台界面" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "system-copy", children: "当前界面不再强调 Windows 优先描述，主题与窗口内容统一按全局设计变量渲染，便于继续扩展到 macOS。" })
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "system-copy", children: "当前界面已经移除 Windows 优先描述，主题与窗口内容统一按全局设计变量渲染，便于同时兼容 Windows 和 macOS。" })
     ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "system-card", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "system-title", children: "打包方式" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "system-copy", children: "项目已经补上 macOS 打包配置，可在 macOS 环境执行对应打包命令生成安装包。" })
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "system-copy", children: "项目已补充 Windows 和 macOS 的打包配置。Windows 可直接打包，macOS 需要在 mac 主机上执行打包命令。" })
     ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsx("style", { children: `
         .system-settings {

@@ -68,17 +68,39 @@ export function registerPtyHandlers() {
 }
 
 function getShellLaunchConfig(shell: string): { file: string; args: string[] } {
+  if (process.platform === 'darwin') {
+    switch (shell) {
+      case 'bash':
+        return {
+          file: '/bin/bash',
+          args: ['--login']
+        };
+      case 'zsh':
+      default:
+        return {
+          file: '/bin/zsh',
+          args: ['-l']
+        };
+    }
+  }
+
+  if (process.platform === 'linux') {
+    switch (shell) {
+      case 'zsh':
+        return {
+          file: '/bin/zsh',
+          args: ['-l']
+        };
+      case 'bash':
+      default:
+        return {
+          file: '/bin/bash',
+          args: ['--login']
+        };
+    }
+  }
+
   switch (shell) {
-    case 'powershell':
-      return {
-        file: 'powershell.exe',
-        args: [
-          '-NoLogo',
-          '-NoExit',
-          '-Command',
-          "[Console]::InputEncoding=[System.Text.UTF8Encoding]::new(); [Console]::OutputEncoding=[System.Text.UTF8Encoding]::new(); chcp 65001 > $null"
-        ]
-      };
     case 'cmd':
       return {
         file: 'cmd.exe',
@@ -90,10 +112,12 @@ function getShellLaunchConfig(shell: string): { file: string; args: string[] } {
         args: []
       };
     case 'git-bash':
+    case 'bash':
       return {
         file: 'bash.exe',
         args: ['--login']
       };
+    case 'powershell':
     default:
       return {
         file: 'powershell.exe',
