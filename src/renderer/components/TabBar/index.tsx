@@ -127,7 +127,7 @@ export function TabBar({ onOpenChat, onOpenSettings }: TabBarProps) {
           align-items: center;
           gap: 8px;
           padding: 0 10px 0 12px;
-          background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0));
+          background: linear-gradient(180deg, color-mix(in srgb, var(--bg2) 88%, white 12%), var(--bg));
           border-bottom: 1px solid var(--border);
           user-select: none;
         }
@@ -160,7 +160,7 @@ export function TabBar({ onOpenChat, onOpenSettings }: TabBarProps) {
           min-width: 0;
         }
         .tab:hover {
-          background: rgba(255,255,255,0.03);
+          background: color-mix(in srgb, var(--bg3) 90%, white 10%);
           color: var(--text);
         }
         .tab.active {
@@ -168,7 +168,7 @@ export function TabBar({ onOpenChat, onOpenSettings }: TabBarProps) {
           color: var(--text);
           border-color: var(--border);
           border-bottom-color: var(--bg);
-          box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+          box-shadow: inset 0 1px 0 var(--border);
         }
         .tab-dot {
           width: 7px;
@@ -185,7 +185,7 @@ export function TabBar({ onOpenChat, onOpenSettings }: TabBarProps) {
         .tab-shell {
           padding: 2px 6px;
           border-radius: 999px;
-          background: rgba(255,255,255,0.05);
+          background: color-mix(in srgb, var(--bg3) 90%, white 10%);
           color: var(--text3);
           font-size: 10px;
           font-family: var(--mono);
@@ -206,7 +206,7 @@ export function TabBar({ onOpenChat, onOpenSettings }: TabBarProps) {
           flex-shrink: 0;
         }
         .tab-close:hover {
-          background: rgba(255,255,255,0.06);
+          background: color-mix(in srgb, var(--bg3) 88%, white 12%);
           color: var(--text);
         }
         .tab-add-wrap {
@@ -227,7 +227,7 @@ export function TabBar({ onOpenChat, onOpenSettings }: TabBarProps) {
         .tab-add:hover,
         .tab-add.active,
         .icon-btn:hover {
-          background: rgba(255,255,255,0.04);
+          background: color-mix(in srgb, var(--bg3) 90%, white 10%);
           border-color: var(--border);
           color: var(--text);
         }
@@ -237,7 +237,7 @@ export function TabBar({ onOpenChat, onOpenSettings }: TabBarProps) {
           left: 0;
           width: 240px;
           padding: 8px;
-          background: rgba(18, 23, 31, 0.98);
+          background: color-mix(in srgb, var(--bg2) 94%, white 6%);
           border: 1px solid var(--border2);
           border-radius: 12px;
           box-shadow: var(--shadow-soft);

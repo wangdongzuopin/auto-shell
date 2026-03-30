@@ -26,9 +26,9 @@ export function Settings({ open, defaultTab = 'ai', onClose }: SettingsProps) {
           <div className="settings-title">
             {activeTab === 'ai' ? 'AI 与模型' : activeTab === 'appearance' ? '外观主题' : '系统偏好'}
           </div>
-          <div className="settings-subtitle">调整终端样式、模型供应商和辅助能力。</div>
+          <div className="settings-subtitle">统一管理主题、模型提供商和运行方式。</div>
         </div>
-        <button className="close-btn" onClick={onClose}>×</button>
+        <button className="close-btn" onClick={onClose} aria-label="关闭设置">×</button>
       </div>
       <div className="settings-tabs">
         <button className={`settings-tab ${activeTab === 'appearance' ? 'active' : ''}`} onClick={() => setActiveTab('appearance')}>
@@ -53,13 +53,13 @@ export function Settings({ open, defaultTab = 'ai', onClose }: SettingsProps) {
           right: 16px;
           bottom: 16px;
           width: min(420px, calc(100vw - 32px));
-          background: linear-gradient(180deg, rgba(19,25,36,0.98), rgba(12,16,24,0.98));
+          background: linear-gradient(180deg, color-mix(in srgb, var(--bg2) 88%, white 12%), var(--bg));
           border: 1px solid var(--border2);
           border-radius: 18px;
           display: flex;
           flex-direction: column;
           z-index: 20;
-          box-shadow: 0 28px 80px rgba(0,0,0,0.45);
+          box-shadow: 0 28px 80px rgba(0,0,0,0.18);
           overflow: hidden;
         }
         .settings-header {
@@ -85,13 +85,13 @@ export function Settings({ open, defaultTab = 'ai', onClose }: SettingsProps) {
           height: 34px;
           border-radius: 10px;
           border: 1px solid var(--border);
-          background: rgba(255,255,255,0.03);
+          background: color-mix(in srgb, var(--bg3) 86%, white 14%);
           color: var(--text2);
           font-size: 20px;
           cursor: pointer;
         }
         .close-btn:hover {
-          background: rgba(255,255,255,0.06);
+          background: var(--bg3);
           color: var(--text);
         }
         .settings-tabs {
@@ -102,7 +102,7 @@ export function Settings({ open, defaultTab = 'ai', onClose }: SettingsProps) {
         .settings-tab {
           flex: 1;
           border: 1px solid var(--border);
-          background: rgba(255,255,255,0.02);
+          background: color-mix(in srgb, var(--bg2) 90%, white 10%);
           color: var(--text2);
           border-radius: 10px;
           padding: 10px 0;
@@ -110,8 +110,8 @@ export function Settings({ open, defaultTab = 'ai', onClose }: SettingsProps) {
         }
         .settings-tab.active {
           color: var(--text);
-          border-color: rgba(76,141,255,0.35);
-          background: rgba(76,141,255,0.08);
+          border-color: var(--ai-border);
+          background: var(--ai-bg);
         }
         .settings-body {
           flex: 1;
@@ -127,15 +127,23 @@ function SystemSettings() {
   return (
     <div className="system-settings">
       <div className="system-card">
-        <div className="system-title">Windows 风格优先</div>
+        <div className="system-title">本地配置缓存</div>
         <div className="system-copy">
-          当前版本已移除顶部的 mac 彩色控制按钮，并统一改为更接近 Windows 桌面应用的标题栏和标签视觉。
+          AI 提供商、模型参数、主题与功能开关会持久化到用户目录下的
+          <code> ~/.autoshell/config.json </code>
+          ，应用启动时会自动读取。
         </div>
       </div>
       <div className="system-card">
-        <div className="system-title">模型配置即时生效</div>
+        <div className="system-title">跨平台界面</div>
         <div className="system-copy">
-          调整 Base URL、模型名或当前 Provider 后，会立即持久化并在下次请求时重建 AI Provider。
+          当前界面不再强调 Windows 优先描述，主题与窗口内容统一按全局设计变量渲染，便于继续扩展到 macOS。
+        </div>
+      </div>
+      <div className="system-card">
+        <div className="system-title">打包方式</div>
+        <div className="system-copy">
+          项目已经补上 macOS 打包配置，可在 macOS 环境执行对应打包命令生成安装包。
         </div>
       </div>
       <style>{`
@@ -146,7 +154,7 @@ function SystemSettings() {
         }
         .system-card {
           border: 1px solid var(--border);
-          background: rgba(255,255,255,0.02);
+          background: color-mix(in srgb, var(--bg2) 90%, white 10%);
           border-radius: 12px;
           padding: 14px;
         }
@@ -160,6 +168,10 @@ function SystemSettings() {
           font-size: 12px;
           line-height: 1.6;
           color: var(--text2);
+        }
+        .system-copy code {
+          font-family: var(--mono);
+          color: var(--text);
         }
       `}</style>
     </div>
@@ -202,8 +214,8 @@ export function ToggleRow({ label, checked, onChange }: { label: string; checked
           cursor: pointer;
         }
         .toggle.on {
-          background: rgba(76,141,255,0.22);
-          border-color: rgba(76,141,255,0.48);
+          background: var(--ai-bg);
+          border-color: var(--ai-border);
         }
         .toggle-knob {
           width: 18px;

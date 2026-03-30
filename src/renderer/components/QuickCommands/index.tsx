@@ -132,7 +132,7 @@ export function QuickCommands() {
       <style>{`
         #sidebar {
           width: var(--sidebar-w);
-          background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+          background: linear-gradient(180deg, color-mix(in srgb, var(--bg2) 92%, white 8%), var(--bg));
           border-right: 1px solid var(--border);
           display: flex;
           flex-direction: column;
@@ -166,7 +166,7 @@ export function QuickCommands() {
         }
         .cmd-search {
           margin: 12px 10px 8px;
-          background: rgba(255,255,255,0.03);
+          background: color-mix(in srgb, var(--bg3) 90%, white 10%);
           border: 1px solid var(--border);
           border-radius: 10px;
           display: flex;
@@ -211,7 +211,7 @@ export function QuickCommands() {
           text-align: left;
         }
         .cmd-item:hover {
-          background: rgba(255,255,255,0.04);
+          background: color-mix(in srgb, var(--bg3) 90%, white 10%);
           border-color: var(--border);
         }
         .cmd-name {

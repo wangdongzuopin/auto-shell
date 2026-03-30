@@ -2,12 +2,14 @@ import { useCallback, useEffect, useRef } from 'react';
 import { FitAddon } from '@xterm/addon-fit';
 import { WebLinksAddon } from '@xterm/addon-web-links';
 import { Terminal } from '@xterm/xterm';
+import type { Theme } from '../store/settings';
 
 export function useTerminal(
   containerRef: React.RefObject<HTMLDivElement | null>,
   tabId: string,
   shell: string = 'powershell',
   cwd: string = '',
+  theme?: Theme,
   onSelectionChange?: (selection: string, position: { x: number; y: number }) => void
 ) {
   const terminalRef = useRef<Terminal | null>(null);
@@ -35,11 +37,11 @@ export function useTerminal(
       cursorStyle: 'block',
       allowProposedApi: true,
       theme: {
-        background: '#0f1115',
-        foreground: '#d8dee9',
-        cursor: '#4c8dff',
-        cursorAccent: '#0f1115',
-        selectionBackground: 'rgba(76, 141, 255, 0.24)'
+        background: theme?.background ?? '#0f1115',
+        foreground: theme?.foreground ?? '#d8dee9',
+        cursor: theme?.accent ?? '#4c8dff',
+        cursorAccent: getCursorAccent(theme?.background ?? '#0f1115'),
+        selectionBackground: withAlpha(theme?.accent ?? '#4c8dff', '3d')
       }
     });
 
@@ -126,7 +128,7 @@ export function useTerminal(
       terminalRef.current = null;
       fitAddonRef.current = null;
     };
-  }, [containerRef, onSelectionChange, resizePty, shell, tabId]);
+  }, [containerRef, onSelectionChange, resizePty, shell, tabId, theme]);
 
   const focus = useCallback(() => {
     terminalRef.current?.focus();
@@ -135,4 +137,22 @@ export function useTerminal(
   return {
     focus
   };
+}
+
+function getCursorAccent(background: string): string {
+  return isLightColor(background) ? '#f6f8fc' : background;
+}
+
+function withAlpha(hex: string, alpha: string): string {
+  return `${hex}${alpha}`;
+}
+
+function isLightColor(hex: string): boolean {
+  const normalized = hex.replace('#', '');
+  const value = parseInt(normalized, 16);
+  const r = (value >> 16) & 0xff;
+  const g = (value >> 8) & 0xff;
+  const b = value & 0xff;
+  const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+  return luminance > 0.72;
 }

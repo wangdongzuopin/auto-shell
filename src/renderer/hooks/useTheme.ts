@@ -9,6 +9,12 @@ const BUILT_IN_THEMES: Theme[] = [
     accent: '#7c6af7'
   },
   {
+    name: 'Auto Shell Day',
+    background: '#f6f8fc',
+    foreground: '#182338',
+    accent: '#2f6fed'
+  },
+  {
     name: 'Catppuccin',
     background: '#1e1e2e',
     foreground: '#cdd6f4',

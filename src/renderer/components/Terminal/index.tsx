@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useAIStore } from '../../store/ai';
+import { useSettingsStore } from '../../store/settings';
 import { shellNames, useTabsStore } from '../../store/tabs';
 import { useTerminal } from '../../hooks/useTerminal';
 import { AICard } from '../AICard';
@@ -13,6 +14,7 @@ export function Terminal() {
   const tabs = useTabsStore((state) => state.tabs);
   const activeTab = tabs.find((tab) => tab.id === activeTabId);
   const errorCardOpen = useAIStore((state) => state.errorCardOpen);
+  const theme = useSettingsStore((state) => state.theme);
 
   const handleSelectionChange = useCallback((selection: string, position: { x: number; y: number }) => {
     setTooltip({ text: selection, position });
@@ -23,6 +25,7 @@ export function Terminal() {
     activeTabId || '1',
     activeTab?.shell,
     activeTab?.cwd,
+    theme,
     handleSelectionChange
   );
 
@@ -61,7 +64,7 @@ export function Terminal() {
           flex: 1;
           display: flex;
           flex-direction: column;
-          background: rgba(10, 13, 18, 0.84);
+          background: var(--bg);
           overflow: hidden;
           position: relative;
         }
@@ -73,7 +76,7 @@ export function Terminal() {
           padding: 0 18px;
           min-height: 38px;
           border-bottom: 1px solid var(--border);
-          background: rgba(255,255,255,0.02);
+          background: color-mix(in srgb, var(--bg2) 88%, white 12%);
         }
         .shell-chip {
           display: inline-flex;
@@ -128,6 +131,7 @@ export function Terminal() {
           padding: 14px 18px;
           overflow: hidden;
           cursor: text;
+          background: var(--bg);
         }
         .terminal-output .xterm {
           height: 100%;

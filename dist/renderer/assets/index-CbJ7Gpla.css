@@ -320,8 +320,8 @@ body,
 #root {
   height: 100%;
   background:
-    radial-gradient(circle at top right, rgba(76, 141, 255, 0.1), transparent 28%),
-    linear-gradient(180deg, #11151d 0%, #0f1115 100%);
+    radial-gradient(circle at top right, var(--app-glow), transparent 28%),
+    linear-gradient(180deg, var(--surface-top) 0%, var(--surface-bottom) 100%);
   color: var(--text);
   font-family: var(--sans);
   font-size: 14px;
@@ -348,19 +348,19 @@ textarea {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--scrollbar-thumb);
   border: 2px solid transparent;
   border-radius: 99px;
   background-clip: padding-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.18);
+  background: var(--scrollbar-thumb-hover);
   background-clip: padding-box;
 }
 
 :focus-visible {
-  outline: 2px solid rgba(76, 141, 255, 0.9);
+  outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }
 
@@ -368,7 +368,7 @@ button:focus-visible,
 input:focus-visible,
 textarea:focus-visible,
 [tabindex]:focus-visible {
-  outline: 2px solid rgba(76, 141, 255, 0.9);
+  outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }
 

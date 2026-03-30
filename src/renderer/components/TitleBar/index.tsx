@@ -5,7 +5,7 @@ export function TitleBar() {
     <div className="title-bar">
       <div className="title-bar-drag">
         <span className="title-main">Auto Shell</span>
-        <span className="title-sub">Windows AI Terminal</span>
+        <span className="title-sub">AI Native Terminal</span>
       </div>
       <div className="title-bar-controls">
         <button className="title-bar-btn" onClick={() => window.api.minimizeWindow()} aria-label="最小化">

@@ -188,10 +188,10 @@ export function AIChatPanel({ open, onClose }: AIChatPanelProps) {
           max-width: 460px;
           height: 100%;
           border-left: 1px solid var(--border);
-          background: linear-gradient(180deg, rgba(19,25,36,0.96), rgba(10,14,20,0.98));
+          background: linear-gradient(180deg, color-mix(in srgb, var(--bg2) 90%, white 10%), var(--bg));
           display: flex;
           flex-direction: column;
-          box-shadow: inset 1px 0 0 rgba(255,255,255,0.02);
+          box-shadow: inset 1px 0 0 var(--border);
         }
         .chat-header {
           display: flex;
@@ -210,7 +210,7 @@ export function AIChatPanel({ open, onClose }: AIChatPanelProps) {
           margin-top: 6px;
           font-size: 11px;
           font-family: var(--mono);
-          color: #8cb3ff;
+          color: var(--accent);
         }
         .chat-context {
           margin-top: 5px;
@@ -223,7 +223,7 @@ export function AIChatPanel({ open, onClose }: AIChatPanelProps) {
           height: 32px;
           border-radius: 8px;
           border: 1px solid var(--border);
-          background: rgba(255,255,255,0.03);
+          background: color-mix(in srgb, var(--bg3) 90%, white 10%);
           color: var(--text2);
           font-size: 18px;
           cursor: pointer;
@@ -244,12 +244,12 @@ export function AIChatPanel({ open, onClose }: AIChatPanelProps) {
         }
         .chat-bubble.user {
           align-self: flex-end;
-          background: rgba(76,141,255,0.14);
-          border-color: rgba(76,141,255,0.26);
+          background: var(--ai-bg);
+          border-color: var(--ai-border);
         }
         .chat-bubble.assistant {
           align-self: flex-start;
-          background: rgba(255,255,255,0.03);
+          background: color-mix(in srgb, var(--bg3) 90%, white 10%);
         }
         .bubble-role {
           font-size: 10px;
@@ -278,7 +278,7 @@ export function AIChatPanel({ open, onClose }: AIChatPanelProps) {
           resize: none;
           border-radius: 12px;
           border: 1px solid var(--border);
-          background: rgba(255,255,255,0.03);
+          background: color-mix(in srgb, var(--bg3) 90%, white 10%);
           color: var(--text);
           padding: 12px;
           line-height: 1.6;
@@ -288,8 +288,8 @@ export function AIChatPanel({ open, onClose }: AIChatPanelProps) {
           min-width: 96px;
           height: 40px;
           border-radius: 10px;
-          border: 1px solid rgba(76,141,255,0.48);
-          background: linear-gradient(180deg, #4c8dff, #2e6edc);
+          border: 1px solid var(--ai-border);
+          background: linear-gradient(180deg, var(--accent), color-mix(in srgb, var(--accent) 78%, #163a75 22%));
           color: white;
           cursor: pointer;
         }

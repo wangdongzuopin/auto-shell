@@ -18,7 +18,7 @@ interface SettingsState {
 }
 
 const defaultTheme: Theme = {
-  name: 'Auto Shell Slate',
+  name: 'Auto Shell Dark',
   background: '#0f1115',
   foreground: '#d8dee9',
   accent: '#4c8dff'
@@ -59,16 +59,30 @@ const defaultFeatures: FeatureToggles = {
 };
 
 function applyThemeToDocument(theme: Theme) {
+  const light = isLightColor(theme.background);
+  const surfaceDelta = light ? -8 : 8;
+
+  document.documentElement.dataset.theme = light ? 'light' : 'dark';
   document.documentElement.style.setProperty('--bg', theme.background);
-  document.documentElement.style.setProperty('--bg2', lighten(theme.background, 8));
-  document.documentElement.style.setProperty('--bg3', lighten(theme.background, 14));
-  document.documentElement.style.setProperty('--bg4', lighten(theme.background, 22));
-  document.documentElement.style.setProperty('--bg5', lighten(theme.background, 28));
+  document.documentElement.style.setProperty('--bg2', shiftColor(theme.background, surfaceDelta));
+  document.documentElement.style.setProperty('--bg3', shiftColor(theme.background, surfaceDelta * 1.75));
+  document.documentElement.style.setProperty('--bg4', shiftColor(theme.background, surfaceDelta * 2.5));
+  document.documentElement.style.setProperty('--bg5', shiftColor(theme.background, surfaceDelta * 3.25));
+  document.documentElement.style.setProperty('--border', light ? 'rgba(26, 37, 56, 0.10)' : 'rgba(255, 255, 255, 0.08)');
+  document.documentElement.style.setProperty('--border2', light ? 'rgba(26, 37, 56, 0.18)' : 'rgba(255, 255, 255, 0.16)');
   document.documentElement.style.setProperty('--text', theme.foreground);
+  document.documentElement.style.setProperty('--text2', mixColors(theme.foreground, theme.background, light ? 0.42 : 0.60));
+  document.documentElement.style.setProperty('--text3', mixColors(theme.foreground, theme.background, light ? 0.66 : 0.78));
   document.documentElement.style.setProperty('--accent', theme.accent);
-  document.documentElement.style.setProperty('--accent-dim', `${theme.accent}22`);
-  document.documentElement.style.setProperty('--ai-bg', `${theme.accent}14`);
-  document.documentElement.style.setProperty('--ai-border', `${theme.accent}44`);
+  document.documentElement.style.setProperty('--accent-dim', withAlpha(theme.accent, light ? '1a' : '22'));
+  document.documentElement.style.setProperty('--ai-bg', withAlpha(theme.accent, light ? '12' : '14'));
+  document.documentElement.style.setProperty('--ai-border', withAlpha(theme.accent, light ? '30' : '44'));
+  document.documentElement.style.setProperty('--app-glow', withAlpha(theme.accent, light ? '14' : '20'));
+  document.documentElement.style.setProperty('--surface-top', shiftColor(theme.background, light ? 10 : 6));
+  document.documentElement.style.setProperty('--surface-bottom', shiftColor(theme.background, light ? -2 : 0));
+  document.documentElement.style.setProperty('--scrollbar-thumb', light ? 'rgba(26, 37, 56, 0.18)' : 'rgba(255, 255, 255, 0.12)');
+  document.documentElement.style.setProperty('--scrollbar-thumb-hover', light ? 'rgba(26, 37, 56, 0.28)' : 'rgba(255, 255, 255, 0.18)');
+  document.documentElement.style.setProperty('--focus-ring', withAlpha(theme.accent, light ? 'cc' : 'e6'));
 }
 
 export const useSettingsStore = create<SettingsState>((set, get) => ({
@@ -141,13 +155,49 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   }
 }));
 
-function lighten(hex: string, amount: number): string {
+function shiftColor(hex: string, amount: number): string {
   const normalized = hex.replace('#', '');
   const value = parseInt(normalized, 16);
-  const r = Math.min(255, (value >> 16) + amount);
-  const g = Math.min(255, ((value >> 8) & 0xff) + amount);
-  const b = Math.min(255, (value & 0xff) + amount);
+  const delta = Math.round(amount);
+  const r = clamp((value >> 16) + delta);
+  const g = clamp(((value >> 8) & 0xff) + delta);
+  const b = clamp((value & 0xff) + delta);
   return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
+}
+
+function mixColors(primary: string, secondary: string, ratio: number): string {
+  const a = parseHex(primary);
+  const b = parseHex(secondary);
+  const mix = (start: number, end: number) => Math.round(start * (1 - ratio) + end * ratio);
+  return rgbToHex(mix(a.r, b.r), mix(a.g, b.g), mix(a.b, b.b));
+}
+
+function withAlpha(hex: string, alpha: string): string {
+  return `${hex}${alpha}`;
+}
+
+function isLightColor(hex: string): boolean {
+  const { r, g, b } = parseHex(hex);
+  const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+  return luminance > 0.72;
+}
+
+function parseHex(hex: string) {
+  const normalized = hex.replace('#', '');
+  const value = parseInt(normalized, 16);
+  return {
+    r: (value >> 16) & 0xff,
+    g: (value >> 8) & 0xff,
+    b: value & 0xff
+  };
+}
+
+function rgbToHex(r: number, g: number, b: number): string {
+  return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
+}
+
+function clamp(value: number): number {
+  return Math.max(0, Math.min(255, value));
 }
 
 export type { Theme, FeatureToggles, ProviderType, ProviderSettings, ProviderConfigs };

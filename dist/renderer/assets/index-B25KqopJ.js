@@ -7301,7 +7301,7 @@ const useTabsStore = create((set, get) => ({
   toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen }))
 }));
 const defaultTheme = {
-  name: "Auto Shell Slate",
+  name: "Auto Shell Dark",
   background: "#0f1115",
   foreground: "#d8dee9",
   accent: "#4c8dff"
@@ -7339,16 +7339,29 @@ const defaultFeatures = {
   completion: false
 };
 function applyThemeToDocument(theme) {
+  const light = isLightColor$1(theme.background);
+  const surfaceDelta = light ? -8 : 8;
+  document.documentElement.dataset.theme = light ? "light" : "dark";
   document.documentElement.style.setProperty("--bg", theme.background);
-  document.documentElement.style.setProperty("--bg2", lighten(theme.background, 8));
-  document.documentElement.style.setProperty("--bg3", lighten(theme.background, 14));
-  document.documentElement.style.setProperty("--bg4", lighten(theme.background, 22));
-  document.documentElement.style.setProperty("--bg5", lighten(theme.background, 28));
+  document.documentElement.style.setProperty("--bg2", shiftColor(theme.background, surfaceDelta));
+  document.documentElement.style.setProperty("--bg3", shiftColor(theme.background, surfaceDelta * 1.75));
+  document.documentElement.style.setProperty("--bg4", shiftColor(theme.background, surfaceDelta * 2.5));
+  document.documentElement.style.setProperty("--bg5", shiftColor(theme.background, surfaceDelta * 3.25));
+  document.documentElement.style.setProperty("--border", light ? "rgba(26, 37, 56, 0.10)" : "rgba(255, 255, 255, 0.08)");
+  document.documentElement.style.setProperty("--border2", light ? "rgba(26, 37, 56, 0.18)" : "rgba(255, 255, 255, 0.16)");
   document.documentElement.style.setProperty("--text", theme.foreground);
+  document.documentElement.style.setProperty("--text2", mixColors(theme.foreground, theme.background, light ? 0.42 : 0.6));
+  document.documentElement.style.setProperty("--text3", mixColors(theme.foreground, theme.background, light ? 0.66 : 0.78));
   document.documentElement.style.setProperty("--accent", theme.accent);
-  document.documentElement.style.setProperty("--accent-dim", `${theme.accent}22`);
-  document.documentElement.style.setProperty("--ai-bg", `${theme.accent}14`);
-  document.documentElement.style.setProperty("--ai-border", `${theme.accent}44`);
+  document.documentElement.style.setProperty("--accent-dim", withAlpha$1(theme.accent, light ? "1a" : "22"));
+  document.documentElement.style.setProperty("--ai-bg", withAlpha$1(theme.accent, light ? "12" : "14"));
+  document.documentElement.style.setProperty("--ai-border", withAlpha$1(theme.accent, light ? "30" : "44"));
+  document.documentElement.style.setProperty("--app-glow", withAlpha$1(theme.accent, light ? "14" : "20"));
+  document.documentElement.style.setProperty("--surface-top", shiftColor(theme.background, light ? 10 : 6));
+  document.documentElement.style.setProperty("--surface-bottom", shiftColor(theme.background, light ? -2 : 0));
+  document.documentElement.style.setProperty("--scrollbar-thumb", light ? "rgba(26, 37, 56, 0.18)" : "rgba(255, 255, 255, 0.12)");
+  document.documentElement.style.setProperty("--scrollbar-thumb-hover", light ? "rgba(26, 37, 56, 0.28)" : "rgba(255, 255, 255, 0.18)");
+  document.documentElement.style.setProperty("--focus-ring", withAlpha$1(theme.accent, light ? "cc" : "e6"));
 }
 const useSettingsStore = create((set, get) => ({
   theme: defaultTheme,
@@ -7414,13 +7427,43 @@ const useSettingsStore = create((set, get) => ({
     await window.api.saveFeatures(nextFeatures);
   }
 }));
-function lighten(hex, amount) {
+function shiftColor(hex, amount) {
   const normalized = hex.replace("#", "");
   const value = parseInt(normalized, 16);
-  const r2 = Math.min(255, (value >> 16) + amount);
-  const g2 = Math.min(255, (value >> 8 & 255) + amount);
-  const b2 = Math.min(255, (value & 255) + amount);
+  const delta = Math.round(amount);
+  const r2 = clamp((value >> 16) + delta);
+  const g2 = clamp((value >> 8 & 255) + delta);
+  const b2 = clamp((value & 255) + delta);
   return `#${(r2 << 16 | g2 << 8 | b2).toString(16).padStart(6, "0")}`;
+}
+function mixColors(primary, secondary, ratio) {
+  const a = parseHex(primary);
+  const b2 = parseHex(secondary);
+  const mix = (start, end) => Math.round(start * (1 - ratio) + end * ratio);
+  return rgbToHex(mix(a.r, b2.r), mix(a.g, b2.g), mix(a.b, b2.b));
+}
+function withAlpha$1(hex, alpha) {
+  return `${hex}${alpha}`;
+}
+function isLightColor$1(hex) {
+  const { r: r2, g: g2, b: b2 } = parseHex(hex);
+  const luminance = (0.2126 * r2 + 0.7152 * g2 + 0.0722 * b2) / 255;
+  return luminance > 0.72;
+}
+function parseHex(hex) {
+  const normalized = hex.replace("#", "");
+  const value = parseInt(normalized, 16);
+  return {
+    r: value >> 16 & 255,
+    g: value >> 8 & 255,
+    b: value & 255
+  };
+}
+function rgbToHex(r2, g2, b2) {
+  return `#${(r2 << 16 | g2 << 8 | b2).toString(16).padStart(6, "0")}`;
+}
+function clamp(value) {
+  return Math.max(0, Math.min(255, value));
 }
 const useToastStore = create((set) => ({
   toasts: [],
@@ -7659,10 +7702,10 @@ function AIChatPanel({ open, onClose }) {
           max-width: 460px;
           height: 100%;
           border-left: 1px solid var(--border);
-          background: linear-gradient(180deg, rgba(19,25,36,0.96), rgba(10,14,20,0.98));
+          background: linear-gradient(180deg, color-mix(in srgb, var(--bg2) 90%, white 10%), var(--bg));
           display: flex;
           flex-direction: column;
-          box-shadow: inset 1px 0 0 rgba(255,255,255,0.02);
+          box-shadow: inset 1px 0 0 var(--border);
         }
         .chat-header {
           display: flex;
@@ -7681,7 +7724,7 @@ function AIChatPanel({ open, onClose }) {
           margin-top: 6px;
           font-size: 11px;
           font-family: var(--mono);
-          color: #8cb3ff;
+          color: var(--accent);
         }
         .chat-context {
           margin-top: 5px;
@@ -7694,7 +7737,7 @@ function AIChatPanel({ open, onClose }) {
           height: 32px;
           border-radius: 8px;
           border: 1px solid var(--border);
-          background: rgba(255,255,255,0.03);
+          background: color-mix(in srgb, var(--bg3) 90%, white 10%);
           color: var(--text2);
           font-size: 18px;
           cursor: pointer;
@@ -7715,12 +7758,12 @@ function AIChatPanel({ open, onClose }) {
         }
         .chat-bubble.user {
           align-self: flex-end;
-          background: rgba(76,141,255,0.14);
-          border-color: rgba(76,141,255,0.26);
+          background: var(--ai-bg);
+          border-color: var(--ai-border);
         }
         .chat-bubble.assistant {
           align-self: flex-start;
-          background: rgba(255,255,255,0.03);
+          background: color-mix(in srgb, var(--bg3) 90%, white 10%);
         }
         .bubble-role {
           font-size: 10px;
@@ -7749,7 +7792,7 @@ function AIChatPanel({ open, onClose }) {
           resize: none;
           border-radius: 12px;
           border: 1px solid var(--border);
-          background: rgba(255,255,255,0.03);
+          background: color-mix(in srgb, var(--bg3) 90%, white 10%);
           color: var(--text);
           padding: 12px;
           line-height: 1.6;
@@ -7759,8 +7802,8 @@ function AIChatPanel({ open, onClose }) {
           min-width: 96px;
           height: 40px;
           border-radius: 10px;
-          border: 1px solid rgba(76,141,255,0.48);
-          background: linear-gradient(180deg, #4c8dff, #2e6edc);
+          border: 1px solid var(--ai-border);
+          background: linear-gradient(180deg, var(--accent), color-mix(in srgb, var(--accent) 78%, #163a75 22%));
           color: white;
           cursor: pointer;
         }
@@ -7918,7 +7961,7 @@ function QuickCommands() {
     /* @__PURE__ */ jsxRuntimeExports.jsx("style", { children: `
         #sidebar {
           width: var(--sidebar-w);
-          background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+          background: linear-gradient(180deg, color-mix(in srgb, var(--bg2) 92%, white 8%), var(--bg));
           border-right: 1px solid var(--border);
           display: flex;
           flex-direction: column;
@@ -7952,7 +7995,7 @@ function QuickCommands() {
         }
         .cmd-search {
           margin: 12px 10px 8px;
-          background: rgba(255,255,255,0.03);
+          background: color-mix(in srgb, var(--bg3) 90%, white 10%);
           border: 1px solid var(--border);
           border-radius: 10px;
           display: flex;
@@ -7997,7 +8040,7 @@ function QuickCommands() {
           text-align: left;
         }
         .cmd-item:hover {
-          background: rgba(255,255,255,0.04);
+          background: color-mix(in srgb, var(--bg3) 90%, white 10%);
           border-color: var(--border);
         }
         .cmd-name {
@@ -8070,6 +8113,12 @@ const BUILT_IN_THEMES = [
     background: "#0e0f11",
     foreground: "#c9cdd6",
     accent: "#7c6af7"
+  },
+  {
+    name: "Auto Shell Day",
+    background: "#f6f8fc",
+    foreground: "#182338",
+    accent: "#2f6fed"
   },
   {
     name: "Catppuccin",
@@ -8206,12 +8255,12 @@ function FeatureToggles() {
   )) });
 }
 const PROVIDERS$1 = [
-  { id: "minimax", name: "MiniMax", helper: "适合国内云端调用", apiKeyRequired: true },
-  { id: "glm", name: "GLM", helper: "智谱模型，OpenAI 兼容风格", apiKeyRequired: true },
+  { id: "minimax", name: "MiniMax", helper: "Anthropic 兼容接入", apiKeyRequired: true },
+  { id: "glm", name: "GLM", helper: "智谱开放平台", apiKeyRequired: true },
   { id: "claude", name: "Claude", helper: "Anthropic 官方接口", apiKeyRequired: true },
   { id: "openai", name: "OpenAI", helper: "OpenAI 官方接口", apiKeyRequired: true },
   { id: "ollama", name: "Ollama", helper: "本地模型服务", apiKeyRequired: false },
-  { id: "openaiCompatible", name: "兼容接口", helper: "DeepSeek、硅基流动、One API 等都可接入", apiKeyRequired: true }
+  { id: "openaiCompatible", name: "兼容接口", helper: "任意 OpenAI 兼容网关", apiKeyRequired: true }
 ];
 function ModelConfigDialog({ open, onClose }) {
   const { aiSettings, setProvider, setProviderConfig } = useSettingsStore();
@@ -8251,7 +8300,7 @@ function ModelConfigDialog({ open, onClose }) {
     try {
       await setProvider(selectedProvider);
       const ok2 = await window.api.checkAIAvailable();
-      toast(ok2 ? "连接成功，配置即时生效" : "连接失败，请检查配置");
+      toast(ok2 ? "连接成功，配置已生效" : "连接失败，请检查配置");
     } finally {
       setChecking(false);
     }
@@ -8261,9 +8310,9 @@ function ModelConfigDialog({ open, onClose }) {
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "model-dialog-header", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "model-dialog-title", children: "模型配置" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "model-dialog-subtitle", children: "参考 OpenClaw 的 provider + model 配置方式，切换后即时生效。" })
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "model-dialog-subtitle", children: "配置 Provider、Base URL、模型名和 API Key，保存后立即生效。" })
         ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "dialog-close", onClick: onClose, children: "×" })
+        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "dialog-close", onClick: onClose, "aria-label": "关闭模型配置", children: "×" })
       ] }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "model-dialog-body", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "provider-list", children: PROVIDERS$1.map((provider) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
@@ -8316,7 +8365,7 @@ function ModelConfigDialog({ open, onClose }) {
               ),
               /* @__PURE__ */ jsxRuntimeExports.jsx("button", { onClick: () => void handleSaveKey(), disabled: !providerMeta?.apiKeyRequired, children: "保存 Key" })
             ] }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "field-hint", children: "Key 通过系统安全存储保存，不写入界面配置文件。" })
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "field-hint", children: "API Key 会和模型配置一起写入用户目录下的 ~/.autoshell/config.json。" })
           ] }),
           /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "dialog-actions", children: [
             /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "secondary-btn", onClick: () => void handleCheck(), disabled: checking, children: checking ? "检测中..." : "测试连接" }),
@@ -8329,7 +8378,7 @@ function ModelConfigDialog({ open, onClose }) {
         .model-dialog-mask {
           position: fixed;
           inset: 0;
-          background: rgba(4, 8, 14, 0.62);
+          background: rgba(4, 8, 14, 0.44);
           backdrop-filter: blur(10px);
           display: flex;
           align-items: center;
@@ -8339,10 +8388,10 @@ function ModelConfigDialog({ open, onClose }) {
         .model-dialog {
           width: min(920px, calc(100vw - 56px));
           min-height: 560px;
-          background: linear-gradient(180deg, #131924, #0f131b);
+          background: linear-gradient(180deg, color-mix(in srgb, var(--bg2) 88%, white 12%), var(--bg));
           border: 1px solid var(--border2);
           border-radius: 18px;
-          box-shadow: 0 24px 80px rgba(0,0,0,0.45);
+          box-shadow: 0 24px 80px rgba(0,0,0,0.20);
           display: flex;
           flex-direction: column;
           overflow: hidden;
@@ -8370,14 +8419,14 @@ function ModelConfigDialog({ open, onClose }) {
           height: 34px;
           border-radius: 10px;
           border: 1px solid var(--border);
-          background: rgba(255,255,255,0.03);
+          background: color-mix(in srgb, var(--bg3) 86%, white 14%);
           color: var(--text2);
           font-size: 20px;
           cursor: pointer;
         }
         .dialog-close:hover {
           color: var(--text);
-          background: rgba(255,255,255,0.06);
+          background: var(--bg3);
         }
         .model-dialog-body {
           display: grid;
@@ -8391,7 +8440,7 @@ function ModelConfigDialog({ open, onClose }) {
           display: flex;
           flex-direction: column;
           gap: 10px;
-          background: rgba(255,255,255,0.02);
+          background: color-mix(in srgb, var(--bg2) 92%, white 8%);
         }
         .provider-list-item {
           display: flex;
@@ -8411,8 +8460,8 @@ function ModelConfigDialog({ open, onClose }) {
           line-height: 1.5;
         }
         .provider-list-item.active {
-          border-color: rgba(76,141,255,0.45);
-          background: rgba(76,141,255,0.1);
+          border-color: var(--ai-border);
+          background: var(--ai-bg);
         }
         .provider-config {
           padding: 22px 24px;
@@ -8434,12 +8483,12 @@ function ModelConfigDialog({ open, onClose }) {
           height: 42px;
           border-radius: 10px;
           border: 1px solid var(--border);
-          background: rgba(255,255,255,0.03);
+          background: color-mix(in srgb, var(--bg3) 90%, white 10%);
           color: var(--text);
           padding: 0 12px;
         }
         .config-block input:focus {
-          border-color: rgba(76,141,255,0.45);
+          border-color: var(--ai-border);
         }
         .api-key-row {
           display: grid;
@@ -8462,11 +8511,11 @@ function ModelConfigDialog({ open, onClose }) {
         }
         .api-key-row button,
         .secondary-btn {
-          background: rgba(255,255,255,0.04);
+          background: color-mix(in srgb, var(--bg3) 90%, white 10%);
         }
         .primary-btn {
-          background: linear-gradient(180deg, #4c8dff, #2e6edc);
-          border-color: rgba(76,141,255,0.65);
+          background: linear-gradient(180deg, var(--accent), color-mix(in srgb, var(--accent) 78%, #163a75 22%));
+          border-color: var(--ai-border);
           color: white;
         }
         .field-hint {
@@ -8678,9 +8727,9 @@ function Settings({ open, defaultTab = "ai", onClose }) {
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "settings-header", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "settings-title", children: activeTab === "ai" ? "AI 与模型" : activeTab === "appearance" ? "外观主题" : "系统偏好" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "settings-subtitle", children: "调整终端样式、模型供应商和辅助能力。" })
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "settings-subtitle", children: "统一管理主题、模型提供商和运行方式。" })
       ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "close-btn", onClick: onClose, children: "×" })
+      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "close-btn", onClick: onClose, "aria-label": "关闭设置", children: "×" })
     ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "settings-tabs", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: `settings-tab ${activeTab === "appearance" ? "active" : ""}`, onClick: () => setActiveTab("appearance"), children: "外观" }),
@@ -8699,13 +8748,13 @@ function Settings({ open, defaultTab = "ai", onClose }) {
           right: 16px;
           bottom: 16px;
           width: min(420px, calc(100vw - 32px));
-          background: linear-gradient(180deg, rgba(19,25,36,0.98), rgba(12,16,24,0.98));
+          background: linear-gradient(180deg, color-mix(in srgb, var(--bg2) 88%, white 12%), var(--bg));
           border: 1px solid var(--border2);
           border-radius: 18px;
           display: flex;
           flex-direction: column;
           z-index: 20;
-          box-shadow: 0 28px 80px rgba(0,0,0,0.45);
+          box-shadow: 0 28px 80px rgba(0,0,0,0.18);
           overflow: hidden;
         }
         .settings-header {
@@ -8731,13 +8780,13 @@ function Settings({ open, defaultTab = "ai", onClose }) {
           height: 34px;
           border-radius: 10px;
           border: 1px solid var(--border);
-          background: rgba(255,255,255,0.03);
+          background: color-mix(in srgb, var(--bg3) 86%, white 14%);
           color: var(--text2);
           font-size: 20px;
           cursor: pointer;
         }
         .close-btn:hover {
-          background: rgba(255,255,255,0.06);
+          background: var(--bg3);
           color: var(--text);
         }
         .settings-tabs {
@@ -8748,7 +8797,7 @@ function Settings({ open, defaultTab = "ai", onClose }) {
         .settings-tab {
           flex: 1;
           border: 1px solid var(--border);
-          background: rgba(255,255,255,0.02);
+          background: color-mix(in srgb, var(--bg2) 90%, white 10%);
           color: var(--text2);
           border-radius: 10px;
           padding: 10px 0;
@@ -8756,8 +8805,8 @@ function Settings({ open, defaultTab = "ai", onClose }) {
         }
         .settings-tab.active {
           color: var(--text);
-          border-color: rgba(76,141,255,0.35);
-          background: rgba(76,141,255,0.08);
+          border-color: var(--ai-border);
+          background: var(--ai-bg);
         }
         .settings-body {
           flex: 1;
@@ -8770,12 +8819,20 @@ function Settings({ open, defaultTab = "ai", onClose }) {
 function SystemSettings() {
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "system-settings", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "system-card", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "system-title", children: "Windows 风格优先" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "system-copy", children: "当前版本已移除顶部的 mac 彩色控制按钮，并统一改为更接近 Windows 桌面应用的标题栏和标签视觉。" })
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "system-title", children: "本地配置缓存" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "system-copy", children: [
+        "AI 提供商、模型参数、主题与功能开关会持久化到用户目录下的",
+        /* @__PURE__ */ jsxRuntimeExports.jsx("code", { children: " ~/.autoshell/config.json " }),
+        "，应用启动时会自动读取。"
+      ] })
     ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "system-card", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "system-title", children: "模型配置即时生效" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "system-copy", children: "调整 Base URL、模型名或当前 Provider 后，会立即持久化并在下次请求时重建 AI Provider。" })
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "system-title", children: "跨平台界面" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "system-copy", children: "当前界面不再强调 Windows 优先描述，主题与窗口内容统一按全局设计变量渲染，便于继续扩展到 macOS。" })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "system-card", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "system-title", children: "打包方式" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "system-copy", children: "项目已经补上 macOS 打包配置，可在 macOS 环境执行对应打包命令生成安装包。" })
     ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsx("style", { children: `
         .system-settings {
@@ -8785,7 +8842,7 @@ function SystemSettings() {
         }
         .system-card {
           border: 1px solid var(--border);
-          background: rgba(255,255,255,0.02);
+          background: color-mix(in srgb, var(--bg2) 90%, white 10%);
           border-radius: 12px;
           padding: 14px;
         }
@@ -8799,6 +8856,10 @@ function SystemSettings() {
           font-size: 12px;
           line-height: 1.6;
           color: var(--text2);
+        }
+        .system-copy code {
+          font-family: var(--mono);
+          color: var(--text);
         }
       ` })
   ] });
@@ -8840,8 +8901,8 @@ function ToggleRow({ label, checked, onChange }) {
           cursor: pointer;
         }
         .toggle.on {
-          background: rgba(76,141,255,0.22);
-          border-color: rgba(76,141,255,0.48);
+          background: var(--ai-bg);
+          border-color: var(--ai-border);
         }
         .toggle-knob {
           width: 18px;
@@ -8967,7 +9028,7 @@ function TabBar({ onOpenChat, onOpenSettings }) {
           align-items: center;
           gap: 8px;
           padding: 0 10px 0 12px;
-          background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0));
+          background: linear-gradient(180deg, color-mix(in srgb, var(--bg2) 88%, white 12%), var(--bg));
           border-bottom: 1px solid var(--border);
           user-select: none;
         }
@@ -9000,7 +9061,7 @@ function TabBar({ onOpenChat, onOpenSettings }) {
           min-width: 0;
         }
         .tab:hover {
-          background: rgba(255,255,255,0.03);
+          background: color-mix(in srgb, var(--bg3) 90%, white 10%);
           color: var(--text);
         }
         .tab.active {
@@ -9008,7 +9069,7 @@ function TabBar({ onOpenChat, onOpenSettings }) {
           color: var(--text);
           border-color: var(--border);
           border-bottom-color: var(--bg);
-          box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+          box-shadow: inset 0 1px 0 var(--border);
         }
         .tab-dot {
           width: 7px;
@@ -9025,7 +9086,7 @@ function TabBar({ onOpenChat, onOpenSettings }) {
         .tab-shell {
           padding: 2px 6px;
           border-radius: 999px;
-          background: rgba(255,255,255,0.05);
+          background: color-mix(in srgb, var(--bg3) 90%, white 10%);
           color: var(--text3);
           font-size: 10px;
           font-family: var(--mono);
@@ -9046,7 +9107,7 @@ function TabBar({ onOpenChat, onOpenSettings }) {
           flex-shrink: 0;
         }
         .tab-close:hover {
-          background: rgba(255,255,255,0.06);
+          background: color-mix(in srgb, var(--bg3) 88%, white 12%);
           color: var(--text);
         }
         .tab-add-wrap {
@@ -9067,7 +9128,7 @@ function TabBar({ onOpenChat, onOpenSettings }) {
         .tab-add:hover,
         .tab-add.active,
         .icon-btn:hover {
-          background: rgba(255,255,255,0.04);
+          background: color-mix(in srgb, var(--bg3) 90%, white 10%);
           border-color: var(--border);
           color: var(--text);
         }
@@ -9077,7 +9138,7 @@ function TabBar({ onOpenChat, onOpenSettings }) {
           left: 0;
           width: 240px;
           padding: 8px;
-          background: rgba(18, 23, 31, 0.98);
+          background: color-mix(in srgb, var(--bg2) 94%, white 6%);
           border: 1px solid var(--border2);
           border-radius: 12px;
           box-shadow: var(--shadow-soft);
@@ -17688,7 +17749,7 @@ var Ic = ["cols", "rows"], Ue = 0, Dl = class extends D {
     for (Ue of t2) if (Ue && (Ue === 1 / 0 || isNaN(Ue) || Ue % 1 !== 0 || Ue < 0)) throw new Error("This API only accepts positive integers");
   }
 };
-function useTerminal(containerRef, tabId, shell = "powershell", cwd = "", onSelectionChange) {
+function useTerminal(containerRef, tabId, shell = "powershell", cwd = "", theme, onSelectionChange) {
   const terminalRef = reactExports.useRef(null);
   const fitAddonRef = reactExports.useRef(null);
   const resizeFrameRef = reactExports.useRef(null);
@@ -17710,11 +17771,11 @@ function useTerminal(containerRef, tabId, shell = "powershell", cwd = "", onSele
       cursorStyle: "block",
       allowProposedApi: true,
       theme: {
-        background: "#0f1115",
-        foreground: "#d8dee9",
-        cursor: "#4c8dff",
-        cursorAccent: "#0f1115",
-        selectionBackground: "rgba(76, 141, 255, 0.24)"
+        background: theme?.background ?? "#0f1115",
+        foreground: theme?.foreground ?? "#d8dee9",
+        cursor: theme?.accent ?? "#4c8dff",
+        cursorAccent: getCursorAccent(theme?.background ?? "#0f1115"),
+        selectionBackground: withAlpha(theme?.accent ?? "#4c8dff", "3d")
       }
     });
     const fitAddon = new o();
@@ -17789,13 +17850,28 @@ function useTerminal(containerRef, tabId, shell = "powershell", cwd = "", onSele
       terminalRef.current = null;
       fitAddonRef.current = null;
     };
-  }, [containerRef, onSelectionChange, resizePty, shell, tabId]);
+  }, [containerRef, onSelectionChange, resizePty, shell, tabId, theme]);
   const focus = reactExports.useCallback(() => {
     terminalRef.current?.focus();
   }, []);
   return {
     focus
   };
+}
+function getCursorAccent(background) {
+  return isLightColor(background) ? "#f6f8fc" : background;
+}
+function withAlpha(hex, alpha) {
+  return `${hex}${alpha}`;
+}
+function isLightColor(hex) {
+  const normalized = hex.replace("#", "");
+  const value = parseInt(normalized, 16);
+  const r2 = value >> 16 & 255;
+  const g2 = value >> 8 & 255;
+  const b2 = value & 255;
+  const luminance = (0.2126 * r2 + 0.7152 * g2 + 0.0722 * b2) / 255;
+  return luminance > 0.72;
 }
 function AICard() {
   const [open, setOpen] = reactExports.useState(true);
@@ -18135,6 +18211,7 @@ function Terminal() {
   const tabs = useTabsStore((state) => state.tabs);
   const activeTab = tabs.find((tab) => tab.id === activeTabId);
   const errorCardOpen = useAIStore((state) => state.errorCardOpen);
+  const theme = useSettingsStore((state) => state.theme);
   const handleSelectionChange = reactExports.useCallback((selection, position) => {
     setTooltip({ text: selection, position });
   }, []);
@@ -18143,6 +18220,7 @@ function Terminal() {
     activeTabId || "1",
     activeTab?.shell,
     activeTab?.cwd,
+    theme,
     handleSelectionChange
   );
   reactExports.useEffect(() => {
@@ -18178,7 +18256,7 @@ function Terminal() {
           flex: 1;
           display: flex;
           flex-direction: column;
-          background: rgba(10, 13, 18, 0.84);
+          background: var(--bg);
           overflow: hidden;
           position: relative;
         }
@@ -18190,7 +18268,7 @@ function Terminal() {
           padding: 0 18px;
           min-height: 38px;
           border-bottom: 1px solid var(--border);
-          background: rgba(255,255,255,0.02);
+          background: color-mix(in srgb, var(--bg2) 88%, white 12%);
         }
         .shell-chip {
           display: inline-flex;
@@ -18245,6 +18323,7 @@ function Terminal() {
           padding: 14px 18px;
           overflow: hidden;
           cursor: text;
+          background: var(--bg);
         }
         .terminal-output .xterm {
           height: 100%;
@@ -18263,7 +18342,7 @@ function TitleBar() {
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "title-bar", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "title-bar-drag", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "title-main", children: "Auto Shell" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "title-sub", children: "Windows AI Terminal" })
+      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "title-sub", children: "AI Native Terminal" })
     ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "title-bar-controls", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "title-bar-btn", onClick: () => window.api.minimizeWindow(), "aria-label": "最小化", children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "10", height: "10", viewBox: "0 0 10 10", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M1 5h8", stroke: "currentColor", strokeWidth: "1.2", strokeLinecap: "round" }) }) }),

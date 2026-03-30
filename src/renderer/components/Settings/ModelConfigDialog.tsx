@@ -14,12 +14,12 @@ const PROVIDERS: Array<{
   helper: string;
   apiKeyRequired: boolean;
 }> = [
-  { id: 'minimax', name: 'MiniMax', helper: '适合国内云端调用', apiKeyRequired: true },
-  { id: 'glm', name: 'GLM', helper: '智谱模型，OpenAI 兼容风格', apiKeyRequired: true },
+  { id: 'minimax', name: 'MiniMax', helper: 'Anthropic 兼容接入', apiKeyRequired: true },
+  { id: 'glm', name: 'GLM', helper: '智谱开放平台', apiKeyRequired: true },
   { id: 'claude', name: 'Claude', helper: 'Anthropic 官方接口', apiKeyRequired: true },
   { id: 'openai', name: 'OpenAI', helper: 'OpenAI 官方接口', apiKeyRequired: true },
   { id: 'ollama', name: 'Ollama', helper: '本地模型服务', apiKeyRequired: false },
-  { id: 'openaiCompatible', name: '兼容接口', helper: 'DeepSeek、硅基流动、One API 等都可接入', apiKeyRequired: true }
+  { id: 'openaiCompatible', name: '兼容接口', helper: '任意 OpenAI 兼容网关', apiKeyRequired: true }
 ];
 
 export function ModelConfigDialog({ open, onClose }: ModelConfigDialogProps) {
@@ -68,7 +68,7 @@ export function ModelConfigDialog({ open, onClose }: ModelConfigDialogProps) {
     try {
       await setProvider(selectedProvider);
       const ok = await window.api.checkAIAvailable();
-      toast(ok ? '连接成功，配置即时生效' : '连接失败，请检查配置');
+      toast(ok ? '连接成功，配置已生效' : '连接失败，请检查配置');
     } finally {
       setChecking(false);
     }
@@ -80,9 +80,9 @@ export function ModelConfigDialog({ open, onClose }: ModelConfigDialogProps) {
         <div className="model-dialog-header">
           <div>
             <div className="model-dialog-title">模型配置</div>
-            <div className="model-dialog-subtitle">参考 OpenClaw 的 provider + model 配置方式，切换后即时生效。</div>
+            <div className="model-dialog-subtitle">配置 Provider、Base URL、模型名和 API Key，保存后立即生效。</div>
           </div>
-          <button className="dialog-close" onClick={onClose}>×</button>
+          <button className="dialog-close" onClick={onClose} aria-label="关闭模型配置">×</button>
         </div>
 
         <div className="model-dialog-body">
@@ -132,7 +132,7 @@ export function ModelConfigDialog({ open, onClose }: ModelConfigDialogProps) {
                   保存 Key
                 </button>
               </div>
-              <span className="field-hint">Key 通过系统安全存储保存，不写入界面配置文件。</span>
+              <span className="field-hint">API Key 会和模型配置一起写入用户目录下的 ~/.autoshell/config.json。</span>
             </div>
 
             <div className="dialog-actions">
@@ -151,7 +151,7 @@ export function ModelConfigDialog({ open, onClose }: ModelConfigDialogProps) {
         .model-dialog-mask {
           position: fixed;
           inset: 0;
-          background: rgba(4, 8, 14, 0.62);
+          background: rgba(4, 8, 14, 0.44);
           backdrop-filter: blur(10px);
           display: flex;
           align-items: center;
@@ -161,10 +161,10 @@ export function ModelConfigDialog({ open, onClose }: ModelConfigDialogProps) {
         .model-dialog {
           width: min(920px, calc(100vw - 56px));
           min-height: 560px;
-          background: linear-gradient(180deg, #131924, #0f131b);
+          background: linear-gradient(180deg, color-mix(in srgb, var(--bg2) 88%, white 12%), var(--bg));
           border: 1px solid var(--border2);
           border-radius: 18px;
-          box-shadow: 0 24px 80px rgba(0,0,0,0.45);
+          box-shadow: 0 24px 80px rgba(0,0,0,0.20);
           display: flex;
           flex-direction: column;
           overflow: hidden;
@@ -192,14 +192,14 @@ export function ModelConfigDialog({ open, onClose }: ModelConfigDialogProps) {
           height: 34px;
           border-radius: 10px;
           border: 1px solid var(--border);
-          background: rgba(255,255,255,0.03);
+          background: color-mix(in srgb, var(--bg3) 86%, white 14%);
           color: var(--text2);
           font-size: 20px;
           cursor: pointer;
         }
         .dialog-close:hover {
           color: var(--text);
-          background: rgba(255,255,255,0.06);
+          background: var(--bg3);
         }
         .model-dialog-body {
           display: grid;
@@ -213,7 +213,7 @@ export function ModelConfigDialog({ open, onClose }: ModelConfigDialogProps) {
           display: flex;
           flex-direction: column;
           gap: 10px;
-          background: rgba(255,255,255,0.02);
+          background: color-mix(in srgb, var(--bg2) 92%, white 8%);
         }
         .provider-list-item {
           display: flex;
@@ -233,8 +233,8 @@ export function ModelConfigDialog({ open, onClose }: ModelConfigDialogProps) {
           line-height: 1.5;
         }
         .provider-list-item.active {
-          border-color: rgba(76,141,255,0.45);
-          background: rgba(76,141,255,0.1);
+          border-color: var(--ai-border);
+          background: var(--ai-bg);
         }
         .provider-config {
           padding: 22px 24px;
@@ -256,12 +256,12 @@ export function ModelConfigDialog({ open, onClose }: ModelConfigDialogProps) {
           height: 42px;
           border-radius: 10px;
           border: 1px solid var(--border);
-          background: rgba(255,255,255,0.03);
+          background: color-mix(in srgb, var(--bg3) 90%, white 10%);
           color: var(--text);
           padding: 0 12px;
         }
         .config-block input:focus {
-          border-color: rgba(76,141,255,0.45);
+          border-color: var(--ai-border);
         }
         .api-key-row {
           display: grid;
@@ -284,11 +284,11 @@ export function ModelConfigDialog({ open, onClose }: ModelConfigDialogProps) {
         }
         .api-key-row button,
         .secondary-btn {
-          background: rgba(255,255,255,0.04);
+          background: color-mix(in srgb, var(--bg3) 90%, white 10%);
         }
         .primary-btn {
-          background: linear-gradient(180deg, #4c8dff, #2e6edc);
-          border-color: rgba(76,141,255,0.65);
+          background: linear-gradient(180deg, var(--accent), color-mix(in srgb, var(--accent) 78%, #163a75 22%));
+          border-color: var(--ai-border);
           color: white;
         }
         .field-hint {
