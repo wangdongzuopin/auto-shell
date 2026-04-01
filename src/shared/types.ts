@@ -35,6 +35,23 @@ export interface AppConfig {
   theme: Theme;
 }
 
+export interface ModelConfig {
+  baseUrl?: string;        // 自定义端点（可选）
+  temperature?: number;     // 可选自定义
+  maxTokens?: number;       // 可选自定义
+}
+
+export interface AppConfig {
+  provider: ProviderType;
+  providerConfig: ProviderSettings;
+  providerConfigs: ProviderConfigs;
+  aiFeatures: FeatureToggles;
+  theme: Theme;
+  // 新增
+  currentModel: string;     // 'claude-3-5-sonnet'
+  modelConfig: ModelConfig; // 用户自定义配置
+}
+
 export interface ChatMessage {
   role: 'system' | 'user' | 'assistant';
   content: string;

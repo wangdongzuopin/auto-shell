@@ -4,6 +4,7 @@ import * as path from 'path';
 import type {
   AppConfig,
   FeatureToggles,
+  ModelConfig,
   ProviderConfigs,
   ProviderSettings,
   ProviderType,
@@ -16,6 +17,8 @@ interface PersistedConfig {
   aiFeatures: FeatureToggles;
   theme: Theme;
   apiKeys: Partial<Record<ProviderType, string>>;
+  currentModel: string;
+  modelConfig: ModelConfig;
 }
 
 const CONFIG_DIR = path.join(os.homedir(), '.autoshell');
@@ -67,7 +70,10 @@ const defaultConfig: PersistedConfig = {
   providerConfigs: defaultProviderConfigs,
   aiFeatures: defaultFeatures,
   theme: defaultTheme,
-  apiKeys: {}
+  apiKeys: {},
+  // 新增默认值
+  currentModel: 'MiniMax-M2.7',
+  modelConfig: {},
 };
 
 function normalizeProviderConfig(provider: ProviderType, config: ProviderSettings): ProviderSettings {
@@ -109,7 +115,9 @@ function normalizePersistedConfig(input?: Partial<PersistedConfig>): PersistedCo
       ...defaultTheme,
       ...(input?.theme ?? {})
     },
-    apiKeys: input?.apiKeys ?? {}
+    apiKeys: input?.apiKeys ?? {},
+    currentModel: input?.currentModel ?? defaultConfig.currentModel,
+    modelConfig: input?.modelConfig ?? defaultConfig.modelConfig
   };
 }
 
@@ -169,7 +177,9 @@ export function getConfig(): AppConfig {
     providerConfig: persisted.providerConfigs[persisted.provider],
     providerConfigs: persisted.providerConfigs,
     aiFeatures: persisted.aiFeatures,
-    theme: persisted.theme
+    theme: persisted.theme,
+    currentModel: persisted.currentModel,
+    modelConfig: persisted.modelConfig
   };
 }
 
