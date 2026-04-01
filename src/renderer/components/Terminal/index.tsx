@@ -5,10 +5,13 @@ import { shellNames, useTabsStore } from '../../store/tabs';
 import { useTerminal } from '../../hooks/useTerminal';
 import { AICard } from '../AICard';
 import { ExplainTooltip } from '../ExplainTooltip';
+import { CommandProgressBar } from '../CommandProgressBar';
+import { useCommandProgress } from '../../hooks/useCommandProgress';
 
 export function Terminal() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [tooltip, setTooltip] = useState<{ text: string; position: { x: number; y: number } } | null>(null);
+  const { progress, isVisible, startTracking, complete } = useCommandProgress();
 
   const activeTabId = useTabsStore((state) => state.activeTabId);
   const tabs = useTabsStore((state) => state.tabs);
@@ -51,6 +54,9 @@ export function Terminal() {
         </div>
       </div>
       <div className="terminal-output" ref={containerRef} onMouseDown={() => focus()} />
+      {isVisible && progress && (
+        <CommandProgressBar progress={progress} />
+      )}
       {errorCardOpen && <AICard />}
       {tooltip && (
         <ExplainTooltip
