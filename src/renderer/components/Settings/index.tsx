@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ThemeSelector } from './ThemeSelector';
-import { AIProviders } from './AIProviders';
+import { AISettings } from './AISettings';
 
 interface SettingsProps {
   open: boolean;
@@ -43,7 +43,7 @@ export function Settings({ open, defaultTab = 'ai', onClose }: SettingsProps) {
       </div>
       <div className="settings-body">
         {activeTab === 'appearance' && <ThemeSelector />}
-        {activeTab === 'ai' && <AIProviders />}
+        {activeTab === 'ai' && <AISettings />}
         {activeTab === 'system' && <SystemSettings />}
       </div>
       <style>{`
