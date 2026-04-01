@@ -3,6 +3,7 @@ import type { AIProvider } from './provider';
 import { ClaudeProvider } from './claude-provider';
 import { OllamaProvider } from './ollama-provider';
 import { OpenAIProvider } from './openai-provider';
+import { MODEL_PRESETS, getModelPreset } from './models';
 
 export type { ProviderType } from '../shared/types';
 
@@ -14,47 +15,67 @@ export interface ProviderConfig {
 }
 
 export function createProvider(config: ProviderConfig): AIProvider {
-  switch (config.type) {
+  // If model is provided, look up preset configuration
+  let finalConfig = config;
+  if (config.model && MODEL_PRESETS[config.model]) {
+    const preset = MODEL_PRESETS[config.model];
+    // Map brand to provider type
+    const brandToType: Record<string, ProviderType> = {
+      'Anthropic': 'claude',
+      'OpenAI': 'openai',
+      'MiniMax': 'minimax',
+      'Zhipu': 'glm',
+      'Ollama': 'ollama',
+    };
+    finalConfig = {
+      ...config,
+      type: config.type || brandToType[preset.brand] || config.type,
+      baseUrl: config.baseUrl || preset.baseUrl,
+      model: preset.id,
+    };
+  }
+
+  switch (finalConfig.type) {
     case 'minimax':
       return new ClaudeProvider({
-        apiKey: config.apiKey ?? '',
-        baseUrl: config.baseUrl ?? 'https://api.minimaxi.com/anthropic',
-        model: config.model ?? 'MiniMax-M2.7'
+        apiKey: finalConfig.apiKey ?? '',
+        baseUrl: finalConfig.baseUrl ?? 'https://api.minimaxi.com/anthropic',
+        model: finalConfig.model ?? 'MiniMax-M2.7'
       });
     case 'glm':
       return new OpenAIProvider({
         name: 'GLM',
-        apiKey: config.apiKey ?? '',
-        baseUrl: config.baseUrl ?? 'https://open.bigmodel.cn/api/paas/v4',
-        model: config.model ?? 'glm-4.5'
+        apiKey: finalConfig.apiKey ?? '',
+        baseUrl: finalConfig.baseUrl ?? 'https://open.bigmodel.cn/api/paas/v4',
+        model: finalConfig.model ?? 'glm-4.5'
       });
     case 'claude':
       return new ClaudeProvider({
-        apiKey: config.apiKey ?? '',
-        baseUrl: config.baseUrl ?? 'https://api.anthropic.com',
-        model: config.model ?? 'claude-3-7-sonnet-latest'
+        apiKey: finalConfig.apiKey ?? '',
+        baseUrl: finalConfig.baseUrl ?? 'https://api.anthropic.com',
+        model: finalConfig.model ?? 'claude-3-7-sonnet-latest'
       });
     case 'openai':
       return new OpenAIProvider({
         name: 'OpenAI',
-        apiKey: config.apiKey ?? '',
-        baseUrl: config.baseUrl ?? 'https://api.openai.com/v1',
-        model: config.model ?? 'gpt-4o-mini'
+        apiKey: finalConfig.apiKey ?? '',
+        baseUrl: finalConfig.baseUrl ?? 'https://api.openai.com/v1',
+        model: finalConfig.model ?? 'gpt-4o-mini'
       });
     case 'openaiCompatible':
       return new OpenAIProvider({
         name: 'OpenAI Compatible',
-        apiKey: config.apiKey ?? '',
-        baseUrl: config.baseUrl ?? 'https://api.openai.com/v1',
-        model: config.model ?? 'gpt-4o-mini'
+        apiKey: finalConfig.apiKey ?? '',
+        baseUrl: finalConfig.baseUrl ?? 'https://api.openai.com/v1',
+        model: finalConfig.model ?? 'gpt-4o-mini'
       });
     case 'ollama':
       return new OllamaProvider({
-        baseUrl: config.baseUrl ?? 'http://localhost:11434',
-        model: config.model ?? 'qwen2.5:7b'
+        baseUrl: finalConfig.baseUrl ?? 'http://localhost:11434',
+        model: finalConfig.model ?? 'qwen2.5:7b'
       });
     default:
-      throw new Error(`Unknown provider type: ${config.type}`);
+      throw new Error(`Unknown provider type: ${finalConfig.type}`);
   }
 }
 
