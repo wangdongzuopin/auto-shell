@@ -60,3 +60,5 @@ export function createProvider(config: ProviderConfig): AIProvider {
 
 export type { AIProvider, CommandExplanation, CompletionContext, ErrorContext, Suggestion } from './provider';
 export { PROMPTS } from './prompts';
+export { MODEL_PRESETS, getModelPreset, getAllModelPresets } from './models';
+export type { ModelPreset } from './models';
