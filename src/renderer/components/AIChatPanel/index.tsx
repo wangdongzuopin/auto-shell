@@ -36,13 +36,13 @@ export function AIChatPanel({ open, onClose }: AIChatPanelProps) {
       return '未关联终端';
     }
 
-    return `${shellNames[activeTab.shell]} · ${activeTab.cwd === '~' ? '默认目录' : activeTab.cwd}`;
+    return `${shellNames[activeTab.shell]} / ${activeTab.cwd === '~' ? '默认目录' : activeTab.cwd}`;
   }, [activeTab]);
 
   const placeholder = useMemo(() => {
     return platform === 'windows'
-      ? '例如：帮我写一个 PowerShell 脚本，或输入“切换到 D:\\Agent\\auto-shell”直接让当前终端切目录'
-      : '例如：帮我写一个 zsh 脚本，或输入“切换到 ~/projects/auto-shell”直接让当前终端切目录';
+      ? '例如：帮我写一个 PowerShell 脚本，或输入“切换到 D:\\Agent\\auto-shell”'
+      : '例如：帮我写一个 zsh 脚本，或输入“切换到 ~/projects/auto-shell”';
   }, [platform]);
 
   if (!open) return null;
@@ -58,6 +58,18 @@ export function AIChatPanel({ open, onClose }: AIChatPanelProps) {
 
     const switchTarget = parseProjectSwitchInput(trimmed);
     if (switchTarget) {
+      const exists = await window.api.pathExists(switchTarget);
+      if (!exists) {
+        setMessages((current) => [
+          ...current,
+          { role: 'user', content: trimmed },
+          { role: 'assistant', content: `找不到该目录：${switchTarget}` }
+        ]);
+        setInput('');
+        toast(`目录不存在：${switchTarget}`);
+        return;
+      }
+
       const command = buildChangeDirectoryCommand(activeTab.shell, switchTarget);
       window.api.writePty(activeTabId, `${command}\r`);
       setTabCwd(activeTabId, switchTarget);
@@ -84,7 +96,7 @@ export function AIChatPanel({ open, onClose }: AIChatPanelProps) {
             '回答要直接、可执行、准确，优先给出当前平台和当前 shell 可直接执行的命令。',
             `当前 shell: ${shellNames[activeTab.shell]}`,
             `当前工作目录: ${activeTab.cwd}`,
-            '如果用户表达的是切换目录或切换项目，优先直接给出明确的 cd / Set-Location / zsh 可执行命令。'
+            '如果用户表达的是切换目录或切换项目，优先直接给出明确的 cd / Set-Location 命令。'
           ].join('\n')
         },
         ...nextMessages
@@ -155,25 +167,56 @@ export function AIChatPanel({ open, onClose }: AIChatPanelProps) {
     <div className="chat-panel">
       <div className="chat-header">
         <div>
-          <div className="chat-title">AI 对话</div>
+          <div className="chat-title">Assistant</div>
           <div className="chat-meta">{modelLabel}</div>
           <div className="chat-context">{tabLabel}</div>
         </div>
         <button className="chat-close" onClick={onClose}>×</button>
       </div>
       <div className="chat-messages">
-        {messages.map((message, index) => (
-          <div key={`${message.role}-${index}`} className={`chat-bubble ${message.role}`}>
-            <div className="bubble-role">{message.role === 'assistant' ? 'AI' : '你'}</div>
-            <div className="bubble-text">{message.content}</div>
-          </div>
-        ))}
-        {loading && (
-          <div className="chat-bubble assistant loading">
-            <div className="bubble-role">AI</div>
-            <div className="bubble-text">正在等待模型返回完整结果...</div>
-          </div>
-        )}
+        {messages.map((message, index) => {
+          const previous = index > 0 ? messages[index - 1] : null;
+          const showAssistantHeader = message.role === 'assistant' && previous?.role !== 'assistant';
+          const isStreamingPlaceholder =
+            loading &&
+            message.role === 'assistant' &&
+            index === messages.length - 1 &&
+            !message.content.trim();
+
+          return (
+            <div
+              key={`${message.role}-${index}`}
+              className={`chat-row ${message.role} ${showAssistantHeader ? 'with-header' : 'continued'}`}
+            >
+              {message.role === 'assistant' && showAssistantHeader ? (
+                <div className="message-avatar assistant" aria-hidden="true">
+                  <span className="avatar-core" />
+                </div>
+              ) : message.role === 'assistant' ? (
+                <div className="message-avatar-spacer" aria-hidden="true" />
+              ) : null}
+              <div className={`chat-bubble ${message.role}`}>
+                {message.role === 'assistant' && showAssistantHeader ? (
+                  <div className="bubble-meta">
+                    <span className="bubble-role">Assistant</span>
+                    <span className="bubble-model">
+                      {isStreamingPlaceholder ? 'thinking' : configs[provider].model}
+                    </span>
+                  </div>
+                ) : null}
+                {isStreamingPlaceholder ? (
+                  <div className="typing-indicator" aria-label="AI 正在回复">
+                    <span />
+                    <span />
+                    <span />
+                  </div>
+                ) : (
+                  <div className="bubble-text">{message.content}</div>
+                )}
+              </div>
+            </div>
+          );
+        })}
       </div>
       <div className="chat-input">
         <textarea
@@ -241,39 +284,109 @@ export function AIChatPanel({ open, onClose }: AIChatPanelProps) {
         .chat-messages {
           flex: 1;
           overflow-y: auto;
-          padding: 16px;
+          padding: 18px 18px 22px;
           display: flex;
           flex-direction: column;
+          gap: 18px;
+        }
+        .chat-row {
+          display: flex;
+          width: 100%;
           gap: 12px;
+          align-items: flex-start;
+        }
+        .chat-row.user {
+          justify-content: flex-end;
+        }
+        .message-avatar {
+          width: 26px;
+          height: 26px;
+          border-radius: 9px;
+          flex: 0 0 26px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border: 1px solid var(--border);
+          background: color-mix(in srgb, var(--bg3) 92%, white 8%);
+          box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+        }
+        .message-avatar-spacer {
+          width: 26px;
+          flex: 0 0 26px;
+        }
+        .avatar-core {
+          width: 8px;
+          height: 8px;
+          border-radius: 999px;
+          background: linear-gradient(180deg, var(--accent), color-mix(in srgb, var(--accent) 78%, #163a75 22%));
         }
         .chat-bubble {
-          max-width: 92%;
-          padding: 12px 14px;
-          border-radius: 14px;
-          border: 1px solid var(--border);
+          max-width: min(92%, 640px);
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
         }
         .chat-bubble.user {
-          align-self: flex-end;
+          padding: 14px 16px;
+          border-radius: 18px;
           background: var(--ai-bg);
-          border-color: var(--ai-border);
+          border: 1px solid var(--ai-border);
+          box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
         }
         .chat-bubble.assistant {
-          align-self: flex-start;
-          background: color-mix(in srgb, var(--bg3) 90%, white 10%);
+          padding: 0;
+          background: transparent;
+          border: 0;
+          box-shadow: none;
+        }
+        .chat-row.assistant.continued {
+          margin-top: -8px;
+        }
+        .bubble-meta {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          min-height: 18px;
         }
         .bubble-role {
-          font-size: 10px;
-          letter-spacing: .08em;
-          text-transform: uppercase;
+          font-size: 11px;
+          font-weight: 600;
           color: var(--text3);
-          margin-bottom: 6px;
+        }
+        .bubble-model {
+          font-size: 11px;
+          font-family: var(--mono);
+          color: var(--accent);
+          opacity: 0.78;
         }
         .bubble-text {
-          font-size: 12.5px;
-          line-height: 1.7;
+          font-size: 13px;
+          line-height: 1.75;
           color: var(--text);
           white-space: pre-wrap;
           word-break: break-word;
+        }
+        .chat-bubble.assistant .bubble-text {
+          padding: 0 2px 0 0;
+        }
+        .typing-indicator {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 6px 0 2px;
+        }
+        .typing-indicator span {
+          width: 6px;
+          height: 6px;
+          border-radius: 999px;
+          background: var(--text3);
+          animation: chatTyping 1.1s ease-in-out infinite;
+        }
+        .typing-indicator span:nth-child(2) {
+          animation-delay: .14s;
+        }
+        .typing-indicator span:nth-child(3) {
+          animation-delay: .28s;
         }
         .chat-input {
           padding: 14px 16px 16px;
@@ -307,6 +420,16 @@ export function AIChatPanel({ open, onClose }: AIChatPanelProps) {
           opacity: 0.55;
           cursor: not-allowed;
         }
+        @keyframes chatTyping {
+          0%, 80%, 100% {
+            transform: translateY(0);
+            opacity: .35;
+          }
+          40% {
+            transform: translateY(-3px);
+            opacity: 1;
+          }
+        }
       `}</style>
     </div>
   );
@@ -322,7 +445,7 @@ function parseProjectSwitchInput(input: string): string | null {
   for (const pattern of patterns) {
     const match = trimmed.match(pattern);
     if (match?.[1]) {
-      return stripWrappingQuotes(match[1].trim());
+      return normalizeProjectPath(stripWrappingQuotes(match[1].trim()));
     }
   }
 
@@ -352,6 +475,13 @@ function stripWrappingQuotes(value: string): string {
     return value.slice(1, -1);
   }
   return value;
+}
+
+function normalizeProjectPath(value: string): string {
+  return value
+    .replace(/[。！!，,\s]+$/g, '')
+    .replace(/(?:目录|文件夹|项目目录|这个目录|该目录)$/i, '')
+    .trim();
 }
 
 function detectPlatform(): AppPlatform {

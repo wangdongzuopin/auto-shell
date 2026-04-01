@@ -512,48 +512,130 @@ async function readSseStream(response, onPayload) {
     }
   }
 }
+const MODEL_PRESETS = {
+  "claude-3-5-sonnet": {
+    id: "claude-3-5-sonnet",
+    name: "Claude 3.5 Sonnet",
+    brand: "Anthropic",
+    baseUrl: "https://api.anthropic.com",
+    apiPath: "/v1/messages",
+    defaultTemperature: 0.7,
+    defaultMaxTokens: 4096
+  },
+  "claude-3-haiku": {
+    id: "claude-3-haiku",
+    name: "Claude 3 Haiku",
+    brand: "Anthropic",
+    baseUrl: "https://api.anthropic.com",
+    apiPath: "/v1/messages",
+    defaultTemperature: 0.7,
+    defaultMaxTokens: 4096
+  },
+  "gpt-4o": {
+    id: "gpt-4o",
+    name: "GPT-4o",
+    brand: "OpenAI",
+    baseUrl: "https://api.openai.com",
+    apiPath: "/v1/chat/completions",
+    defaultTemperature: 0.7,
+    defaultMaxTokens: 4096
+  },
+  "gpt-4o-mini": {
+    id: "gpt-4o-mini",
+    name: "GPT-4o Mini",
+    brand: "OpenAI",
+    baseUrl: "https://api.openai.com",
+    apiPath: "/v1/chat/completions",
+    defaultTemperature: 0.7,
+    defaultMaxTokens: 4096
+  },
+  "MiniMax-M2.7": {
+    id: "MiniMax-M2.7",
+    name: "MiniMax M2.7",
+    brand: "MiniMax",
+    baseUrl: "https://api.minimaxi.com/anthropic",
+    apiPath: "/v1/messages",
+    defaultTemperature: 0.7,
+    defaultMaxTokens: 4096
+  },
+  "glm-4": {
+    id: "glm-4",
+    name: "GLM-4",
+    brand: "Zhipu",
+    baseUrl: "https://open.bigmodel.cn/api/paas/v4",
+    apiPath: "/chat/completions",
+    defaultTemperature: 0.7,
+    defaultMaxTokens: 4096
+  },
+  "llama3": {
+    id: "llama3",
+    name: "Llama 3",
+    brand: "Ollama",
+    baseUrl: "http://localhost:11434",
+    apiPath: "/api/chat",
+    defaultTemperature: 0.7,
+    defaultMaxTokens: 4096
+  }
+};
 function createProvider(config) {
-  switch (config.type) {
+  let finalConfig = config;
+  if (config.model && MODEL_PRESETS[config.model]) {
+    const preset = MODEL_PRESETS[config.model];
+    const brandToType = {
+      "Anthropic": "claude",
+      "OpenAI": "openai",
+      "MiniMax": "minimax",
+      "Zhipu": "glm",
+      "Ollama": "ollama"
+    };
+    finalConfig = {
+      ...config,
+      type: config.type || brandToType[preset.brand] || config.type,
+      baseUrl: config.baseUrl || preset.baseUrl,
+      model: preset.id
+    };
+  }
+  switch (finalConfig.type) {
     case "minimax":
       return new ClaudeProvider({
-        apiKey: config.apiKey ?? "",
-        baseUrl: config.baseUrl ?? "https://api.minimaxi.com/anthropic",
-        model: config.model ?? "MiniMax-M2.7"
+        apiKey: finalConfig.apiKey ?? "",
+        baseUrl: finalConfig.baseUrl ?? "https://api.minimaxi.com/anthropic",
+        model: finalConfig.model ?? "MiniMax-M2.7"
       });
     case "glm":
       return new OpenAIProvider({
         name: "GLM",
-        apiKey: config.apiKey ?? "",
-        baseUrl: config.baseUrl ?? "https://open.bigmodel.cn/api/paas/v4",
-        model: config.model ?? "glm-4.5"
+        apiKey: finalConfig.apiKey ?? "",
+        baseUrl: finalConfig.baseUrl ?? "https://open.bigmodel.cn/api/paas/v4",
+        model: finalConfig.model ?? "glm-4.5"
       });
     case "claude":
       return new ClaudeProvider({
-        apiKey: config.apiKey ?? "",
-        baseUrl: config.baseUrl ?? "https://api.anthropic.com",
-        model: config.model ?? "claude-3-7-sonnet-latest"
+        apiKey: finalConfig.apiKey ?? "",
+        baseUrl: finalConfig.baseUrl ?? "https://api.anthropic.com",
+        model: finalConfig.model ?? "claude-3-7-sonnet-latest"
       });
     case "openai":
       return new OpenAIProvider({
         name: "OpenAI",
-        apiKey: config.apiKey ?? "",
-        baseUrl: config.baseUrl ?? "https://api.openai.com/v1",
-        model: config.model ?? "gpt-4o-mini"
+        apiKey: finalConfig.apiKey ?? "",
+        baseUrl: finalConfig.baseUrl ?? "https://api.openai.com/v1",
+        model: finalConfig.model ?? "gpt-4o-mini"
       });
     case "openaiCompatible":
       return new OpenAIProvider({
         name: "OpenAI Compatible",
-        apiKey: config.apiKey ?? "",
-        baseUrl: config.baseUrl ?? "https://api.openai.com/v1",
-        model: config.model ?? "gpt-4o-mini"
+        apiKey: finalConfig.apiKey ?? "",
+        baseUrl: finalConfig.baseUrl ?? "https://api.openai.com/v1",
+        model: finalConfig.model ?? "gpt-4o-mini"
       });
     case "ollama":
       return new OllamaProvider({
-        baseUrl: config.baseUrl ?? "http://localhost:11434",
-        model: config.model ?? "qwen2.5:7b"
+        baseUrl: finalConfig.baseUrl ?? "http://localhost:11434",
+        model: finalConfig.model ?? "qwen2.5:7b"
       });
     default:
-      throw new Error(`Unknown provider type: ${config.type}`);
+      throw new Error(`Unknown provider type: ${finalConfig.type}`);
   }
 }
 const IPC = {
@@ -576,6 +658,9 @@ const IPC = {
   CONFIG_SET_FEATURES: "config:set-features",
   KEY_SAVE: "key:save",
   KEY_GET: "key:get",
+  PATH_EXISTS: "path:exists",
+  // PTY command events
+  PTY_COMMAND: "pty:command",
   // Window controls
   WINDOW_MINIMIZE: "window:minimize",
   WINDOW_MAXIMIZE: "window:maximize",
@@ -626,7 +711,10 @@ const defaultConfig = {
   providerConfigs: defaultProviderConfigs,
   aiFeatures: defaultFeatures,
   theme: defaultTheme,
-  apiKeys: {}
+  apiKeys: {},
+  // 新增默认值
+  currentModel: "MiniMax-M2.7",
+  modelConfig: {}
 };
 function normalizeProviderConfig(provider, config) {
   if (provider === "minimax" && config.baseUrl === "https://api.minimaxi.com/v1") {
@@ -662,7 +750,9 @@ function normalizePersistedConfig(input) {
       ...defaultTheme,
       ...input?.theme ?? {}
     },
-    apiKeys: input?.apiKeys ?? {}
+    apiKeys: input?.apiKeys ?? {},
+    currentModel: input?.currentModel ?? defaultConfig.currentModel,
+    modelConfig: input?.modelConfig ?? defaultConfig.modelConfig
   };
 }
 function writePersistedConfig(config) {
@@ -712,7 +802,9 @@ function getConfig() {
     providerConfig: persisted.providerConfigs[persisted.provider],
     providerConfigs: persisted.providerConfigs,
     aiFeatures: persisted.aiFeatures,
-    theme: persisted.theme
+    theme: persisted.theme,
+    currentModel: persisted.currentModel,
+    modelConfig: persisted.modelConfig
   };
 }
 function setProvider(provider) {
@@ -822,6 +914,16 @@ function registerIpcHandlers() {
     }
     return true;
   });
+  electron.ipcMain.handle(IPC.PATH_EXISTS, async (_event, targetPath) => {
+    if (!targetPath) {
+      return false;
+    }
+    try {
+      return fs__namespace.existsSync(targetPath);
+    } catch {
+      return false;
+    }
+  });
 }
 const instances = /* @__PURE__ */ new Map();
 function resolveCwd(cwd) {
@@ -854,11 +956,24 @@ function registerPtyHandlers() {
       event.sender.send("pty:exit", id, exitCode);
       instances.delete(id);
     });
-    instances.set(id, { id, pty: ptyProcess });
+    instances.set(id, { id, pty: ptyProcess, currentCommand: "" });
     return id;
   });
-  electron.ipcMain.on("pty:input", (_event, id, data) => {
-    instances.get(id)?.pty.write(data);
+  electron.ipcMain.on("pty:input", (event, id, data) => {
+    const instance = instances.get(id);
+    if (!instance) return;
+    if (data === "\r" || data === "\n") {
+      const cmd = instance.currentCommand.trim();
+      if (cmd.length > 0) {
+        event.sender.send(IPC.PTY_COMMAND, id, cmd);
+      }
+      instance.currentCommand = "";
+    } else if (data === "") {
+      instance.currentCommand = instance.currentCommand.slice(0, -1);
+    } else if (data.length === 1 && !data.match(/\x00-\x1f/)) {
+      instance.currentCommand += data;
+    }
+    instance.pty.write(data);
   });
   electron.ipcMain.on("pty:resize", (_event, id, cols, rows) => {
     instances.get(id)?.pty.resize(cols, rows);
@@ -906,7 +1021,7 @@ function getShellLaunchConfig(shell) {
   switch (shell) {
     case "cmd":
       return {
-        file: "cmd.exe",
+        file: process.env.ComSpec || "cmd.exe",
         args: ["/k", "chcp", "65001"]
       };
     case "wsl":
@@ -917,21 +1032,51 @@ function getShellLaunchConfig(shell) {
     case "git-bash":
     case "bash":
       return {
-        file: "bash.exe",
+        file: resolveGitBashExecutable(),
         args: ["--login"]
       };
     case "powershell":
     default:
       return {
-        file: "powershell.exe",
+        file: resolvePowerShellExecutable(),
         args: [
           "-NoLogo",
           "-NoExit",
+          "-ExecutionPolicy",
+          "Bypass",
           "-Command",
-          "[Console]::InputEncoding=[System.Text.UTF8Encoding]::new(); [Console]::OutputEncoding=[System.Text.UTF8Encoding]::new(); chcp 65001 > $null"
+          "try { chcp 65001 > $null } catch {}; try { [Console]::InputEncoding=[System.Text.UTF8Encoding]::new($false) } catch {}; try { [Console]::OutputEncoding=[System.Text.UTF8Encoding]::new($false) } catch {}"
         ]
       };
   }
+}
+function resolvePowerShellExecutable() {
+  const pwshPath = findExistingPath([
+    path__namespace.join(process.env.ProgramFiles || "", "PowerShell", "7", "pwsh.exe"),
+    path__namespace.join(process.env.ProgramFiles || "", "PowerShell", "6", "pwsh.exe")
+  ]);
+  if (pwshPath) {
+    return pwshPath;
+  }
+  return "powershell.exe";
+}
+function resolveGitBashExecutable() {
+  const gitBashPath = findExistingPath([
+    path__namespace.join(process.env.ProgramFiles || "", "Git", "bin", "bash.exe"),
+    path__namespace.join(process.env["ProgramFiles(x86)"] || "", "Git", "bin", "bash.exe")
+  ]);
+  if (gitBashPath) {
+    return gitBashPath;
+  }
+  return "bash.exe";
+}
+function findExistingPath(candidates) {
+  for (const candidate of candidates) {
+    if (candidate && fs__namespace.existsSync(candidate)) {
+      return candidate;
+    }
+  }
+  return null;
 }
 let mainWindow = null;
 function createWindow() {

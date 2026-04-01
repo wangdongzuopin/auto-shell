@@ -4,7 +4,23 @@ import { toast } from '../Toast';
 
 type AppPlatform = 'windows' | 'macos' | 'linux';
 
-const BASE_COMMANDS = {
+type QuickCommandItem = {
+  name: string;
+  cmd: string;
+  preview?: string;
+  actionLabel?: string;
+};
+
+type QuickCommandGroup = {
+  group: string;
+  commands: QuickCommandItem[];
+};
+
+const BASE_COMMANDS: {
+  common: QuickCommandGroup[];
+  windows: QuickCommandGroup;
+  unix: QuickCommandGroup;
+} = {
   common: [
     {
       group: 'Git',
@@ -51,14 +67,16 @@ export function QuickCommands() {
   const activeTab = tabs.find((tab) => tab.id === activeTabId) ?? null;
   const platform = useMemo(() => detectPlatform(), []);
 
-  const allCommands = useMemo(() => {
+  const allCommands = useMemo<QuickCommandGroup[]>(() => {
     const projectCommands = activeTab
       ? [
           {
             group: '项目切换',
             commands: getProjectPaths(platform).map((project) => ({
-              name: `进入 ${project.name}`,
-              cmd: buildCdCommand(activeTab.shell, project.path)
+              name: project.name,
+              cmd: buildCdCommand(activeTab.shell, project.path),
+              preview: project.path,
+              actionLabel: '切换项目'
             }))
           }
         ]
@@ -75,7 +93,8 @@ export function QuickCommands() {
           ...group,
           commands: group.commands.filter((command) =>
             command.name.toLowerCase().includes(filter.toLowerCase()) ||
-            command.cmd.toLowerCase().includes(filter.toLowerCase())
+            command.cmd.toLowerCase().includes(filter.toLowerCase()) ||
+            (command.preview ?? '').toLowerCase().includes(filter.toLowerCase())
           )
         }))
         .filter((group) => group.commands.length > 0),
@@ -102,7 +121,7 @@ export function QuickCommands() {
         <div>
           <span className="sb-title">快捷命令</span>
           <div className="sb-meta">
-            {activeTab ? `${shellNames[activeTab.shell]} · ${activeTab.name}` : '未关联终端'}
+            {activeTab ? `${shellNames[activeTab.shell]} / ${activeTab.name}` : '未关联终端'}
           </div>
         </div>
       </div>
@@ -128,9 +147,11 @@ export function QuickCommands() {
                 onClick={() => handleRun(item.cmd)}
                 title={`在当前终端执行：${item.cmd}`}
               >
-                <span className="cmd-name">{item.name}</span>
-                <span className="cmd-preview">{item.cmd}</span>
-                <span className="cmd-run">执行到当前终端</span>
+                <span className="cmd-main">
+                  <span className="cmd-name">{item.name}</span>
+                  <span className="cmd-preview">{item.preview ?? item.cmd}</span>
+                </span>
+                <span className="cmd-run">{item.actionLabel ?? '执行到当前终端'}</span>
               </button>
             ))}
           </React.Fragment>
@@ -210,8 +231,8 @@ export function QuickCommands() {
           width: 100%;
           display: flex;
           align-items: center;
-          gap: 8px;
-          padding: 9px 10px;
+          gap: 10px;
+          padding: 10px;
           border-radius: 10px;
           border: 1px solid transparent;
           background: transparent;
@@ -222,10 +243,16 @@ export function QuickCommands() {
           background: color-mix(in srgb, var(--bg3) 90%, white 10%);
           border-color: var(--border);
         }
+        .cmd-main {
+          min-width: 0;
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          gap: 3px;
+        }
         .cmd-name {
           font-size: 12px;
           color: var(--text);
-          flex: 1;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -234,7 +261,6 @@ export function QuickCommands() {
           font-family: var(--mono);
           font-size: 10px;
           color: var(--text2);
-          max-width: 120px;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -243,6 +269,7 @@ export function QuickCommands() {
           font-size: 10px;
           color: var(--accent);
           white-space: nowrap;
+          flex-shrink: 0;
         }
         .cmd-empty {
           font-size: 12px;

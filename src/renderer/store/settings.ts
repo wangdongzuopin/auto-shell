@@ -60,26 +60,27 @@ const defaultFeatures: FeatureToggles = {
 
 function applyThemeToDocument(theme: Theme) {
   const light = isLightColor(theme.background);
-  const surfaceDelta = light ? -8 : 8;
+  const surfaceDelta = light ? -10 : 8;
+  const elevatedDelta = light ? -16 : 14;
 
   document.documentElement.dataset.theme = light ? 'light' : 'dark';
   document.documentElement.style.setProperty('--bg', theme.background);
   document.documentElement.style.setProperty('--bg2', shiftColor(theme.background, surfaceDelta));
-  document.documentElement.style.setProperty('--bg3', shiftColor(theme.background, surfaceDelta * 1.75));
-  document.documentElement.style.setProperty('--bg4', shiftColor(theme.background, surfaceDelta * 2.5));
-  document.documentElement.style.setProperty('--bg5', shiftColor(theme.background, surfaceDelta * 3.25));
-  document.documentElement.style.setProperty('--border', light ? 'rgba(26, 37, 56, 0.10)' : 'rgba(255, 255, 255, 0.08)');
-  document.documentElement.style.setProperty('--border2', light ? 'rgba(26, 37, 56, 0.18)' : 'rgba(255, 255, 255, 0.16)');
+  document.documentElement.style.setProperty('--bg3', shiftColor(theme.background, light ? elevatedDelta : surfaceDelta * 1.75));
+  document.documentElement.style.setProperty('--bg4', shiftColor(theme.background, light ? elevatedDelta * 1.22 : surfaceDelta * 2.5));
+  document.documentElement.style.setProperty('--bg5', shiftColor(theme.background, light ? elevatedDelta * 1.42 : surfaceDelta * 3.25));
+  document.documentElement.style.setProperty('--border', light ? 'rgba(26, 37, 56, 0.14)' : 'rgba(255, 255, 255, 0.08)');
+  document.documentElement.style.setProperty('--border2', light ? 'rgba(26, 37, 56, 0.24)' : 'rgba(255, 255, 255, 0.16)');
   document.documentElement.style.setProperty('--text', theme.foreground);
-  document.documentElement.style.setProperty('--text2', mixColors(theme.foreground, theme.background, light ? 0.42 : 0.60));
-  document.documentElement.style.setProperty('--text3', mixColors(theme.foreground, theme.background, light ? 0.66 : 0.78));
+  document.documentElement.style.setProperty('--text2', mixColors(theme.foreground, theme.background, light ? 0.36 : 0.60));
+  document.documentElement.style.setProperty('--text3', mixColors(theme.foreground, theme.background, light ? 0.54 : 0.78));
   document.documentElement.style.setProperty('--accent', theme.accent);
-  document.documentElement.style.setProperty('--accent-dim', withAlpha(theme.accent, light ? '1a' : '22'));
-  document.documentElement.style.setProperty('--ai-bg', withAlpha(theme.accent, light ? '12' : '14'));
-  document.documentElement.style.setProperty('--ai-border', withAlpha(theme.accent, light ? '30' : '44'));
-  document.documentElement.style.setProperty('--app-glow', withAlpha(theme.accent, light ? '14' : '20'));
-  document.documentElement.style.setProperty('--surface-top', shiftColor(theme.background, light ? 10 : 6));
-  document.documentElement.style.setProperty('--surface-bottom', shiftColor(theme.background, light ? -2 : 0));
+  document.documentElement.style.setProperty('--accent-dim', withAlpha(theme.accent, light ? '14' : '22'));
+  document.documentElement.style.setProperty('--ai-bg', withAlpha(theme.accent, light ? '0d' : '14'));
+  document.documentElement.style.setProperty('--ai-border', withAlpha(theme.accent, light ? '26' : '44'));
+  document.documentElement.style.setProperty('--app-glow', withAlpha(theme.accent, light ? '0f' : '20'));
+  document.documentElement.style.setProperty('--surface-top', shiftColor(theme.background, light ? 4 : 6));
+  document.documentElement.style.setProperty('--surface-bottom', shiftColor(theme.background, light ? -6 : 0));
   document.documentElement.style.setProperty('--scrollbar-thumb', light ? 'rgba(26, 37, 56, 0.18)' : 'rgba(255, 255, 255, 0.12)');
   document.documentElement.style.setProperty('--scrollbar-thumb-hover', light ? 'rgba(26, 37, 56, 0.28)' : 'rgba(255, 255, 255, 0.18)');
   document.documentElement.style.setProperty('--focus-ring', withAlpha(theme.accent, light ? 'cc' : 'e6'));

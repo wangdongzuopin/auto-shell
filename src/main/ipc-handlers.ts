@@ -1,4 +1,5 @@
 import { ipcMain } from 'electron';
+import * as fs from 'fs';
 import { createProvider, ProviderConfig } from '../ai';
 import { IPC } from '../shared/ipc-channels';
 import type { ChatMessage, FeatureToggles, ProviderSettings, ProviderType, Theme } from '../shared/types';
@@ -101,5 +102,17 @@ export function registerIpcHandlers() {
       invalidateProvider();
     }
     return true;
+  });
+
+  ipcMain.handle(IPC.PATH_EXISTS, async (_event, targetPath: string) => {
+    if (!targetPath) {
+      return false;
+    }
+
+    try {
+      return fs.existsSync(targetPath);
+    } catch {
+      return false;
+    }
   });
 }

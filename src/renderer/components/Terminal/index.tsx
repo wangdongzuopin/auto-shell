@@ -29,7 +29,9 @@ export function Terminal() {
     activeTab?.shell,
     activeTab?.cwd,
     theme,
-    handleSelectionChange
+    handleSelectionChange,
+    startTracking,
+    complete
   );
 
   useEffect(() => {
@@ -53,7 +55,13 @@ export function Terminal() {
           <span className="shell-path">{activeTab.cwd === '~' ? '默认目录' : activeTab.cwd}</span>
         </div>
       </div>
-      <div className="terminal-output" ref={containerRef} onMouseDown={() => focus()} />
+      <div
+        className="terminal-output"
+        ref={containerRef}
+        tabIndex={0}
+        onMouseDown={() => focus()}
+        onFocus={() => focus()}
+      />
       {isVisible && progress && (
         <CommandProgressBar progress={progress} />
       )}

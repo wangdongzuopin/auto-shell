@@ -10,11 +10,26 @@ export function useTerminal(
   shell: string = 'powershell',
   cwd: string = '',
   theme?: Theme,
-  onSelectionChange?: (selection: string, position: { x: number; y: number }) => void
+  onSelectionChange?: (selection: string, position: { x: number; y: number }) => void,
+  onCommandStart?: (command: string) => void,
+  onCommandComplete?: () => void
 ) {
   const terminalRef = useRef<Terminal | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
   const resizeFrameRef = useRef<number | null>(null);
+  const callbacksRef = useRef({
+    onSelectionChange,
+    onCommandStart,
+    onCommandComplete
+  });
+
+  useEffect(() => {
+    callbacksRef.current = {
+      onSelectionChange,
+      onCommandStart,
+      onCommandComplete
+    };
+  }, [onSelectionChange, onCommandStart, onCommandComplete]);
 
   const resizePty = useCallback(() => {
     if (!terminalRef.current) {
@@ -36,30 +51,26 @@ export function useTerminal(
       cursorBlink: true,
       cursorStyle: 'block',
       allowProposedApi: true,
-      theme: {
-        background: theme?.background ?? '#0f1115',
-        foreground: theme?.foreground ?? '#d8dee9',
-        cursor: theme?.accent ?? '#4c8dff',
-        cursorAccent: getCursorAccent(theme?.background ?? '#0f1115'),
-        selectionBackground: withAlpha(theme?.accent ?? '#4c8dff', '3d')
-      }
+      theme: createTerminalTheme(theme)
     });
 
     const fitAddon = new FitAddon();
     terminal.loadAddon(fitAddon);
     terminal.loadAddon(new WebLinksAddon());
 
-    if (onSelectionChange) {
-      let selectionTimeout: ReturnType<typeof setTimeout>;
+    let selectionTimeout: ReturnType<typeof setTimeout> | undefined;
+    if (callbacksRef.current.onSelectionChange) {
       terminal.onSelectionChange(() => {
-        clearTimeout(selectionTimeout);
+        if (selectionTimeout) {
+          clearTimeout(selectionTimeout);
+        }
         selectionTimeout = setTimeout(() => {
           const selection = terminal.getSelection().trim();
           if (!selection || selection.length < 3) {
             return;
           }
 
-          onSelectionChange(selection, {
+          callbacksRef.current.onSelectionChange?.(selection, {
             x: terminal.buffer.active.cursorX * 8,
             y: terminal.buffer.active.cursorY * 20
           });
@@ -84,6 +95,14 @@ export function useTerminal(
     const disposeExit = window.api.onPtyExit((id, code) => {
       if (id === tabId) {
         terminal.writeln(`\r\n[process exited with code ${code}]`);
+        callbacksRef.current.onCommandComplete?.();
+      }
+    });
+
+    // Command detection
+    const disposeCommand = window.api.onPtyCommand((id, command) => {
+      if (id === tabId) {
+        callbacksRef.current.onCommandStart?.(command);
       }
     });
 
@@ -115,6 +134,9 @@ export function useTerminal(
     resizeObserver.observe(containerRef.current);
 
     return () => {
+      if (selectionTimeout) {
+        clearTimeout(selectionTimeout);
+      }
       if (resizeFrameRef.current !== null) {
         cancelAnimationFrame(resizeFrameRef.current);
         resizeFrameRef.current = null;
@@ -123,12 +145,21 @@ export function useTerminal(
       containerRef.current?.removeEventListener('mousedown', handleClick);
       disposeOutput();
       disposeExit();
+      disposeCommand();
       window.api.killPty(tabId);
       terminal.dispose();
       terminalRef.current = null;
       fitAddonRef.current = null;
     };
-  }, [containerRef, onSelectionChange, resizePty, shell, tabId, theme]);
+  }, [containerRef, resizePty, shell, tabId]);
+
+  useEffect(() => {
+    if (!terminalRef.current) {
+      return;
+    }
+
+    terminalRef.current.options.theme = createTerminalTheme(theme);
+  }, [theme]);
 
   const focus = useCallback(() => {
     terminalRef.current?.focus();
@@ -136,6 +167,37 @@ export function useTerminal(
 
   return {
     focus
+  };
+}
+
+function createTerminalTheme(theme?: Theme) {
+  const background = theme?.background ?? '#0f1115';
+  const accent = theme?.accent ?? '#4c8dff';
+  const foreground = theme?.foreground ?? '#d8dee9';
+  const light = isLightColor(background);
+
+  return {
+    background,
+    foreground,
+    cursor: accent,
+    cursorAccent: getCursorAccent(background),
+    selectionBackground: withAlpha(accent, light ? '26' : '3d'),
+    black: light ? '#4b5563' : '#1f2430',
+    red: light ? '#c2410c' : '#f7768e',
+    green: light ? '#0f766e' : '#9ece6a',
+    yellow: light ? '#a16207' : '#e0af68',
+    blue: light ? '#2563eb' : '#7aa2f7',
+    magenta: light ? '#a21caf' : '#bb9af7',
+    cyan: light ? '#0f766e' : '#7dcfff',
+    white: foreground,
+    brightBlack: light ? '#64748b' : '#414868',
+    brightRed: light ? '#dc2626' : '#f7768e',
+    brightGreen: light ? '#059669' : '#9ece6a',
+    brightYellow: light ? '#b45309' : '#e0af68',
+    brightBlue: light ? '#1d4ed8' : '#7aa2f7',
+    brightMagenta: light ? '#9333ea' : '#c0a8ff',
+    brightCyan: light ? '#0891b2' : '#89ddff',
+    brightWhite: light ? '#0f172a' : '#d8dee9'
   };
 }
 

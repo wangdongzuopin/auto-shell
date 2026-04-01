@@ -19,6 +19,9 @@ const IPC = {
   CONFIG_SET_FEATURES: "config:set-features",
   KEY_SAVE: "key:save",
   KEY_GET: "key:get",
+  PATH_EXISTS: "path:exists",
+  // PTY command events
+  PTY_COMMAND: "pty:command",
   // Window controls
   WINDOW_MINIMIZE: "window:minimize",
   WINDOW_MAXIMIZE: "window:maximize",
@@ -63,6 +66,7 @@ const api = {
   saveFeatures: (features) => electron.ipcRenderer.invoke(IPC.CONFIG_SET_FEATURES, features),
   getKey: (provider) => electron.ipcRenderer.invoke(IPC.KEY_GET, provider),
   saveKey: (provider, key) => electron.ipcRenderer.invoke(IPC.KEY_SAVE, provider, key),
+  pathExists: (targetPath) => electron.ipcRenderer.invoke(IPC.PATH_EXISTS, targetPath),
   createPty: (id, shell, cwd) => electron.ipcRenderer.invoke("pty:create", id, shell, cwd),
   writePty: (id, data) => electron.ipcRenderer.send("pty:input", id, data),
   resizePty: (id, cols, rows) => electron.ipcRenderer.send("pty:resize", id, cols, rows),
@@ -76,6 +80,11 @@ const api = {
     const listener = (_event, id, code) => callback(id, code);
     electron.ipcRenderer.on("pty:exit", listener);
     return () => electron.ipcRenderer.removeListener("pty:exit", listener);
+  },
+  onPtyCommand: (callback) => {
+    const listener = (_event, id, command) => callback(id, command);
+    electron.ipcRenderer.on(IPC.PTY_COMMAND, listener);
+    return () => electron.ipcRenderer.removeListener(IPC.PTY_COMMAND, listener);
   },
   minimizeWindow: () => electron.ipcRenderer.send(IPC.WINDOW_MINIMIZE),
   maximizeWindow: () => electron.ipcRenderer.send(IPC.WINDOW_MAXIMIZE),

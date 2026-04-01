@@ -7380,25 +7380,26 @@ const defaultFeatures = {
 };
 function applyThemeToDocument(theme) {
   const light = isLightColor$1(theme.background);
-  const surfaceDelta = light ? -8 : 8;
+  const surfaceDelta = light ? -10 : 8;
+  const elevatedDelta = light ? -16 : 14;
   document.documentElement.dataset.theme = light ? "light" : "dark";
   document.documentElement.style.setProperty("--bg", theme.background);
   document.documentElement.style.setProperty("--bg2", shiftColor(theme.background, surfaceDelta));
-  document.documentElement.style.setProperty("--bg3", shiftColor(theme.background, surfaceDelta * 1.75));
-  document.documentElement.style.setProperty("--bg4", shiftColor(theme.background, surfaceDelta * 2.5));
-  document.documentElement.style.setProperty("--bg5", shiftColor(theme.background, surfaceDelta * 3.25));
-  document.documentElement.style.setProperty("--border", light ? "rgba(26, 37, 56, 0.10)" : "rgba(255, 255, 255, 0.08)");
-  document.documentElement.style.setProperty("--border2", light ? "rgba(26, 37, 56, 0.18)" : "rgba(255, 255, 255, 0.16)");
+  document.documentElement.style.setProperty("--bg3", shiftColor(theme.background, light ? elevatedDelta : surfaceDelta * 1.75));
+  document.documentElement.style.setProperty("--bg4", shiftColor(theme.background, light ? elevatedDelta * 1.22 : surfaceDelta * 2.5));
+  document.documentElement.style.setProperty("--bg5", shiftColor(theme.background, light ? elevatedDelta * 1.42 : surfaceDelta * 3.25));
+  document.documentElement.style.setProperty("--border", light ? "rgba(26, 37, 56, 0.14)" : "rgba(255, 255, 255, 0.08)");
+  document.documentElement.style.setProperty("--border2", light ? "rgba(26, 37, 56, 0.24)" : "rgba(255, 255, 255, 0.16)");
   document.documentElement.style.setProperty("--text", theme.foreground);
-  document.documentElement.style.setProperty("--text2", mixColors(theme.foreground, theme.background, light ? 0.42 : 0.6));
-  document.documentElement.style.setProperty("--text3", mixColors(theme.foreground, theme.background, light ? 0.66 : 0.78));
+  document.documentElement.style.setProperty("--text2", mixColors(theme.foreground, theme.background, light ? 0.36 : 0.6));
+  document.documentElement.style.setProperty("--text3", mixColors(theme.foreground, theme.background, light ? 0.54 : 0.78));
   document.documentElement.style.setProperty("--accent", theme.accent);
-  document.documentElement.style.setProperty("--accent-dim", withAlpha$1(theme.accent, light ? "1a" : "22"));
-  document.documentElement.style.setProperty("--ai-bg", withAlpha$1(theme.accent, light ? "12" : "14"));
-  document.documentElement.style.setProperty("--ai-border", withAlpha$1(theme.accent, light ? "30" : "44"));
-  document.documentElement.style.setProperty("--app-glow", withAlpha$1(theme.accent, light ? "14" : "20"));
-  document.documentElement.style.setProperty("--surface-top", shiftColor(theme.background, light ? 10 : 6));
-  document.documentElement.style.setProperty("--surface-bottom", shiftColor(theme.background, light ? -2 : 0));
+  document.documentElement.style.setProperty("--accent-dim", withAlpha$1(theme.accent, light ? "14" : "22"));
+  document.documentElement.style.setProperty("--ai-bg", withAlpha$1(theme.accent, light ? "0d" : "14"));
+  document.documentElement.style.setProperty("--ai-border", withAlpha$1(theme.accent, light ? "26" : "44"));
+  document.documentElement.style.setProperty("--app-glow", withAlpha$1(theme.accent, light ? "0f" : "20"));
+  document.documentElement.style.setProperty("--surface-top", shiftColor(theme.background, light ? 4 : 6));
+  document.documentElement.style.setProperty("--surface-bottom", shiftColor(theme.background, light ? -6 : 0));
   document.documentElement.style.setProperty("--scrollbar-thumb", light ? "rgba(26, 37, 56, 0.18)" : "rgba(255, 255, 255, 0.12)");
   document.documentElement.style.setProperty("--scrollbar-thumb-hover", light ? "rgba(26, 37, 56, 0.28)" : "rgba(255, 255, 255, 0.18)");
   document.documentElement.style.setProperty("--focus-ring", withAlpha$1(theme.accent, light ? "cc" : "e6"));
@@ -7600,10 +7601,10 @@ function AIChatPanel({ open, onClose }) {
     if (!activeTab) {
       return "未关联终端";
     }
-    return `${shellNames[activeTab.shell]} · ${activeTab.cwd === "~" ? "默认目录" : activeTab.cwd}`;
+    return `${shellNames[activeTab.shell]} / ${activeTab.cwd === "~" ? "默认目录" : activeTab.cwd}`;
   }, [activeTab]);
   const placeholder = reactExports.useMemo(() => {
-    return platform2 === "windows" ? "例如：帮我写一个 PowerShell 脚本，或输入“切换到 D:\\Agent\\auto-shell”直接让当前终端切目录" : "例如：帮我写一个 zsh 脚本，或输入“切换到 ~/projects/auto-shell”直接让当前终端切目录";
+    return platform2 === "windows" ? "例如：帮我写一个 PowerShell 脚本，或输入“切换到 D:\\Agent\\auto-shell”" : "例如：帮我写一个 zsh 脚本，或输入“切换到 ~/projects/auto-shell”";
   }, [platform2]);
   if (!open) return null;
   const handleSend = async () => {
@@ -7615,6 +7616,17 @@ function AIChatPanel({ open, onClose }) {
     }
     const switchTarget = parseProjectSwitchInput(trimmed);
     if (switchTarget) {
+      const exists = await window.api.pathExists(switchTarget);
+      if (!exists) {
+        setMessages((current) => [
+          ...current,
+          { role: "user", content: trimmed },
+          { role: "assistant", content: `找不到该目录：${switchTarget}` }
+        ]);
+        setInput("");
+        toast(`目录不存在：${switchTarget}`);
+        return;
+      }
       const command = buildChangeDirectoryCommand(activeTab.shell, switchTarget);
       window.api.writePty(activeTabId, `${command}\r`);
       setTabCwd(activeTabId, switchTarget);
@@ -7639,7 +7651,7 @@ function AIChatPanel({ open, onClose }) {
             "回答要直接、可执行、准确，优先给出当前平台和当前 shell 可直接执行的命令。",
             `当前 shell: ${shellNames[activeTab.shell]}`,
             `当前工作目录: ${activeTab.cwd}`,
-            "如果用户表达的是切换目录或切换项目，优先直接给出明确的 cd / Set-Location / zsh 可执行命令。"
+            "如果用户表达的是切换目录或切换项目，优先直接给出明确的 cd / Set-Location 命令。"
           ].join("\n")
         },
         ...nextMessages
@@ -7706,22 +7718,38 @@ function AIChatPanel({ open, onClose }) {
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-panel", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-header", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "chat-title", children: "AI 对话" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "chat-title", children: "Assistant" }),
         /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "chat-meta", children: modelLabel }),
         /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "chat-context", children: tabLabel })
       ] }),
       /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "chat-close", onClick: onClose, children: "×" })
     ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-messages", children: [
-      messages.map((message, index) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: `chat-bubble ${message.role}`, children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "bubble-role", children: message.role === "assistant" ? "AI" : "你" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "bubble-text", children: message.content })
-      ] }, `${message.role}-${index}`)),
-      loading && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-bubble assistant loading", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "bubble-role", children: "AI" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "bubble-text", children: "正在等待模型返回完整结果..." })
-      ] })
-    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "chat-messages", children: messages.map((message, index) => {
+      const previous = index > 0 ? messages[index - 1] : null;
+      const showAssistantHeader = message.role === "assistant" && previous?.role !== "assistant";
+      const isStreamingPlaceholder = loading && message.role === "assistant" && index === messages.length - 1 && !message.content.trim();
+      return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        "div",
+        {
+          className: `chat-row ${message.role} ${showAssistantHeader ? "with-header" : "continued"}`,
+          children: [
+            message.role === "assistant" && showAssistantHeader ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "message-avatar assistant", "aria-hidden": "true", children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "avatar-core" }) }) : message.role === "assistant" ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "message-avatar-spacer", "aria-hidden": "true" }) : null,
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: `chat-bubble ${message.role}`, children: [
+              message.role === "assistant" && showAssistantHeader ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bubble-meta", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "bubble-role", children: "Assistant" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "bubble-model", children: isStreamingPlaceholder ? "thinking" : configs[provider].model })
+              ] }) : null,
+              isStreamingPlaceholder ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "typing-indicator", "aria-label": "AI 正在回复", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", {}),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", {}),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", {})
+              ] }) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "bubble-text", children: message.content })
+            ] })
+          ]
+        },
+        `${message.role}-${index}`
+      );
+    }) }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-input", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx(
         "textarea",
@@ -7789,39 +7817,109 @@ function AIChatPanel({ open, onClose }) {
         .chat-messages {
           flex: 1;
           overflow-y: auto;
-          padding: 16px;
+          padding: 18px 18px 22px;
           display: flex;
           flex-direction: column;
+          gap: 18px;
+        }
+        .chat-row {
+          display: flex;
+          width: 100%;
           gap: 12px;
+          align-items: flex-start;
+        }
+        .chat-row.user {
+          justify-content: flex-end;
+        }
+        .message-avatar {
+          width: 26px;
+          height: 26px;
+          border-radius: 9px;
+          flex: 0 0 26px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border: 1px solid var(--border);
+          background: color-mix(in srgb, var(--bg3) 92%, white 8%);
+          box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+        }
+        .message-avatar-spacer {
+          width: 26px;
+          flex: 0 0 26px;
+        }
+        .avatar-core {
+          width: 8px;
+          height: 8px;
+          border-radius: 999px;
+          background: linear-gradient(180deg, var(--accent), color-mix(in srgb, var(--accent) 78%, #163a75 22%));
         }
         .chat-bubble {
-          max-width: 92%;
-          padding: 12px 14px;
-          border-radius: 14px;
-          border: 1px solid var(--border);
+          max-width: min(92%, 640px);
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
         }
         .chat-bubble.user {
-          align-self: flex-end;
+          padding: 14px 16px;
+          border-radius: 18px;
           background: var(--ai-bg);
-          border-color: var(--ai-border);
+          border: 1px solid var(--ai-border);
+          box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
         }
         .chat-bubble.assistant {
-          align-self: flex-start;
-          background: color-mix(in srgb, var(--bg3) 90%, white 10%);
+          padding: 0;
+          background: transparent;
+          border: 0;
+          box-shadow: none;
+        }
+        .chat-row.assistant.continued {
+          margin-top: -8px;
+        }
+        .bubble-meta {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          min-height: 18px;
         }
         .bubble-role {
-          font-size: 10px;
-          letter-spacing: .08em;
-          text-transform: uppercase;
+          font-size: 11px;
+          font-weight: 600;
           color: var(--text3);
-          margin-bottom: 6px;
+        }
+        .bubble-model {
+          font-size: 11px;
+          font-family: var(--mono);
+          color: var(--accent);
+          opacity: 0.78;
         }
         .bubble-text {
-          font-size: 12.5px;
-          line-height: 1.7;
+          font-size: 13px;
+          line-height: 1.75;
           color: var(--text);
           white-space: pre-wrap;
           word-break: break-word;
+        }
+        .chat-bubble.assistant .bubble-text {
+          padding: 0 2px 0 0;
+        }
+        .typing-indicator {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 6px 0 2px;
+        }
+        .typing-indicator span {
+          width: 6px;
+          height: 6px;
+          border-radius: 999px;
+          background: var(--text3);
+          animation: chatTyping 1.1s ease-in-out infinite;
+        }
+        .typing-indicator span:nth-child(2) {
+          animation-delay: .14s;
+        }
+        .typing-indicator span:nth-child(3) {
+          animation-delay: .28s;
         }
         .chat-input {
           padding: 14px 16px 16px;
@@ -7855,6 +7953,16 @@ function AIChatPanel({ open, onClose }) {
           opacity: 0.55;
           cursor: not-allowed;
         }
+        @keyframes chatTyping {
+          0%, 80%, 100% {
+            transform: translateY(0);
+            opacity: .35;
+          }
+          40% {
+            transform: translateY(-3px);
+            opacity: 1;
+          }
+        }
       ` })
   ] });
 }
@@ -7867,7 +7975,7 @@ function parseProjectSwitchInput(input) {
   for (const pattern of patterns) {
     const match = trimmed.match(pattern);
     if (match?.[1]) {
-      return stripWrappingQuotes$1(match[1].trim());
+      return normalizeProjectPath(stripWrappingQuotes$1(match[1].trim()));
     }
   }
   return null;
@@ -7893,6 +8001,9 @@ function stripWrappingQuotes$1(value) {
     return value.slice(1, -1);
   }
   return value;
+}
+function normalizeProjectPath(value) {
+  return value.replace(/[。！!，,\s]+$/g, "").replace(/(?:目录|文件夹|项目目录|这个目录|该目录)$/i, "").trim();
 }
 function detectPlatform$1() {
   const value = typeof navigator === "undefined" ? "" : navigator.userAgent.toLowerCase();
@@ -7964,8 +8075,10 @@ function QuickCommands() {
       {
         group: "项目切换",
         commands: getProjectPaths(platform2).map((project) => ({
-          name: `进入 ${project.name}`,
-          cmd: buildCdCommand(activeTab.shell, project.path)
+          name: project.name,
+          cmd: buildCdCommand(activeTab.shell, project.path),
+          preview: project.path,
+          actionLabel: "切换项目"
         }))
       }
     ] : [];
@@ -7976,7 +8089,7 @@ function QuickCommands() {
     () => allCommands.map((group) => ({
       ...group,
       commands: group.commands.filter(
-        (command) => command.name.toLowerCase().includes(filter.toLowerCase()) || command.cmd.toLowerCase().includes(filter.toLowerCase())
+        (command) => command.name.toLowerCase().includes(filter.toLowerCase()) || command.cmd.toLowerCase().includes(filter.toLowerCase()) || (command.preview ?? "").toLowerCase().includes(filter.toLowerCase())
       )
     })).filter((group) => group.commands.length > 0),
     [allCommands, filter]
@@ -7995,7 +8108,7 @@ function QuickCommands() {
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { id: "sidebar", className: sidebarOpen ? "" : "collapsed", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "sb-head", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sb-title", children: "快捷命令" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "sb-meta", children: activeTab ? `${shellNames[activeTab.shell]} · ${activeTab.name}` : "未关联终端" })
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "sb-meta", children: activeTab ? `${shellNames[activeTab.shell]} / ${activeTab.name}` : "未关联终端" })
     ] }) }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "cmd-search", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "12", height: "12", viewBox: "0 0 12 12", fill: "none", children: [
@@ -8021,9 +8134,11 @@ function QuickCommands() {
             onClick: () => handleRun(item.cmd),
             title: `在当前终端执行：${item.cmd}`,
             children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "cmd-name", children: item.name }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "cmd-preview", children: item.cmd }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "cmd-run", children: "执行到当前终端" })
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "cmd-main", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "cmd-name", children: item.name }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "cmd-preview", children: item.preview ?? item.cmd })
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "cmd-run", children: item.actionLabel ?? "执行到当前终端" })
             ]
           },
           `${item.cmd}-${index}`
@@ -8104,8 +8219,8 @@ function QuickCommands() {
           width: 100%;
           display: flex;
           align-items: center;
-          gap: 8px;
-          padding: 9px 10px;
+          gap: 10px;
+          padding: 10px;
           border-radius: 10px;
           border: 1px solid transparent;
           background: transparent;
@@ -8116,10 +8231,16 @@ function QuickCommands() {
           background: color-mix(in srgb, var(--bg3) 90%, white 10%);
           border-color: var(--border);
         }
+        .cmd-main {
+          min-width: 0;
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          gap: 3px;
+        }
         .cmd-name {
           font-size: 12px;
           color: var(--text);
-          flex: 1;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -8128,7 +8249,6 @@ function QuickCommands() {
           font-family: var(--mono);
           font-size: 10px;
           color: var(--text2);
-          max-width: 120px;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -8137,6 +8257,7 @@ function QuickCommands() {
           font-size: 10px;
           color: var(--accent);
           white-space: nowrap;
+          flex-shrink: 0;
         }
         .cmd-empty {
           font-size: 12px;
@@ -8335,381 +8456,223 @@ function ThemeSelector() {
       ` })
   ] });
 }
-function FeatureToggles() {
-  const { features, setFeatures } = useSettingsStore();
-  const toggles = [
-    { key: "errorCard", label: "报错后自动给出 AI 分析" },
-    { key: "naturalCommand", label: "支持 # 自然语言转命令" },
-    { key: "explainCommand", label: "选中文本后解释命令" },
-    { key: "completion", label: "预留上下文补全能力" }
-  ];
-  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "feature-toggles", children: toggles.map((toggle) => /* @__PURE__ */ jsxRuntimeExports.jsx(
-    ToggleRow,
-    {
-      label: toggle.label,
-      checked: features[toggle.key],
-      onChange: (value) => void setFeatures({ [toggle.key]: value })
-    },
-    toggle.key
-  )) });
+const MODEL_PRESETS = {
+  "claude-3-5-sonnet": {
+    id: "claude-3-5-sonnet",
+    name: "Claude 3.5 Sonnet",
+    brand: "Anthropic",
+    baseUrl: "https://api.anthropic.com",
+    apiPath: "/v1/messages",
+    defaultTemperature: 0.7,
+    defaultMaxTokens: 4096
+  },
+  "claude-3-haiku": {
+    id: "claude-3-haiku",
+    name: "Claude 3 Haiku",
+    brand: "Anthropic",
+    baseUrl: "https://api.anthropic.com",
+    apiPath: "/v1/messages",
+    defaultTemperature: 0.7,
+    defaultMaxTokens: 4096
+  },
+  "gpt-4o": {
+    id: "gpt-4o",
+    name: "GPT-4o",
+    brand: "OpenAI",
+    baseUrl: "https://api.openai.com",
+    apiPath: "/v1/chat/completions",
+    defaultTemperature: 0.7,
+    defaultMaxTokens: 4096
+  },
+  "gpt-4o-mini": {
+    id: "gpt-4o-mini",
+    name: "GPT-4o Mini",
+    brand: "OpenAI",
+    baseUrl: "https://api.openai.com",
+    apiPath: "/v1/chat/completions",
+    defaultTemperature: 0.7,
+    defaultMaxTokens: 4096
+  },
+  "MiniMax-M2.7": {
+    id: "MiniMax-M2.7",
+    name: "MiniMax M2.7",
+    brand: "MiniMax",
+    baseUrl: "https://api.minimaxi.com/anthropic",
+    apiPath: "/v1/messages",
+    defaultTemperature: 0.7,
+    defaultMaxTokens: 4096
+  },
+  "glm-4": {
+    id: "glm-4",
+    name: "GLM-4",
+    brand: "Zhipu",
+    baseUrl: "https://open.bigmodel.cn/api/paas/v4",
+    apiPath: "/chat/completions",
+    defaultTemperature: 0.7,
+    defaultMaxTokens: 4096
+  },
+  "llama3": {
+    id: "llama3",
+    name: "Llama 3",
+    brand: "Ollama",
+    baseUrl: "http://localhost:11434",
+    apiPath: "/api/chat",
+    defaultTemperature: 0.7,
+    defaultMaxTokens: 4096
+  }
+};
+function getAllModelPresets() {
+  return Object.values(MODEL_PRESETS);
 }
-const PROVIDERS$1 = [
-  { id: "minimax", name: "MiniMax", helper: "Anthropic 兼容接入", apiKeyRequired: true },
-  { id: "glm", name: "GLM", helper: "智谱开放平台", apiKeyRequired: true },
-  { id: "claude", name: "Claude", helper: "Anthropic 官方接口", apiKeyRequired: true },
-  { id: "openai", name: "OpenAI", helper: "OpenAI 官方接口", apiKeyRequired: true },
-  { id: "ollama", name: "Ollama", helper: "本地模型服务", apiKeyRequired: false },
-  { id: "openaiCompatible", name: "兼容接口", helper: "任意 OpenAI 兼容网关", apiKeyRequired: true }
-];
-function ModelConfigDialog({ open, onClose }) {
+function AISettings() {
   const { aiSettings, setProvider, setProviderConfig } = useSettingsStore();
-  const [selectedProvider, setSelectedProvider] = reactExports.useState(aiSettings.provider);
   const [apiKey, setApiKey] = reactExports.useState("");
-  const [checking, setChecking] = reactExports.useState(false);
-  const config = aiSettings.configs[selectedProvider];
-  const providerMeta = reactExports.useMemo(
-    () => PROVIDERS$1.find((provider) => provider.id === selectedProvider),
-    [selectedProvider]
-  );
+  const [isConnected, setIsConnected] = reactExports.useState(null);
+  const [isChecking, setIsChecking] = reactExports.useState(false);
+  const [showAdvanced, setShowAdvanced] = reactExports.useState(false);
+  const currentModel = aiSettings.configs[aiSettings.provider]?.model || "MiniMax-M2.7";
+  const currentPreset = MODEL_PRESETS[currentModel];
+  const models = getAllModelPresets();
   reactExports.useEffect(() => {
-    if (!open) return;
-    setSelectedProvider(aiSettings.provider);
-  }, [open, aiSettings.provider]);
-  reactExports.useEffect(() => {
-    if (!open) return;
-    window.api.getKey(selectedProvider).then((key) => setApiKey(key ?? ""));
-  }, [open, selectedProvider]);
-  if (!open) return null;
-  const updateConfig = async (patch) => {
-    await setProviderConfig(selectedProvider, {
-      ...config,
-      ...patch
+    window.api.getKey(aiSettings.provider).then((key) => {
+      setApiKey(key || "");
     });
+  }, [aiSettings.provider]);
+  const handleModelChange = async (modelId) => {
+    const preset = MODEL_PRESETS[modelId];
+    if (!preset) return;
+    const brandToProvider = {
+      "Anthropic": "claude",
+      "OpenAI": "openai",
+      "MiniMax": "minimax",
+      "Zhipu": "glm",
+      "Ollama": "ollama"
+    };
+    const providerType = brandToProvider[preset.brand] || aiSettings.provider;
+    await setProvider(providerType);
+    await setProviderConfig(providerType, {
+      baseUrl: preset.baseUrl,
+      model: preset.id
+    });
+    const key = await window.api.getKey(providerType);
+    setApiKey(key || "");
   };
-  const handleApplyProvider = async () => {
-    await setProvider(selectedProvider);
-    toast(`${providerMeta?.name ?? selectedProvider} 已设为当前对话模型`);
+  const handleApiKeyChange = (key) => {
+    setApiKey(key);
   };
-  const handleSaveKey = async () => {
-    await window.api.saveKey(selectedProvider, apiKey.trim());
-    toast(`${providerMeta?.name ?? selectedProvider} 的 API Key 已保存`);
-  };
-  const handleCheck = async () => {
-    setChecking(true);
-    try {
-      await setProvider(selectedProvider);
-      const ok2 = await window.api.checkAIAvailable();
-      toast(ok2 ? "连接成功，配置已生效" : "连接失败，请检查配置");
-    } finally {
-      setChecking(false);
+  const handleSaveApiKey = async () => {
+    if (apiKey) {
+      await window.api.saveKey(aiSettings.provider, apiKey);
     }
   };
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "model-dialog-mask", onClick: onClose, children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "model-dialog", onClick: (event) => event.stopPropagation(), children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "model-dialog-header", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "model-dialog-title", children: "模型配置" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "model-dialog-subtitle", children: "配置 Provider、Base URL、模型名和 API Key，保存后立即生效。" })
-        ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "dialog-close", onClick: onClose, "aria-label": "关闭模型配置", children: "×" })
-      ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "model-dialog-body", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "provider-list", children: PROVIDERS$1.map((provider) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
-          "button",
+  const handleTestConnection = async () => {
+    setIsChecking(true);
+    setIsConnected(null);
+    try {
+      if (apiKey) {
+        await window.api.saveKey(aiSettings.provider, apiKey);
+      }
+      const available = await window.api.checkAIAvailable();
+      setIsConnected(available);
+    } catch {
+      setIsConnected(false);
+    } finally {
+      setIsChecking(false);
+    }
+  };
+  const handleReset = (field) => {
+    if (currentPreset) {
+      setProviderConfig(aiSettings.provider, {
+        ...aiSettings.configs[aiSettings.provider],
+        baseUrl: currentPreset.baseUrl
+      });
+    }
+  };
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "ai-settings", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "settings-section", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "section-title", children: "选择模型" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "model-selector", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "select",
+        {
+          value: currentModel,
+          onChange: (e) => handleModelChange(e.target.value),
+          className: "model-select",
+          children: models.map((model) => /* @__PURE__ */ jsxRuntimeExports.jsxs("option", { value: model.id, children: [
+            model.name,
+            " (",
+            model.brand,
+            ")"
+          ] }, model.id))
+        }
+      ) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "model-hint", children: currentPreset ? `${currentPreset.baseUrl}` : "选择模型自动配置端点" })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "settings-section", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "section-title", children: "API Key" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "api-key-row", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "input",
           {
-            className: `provider-list-item ${selectedProvider === provider.id ? "active" : ""}`,
-            onClick: () => setSelectedProvider(provider.id),
-            children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: provider.name }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("small", { children: provider.helper })
-            ]
-          },
-          provider.id
-        )) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "provider-config", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "config-block", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("label", { children: "API Base URL" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx(
-              "input",
-              {
-                value: config.baseUrl,
-                onChange: (event) => void updateConfig({ baseUrl: event.target.value }),
-                placeholder: "https://api.example.com/v1"
-              }
-            )
-          ] }),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "config-block", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("label", { children: "模型名称" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx(
-              "input",
-              {
-                value: config.model,
-                onChange: (event) => void updateConfig({ model: event.target.value }),
-                placeholder: "gpt-4o-mini"
-              }
-            )
-          ] }),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "config-block", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("label", { children: "API Key" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "api-key-row", children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx(
-                "input",
-                {
-                  type: "password",
-                  value: apiKey,
-                  onChange: (event) => setApiKey(event.target.value),
-                  placeholder: providerMeta?.apiKeyRequired ? "sk-..." : "Ollama 无需 API Key",
-                  disabled: !providerMeta?.apiKeyRequired
-                }
-              ),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("button", { onClick: () => void handleSaveKey(), disabled: !providerMeta?.apiKeyRequired, children: "保存 Key" })
-            ] }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "field-hint", children: "API Key 会和模型配置一起写入用户目录下的 ~/.autoshell/config.json。" })
-          ] }),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "dialog-actions", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "secondary-btn", onClick: () => void handleCheck(), disabled: checking, children: checking ? "检测中..." : "测试连接" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "primary-btn", onClick: () => void handleApplyProvider(), children: "设为当前模型" })
-          ] })
-        ] })
+            type: "password",
+            value: apiKey,
+            onChange: (e) => handleApiKeyChange(e.target.value),
+            placeholder: "sk-...",
+            className: "api-key-input"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { onClick: handleSaveApiKey, className: "save-btn", children: "保存" })
       ] })
     ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "settings-section", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "connection-row", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "button",
+        {
+          onClick: handleTestConnection,
+          disabled: isChecking,
+          className: "test-btn",
+          children: isChecking ? "检测中..." : "测试连接"
+        }
+      ),
+      isConnected === true && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "status-ok", children: "✓ 已连接" }),
+      isConnected === false && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "status-fail", children: "✗ 连接失败" })
+    ] }) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "settings-section", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        "button",
+        {
+          className: "advanced-toggle",
+          onClick: () => setShowAdvanced(!showAdvanced),
+          children: [
+            showAdvanced ? "▲" : "▼",
+            " 高级选项"
+          ]
+        }
+      ),
+      showAdvanced && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "advanced-panel", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "advanced-row", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("label", { children: "端点" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "input",
+          {
+            type: "text",
+            value: aiSettings.configs[aiSettings.provider]?.baseUrl || "",
+            className: "advanced-input",
+            placeholder: currentPreset?.baseUrl
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { onClick: () => handleReset(), className: "reset-btn", children: "重置" })
+      ] }) })
+    ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsx("style", { children: `
-        .model-dialog-mask {
-          position: fixed;
-          inset: 0;
-          background: rgba(4, 8, 14, 0.44);
-          backdrop-filter: blur(10px);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 40;
-        }
-        .model-dialog {
-          width: min(920px, calc(100vw - 56px));
-          min-height: 560px;
-          background: linear-gradient(180deg, color-mix(in srgb, var(--bg2) 88%, white 12%), var(--bg));
-          border: 1px solid var(--border2);
-          border-radius: 18px;
-          box-shadow: 0 24px 80px rgba(0,0,0,0.20);
-          display: flex;
-          flex-direction: column;
-          overflow: hidden;
-        }
-        .model-dialog-header {
-          display: flex;
-          align-items: flex-start;
-          justify-content: space-between;
-          gap: 16px;
-          padding: 22px 24px 18px;
-          border-bottom: 1px solid var(--border);
-        }
-        .model-dialog-title {
-          font-size: 20px;
-          font-weight: 700;
-          color: var(--text);
-        }
-        .model-dialog-subtitle {
-          margin-top: 6px;
-          font-size: 12px;
-          color: var(--text2);
-        }
-        .dialog-close {
-          width: 34px;
-          height: 34px;
-          border-radius: 10px;
-          border: 1px solid var(--border);
-          background: color-mix(in srgb, var(--bg3) 86%, white 14%);
-          color: var(--text2);
-          font-size: 20px;
-          cursor: pointer;
-        }
-        .dialog-close:hover {
-          color: var(--text);
-          background: var(--bg3);
-        }
-        .model-dialog-body {
-          display: grid;
-          grid-template-columns: 260px minmax(0, 1fr);
-          flex: 1;
-          min-height: 0;
-        }
-        .provider-list {
-          padding: 18px;
-          border-right: 1px solid var(--border);
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-          background: color-mix(in srgb, var(--bg2) 92%, white 8%);
-        }
-        .provider-list-item {
-          display: flex;
-          flex-direction: column;
-          gap: 6px;
-          text-align: left;
-          padding: 14px;
-          border-radius: 12px;
-          border: 1px solid var(--border);
-          background: var(--bg3);
-          color: var(--text);
-          cursor: pointer;
-        }
-        .provider-list-item small {
-          color: var(--text2);
-          font-size: 11px;
-          line-height: 1.5;
-        }
-        .provider-list-item.active {
-          border-color: var(--ai-border);
-          background: var(--ai-bg);
-        }
-        .provider-config {
-          padding: 22px 24px;
+        .ai-settings {
           display: flex;
           flex-direction: column;
           gap: 18px;
         }
-        .config-block {
+        .settings-section {
           display: flex;
           flex-direction: column;
           gap: 8px;
         }
-        .config-block label {
-          font-size: 12px;
-          color: var(--text2);
-        }
-        .config-block input {
-          width: 100%;
-          height: 42px;
-          border-radius: 10px;
-          border: 1px solid var(--border);
-          background: color-mix(in srgb, var(--bg3) 90%, white 10%);
-          color: var(--text);
-          padding: 0 12px;
-        }
-        .config-block input:focus {
-          border-color: var(--ai-border);
-        }
-        .api-key-row {
-          display: grid;
-          grid-template-columns: minmax(0, 1fr) auto;
-          gap: 10px;
-        }
-        .api-key-row button,
-        .primary-btn,
-        .secondary-btn {
-          height: 42px;
-          border-radius: 10px;
-          border: 1px solid var(--border);
-          padding: 0 16px;
-          cursor: pointer;
-          color: var(--text);
-        }
-        .api-key-row button:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-        .api-key-row button,
-        .secondary-btn {
-          background: color-mix(in srgb, var(--bg3) 90%, white 10%);
-        }
-        .primary-btn {
-          background: linear-gradient(180deg, var(--accent), color-mix(in srgb, var(--accent) 78%, #163a75 22%));
-          border-color: var(--ai-border);
-          color: white;
-        }
-        .field-hint {
-          font-size: 11px;
-          color: var(--text3);
-        }
-        .dialog-actions {
-          margin-top: auto;
-          display: flex;
-          justify-content: flex-end;
-          gap: 10px;
-        }
-      ` })
-  ] });
-}
-const PROVIDERS = [
-  { id: "minimax", name: "MiniMax", desc: "Anthropic 兼容接入", apiKeyRequired: true },
-  { id: "glm", name: "GLM", desc: "智谱开放平台", apiKeyRequired: true },
-  { id: "claude", name: "Claude", desc: "Anthropic", apiKeyRequired: true },
-  { id: "openai", name: "OpenAI", desc: "官方接口", apiKeyRequired: true },
-  { id: "ollama", name: "Ollama", desc: "本地模型服务", apiKeyRequired: false },
-  { id: "openaiCompatible", name: "兼容接口", desc: "任意 OpenAI 兼容网关", apiKeyRequired: true }
-];
-function AIProviders() {
-  const { aiSettings, setProvider } = useSettingsStore();
-  const activeProvider = aiSettings.provider;
-  const [available, setAvailable] = reactExports.useState(false);
-  const [checking, setChecking] = reactExports.useState(false);
-  const [dialogOpen, setDialogOpen] = reactExports.useState(false);
-  const activeProviderMeta = reactExports.useMemo(
-    () => PROVIDERS.find((provider) => provider.id === activeProvider),
-    [activeProvider]
-  );
-  reactExports.useEffect(() => {
-    const run = async () => {
-      setChecking(true);
-      try {
-        setAvailable(await window.api.checkAIAvailable());
-      } catch {
-        setAvailable(false);
-      } finally {
-        setChecking(false);
-      }
-    };
-    void run();
-  }, [activeProvider, aiSettings.configs]);
-  const handleSelectProvider = async (provider) => {
-    await setProvider(provider);
-    toast(`当前模型已切换为 ${PROVIDERS.find((item) => item.id === provider)?.name ?? provider}`);
-  };
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "ai-providers", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "settings-section", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "section-title", children: "当前模型" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "current-provider-card", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "current-provider-name", children: activeProviderMeta?.name }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "current-provider-desc", children: activeProviderMeta?.desc }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "current-provider-model", children: aiSettings.configs[activeProvider].model })
-        ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "open-config-btn", onClick: () => setDialogOpen(true), children: "配置模型" })
-      ] })
-    ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "settings-section", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "section-title", children: "快速切换" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "provider-grid", children: PROVIDERS.map((provider) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
-        "button",
-        {
-          className: `provider-item ${activeProvider === provider.id ? "active" : ""}`,
-          onClick: () => void handleSelectProvider(provider.id),
-          children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "provider-name", children: provider.name }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "provider-desc", children: provider.desc })
-          ]
-        },
-        provider.id
-      )) })
-    ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "settings-section", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "section-title", children: "连接状态" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: `status-card ${available ? "ok" : "off"}`, children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "status-dot" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "status-title", children: checking ? "正在检测模型连接..." : available ? "模型连接正常" : "模型暂不可用" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "status-desc", children: activeProviderMeta?.apiKeyRequired ? "请确认 API Key、Base URL 和模型名是否填写正确。" : "请确认 Ollama 服务已启动，并且本机可访问。" })
-        ] })
-      ] })
-    ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "settings-section", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "section-title", children: "AI 功能" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(FeatureToggles, {})
-    ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(ModelConfigDialog, { open: dialogOpen, onClose: () => setDialogOpen(false) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("style", { children: `
-        .ai-providers { display: flex; flex-direction: column; gap: 18px; }
-        .settings-section { display: flex; flex-direction: column; gap: 12px; }
         .section-title {
           font-size: 11px;
           letter-spacing: .08em;
@@ -8717,99 +8680,109 @@ function AIProviders() {
           color: var(--text3);
           font-weight: 700;
         }
-        .current-provider-card,
-        .status-card {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 14px;
-          padding: 14px;
+        .model-select {
+          width: 100%;
+          padding: 10px 12px;
+          background: var(--bg3);
           border: 1px solid var(--border);
-          border-radius: 12px;
-          background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-        }
-        .current-provider-name,
-        .status-title {
+          border-radius: 8px;
+          color: var(--text);
           font-size: 14px;
-          font-weight: 600;
-          color: var(--text);
-        }
-        .current-provider-desc,
-        .status-desc {
-          font-size: 12px;
-          color: var(--text2);
-          line-height: 1.5;
-        }
-        .current-provider-model {
-          margin-top: 6px;
-          font-family: var(--mono);
-          font-size: 11px;
-          color: #8cb3ff;
-        }
-        .open-config-btn {
-          border: 1px solid rgba(76,141,255,0.35);
-          background: rgba(76,141,255,0.12);
-          color: var(--text);
-          border-radius: 10px;
-          padding: 10px 14px;
           cursor: pointer;
-          white-space: nowrap;
         }
-        .open-config-btn:hover {
-          background: rgba(76,141,255,0.18);
+        .model-select:hover {
+          border-color: var(--ai-border);
         }
-        .provider-grid {
-          display: grid;
-          grid-template-columns: 1fr;
+        .model-hint {
+          font-size: 11px;
+          color: var(--text3);
+          font-family: var(--mono);
+        }
+        .api-key-row {
+          display: flex;
           gap: 8px;
         }
-        .provider-item {
+        .api-key-input {
+          flex: 1;
+          padding: 10px 12px;
+          background: var(--bg3);
+          border: 1px solid var(--border);
+          border-radius: 8px;
+          color: var(--text);
+          font-size: 14px;
+        }
+        .save-btn, .test-btn {
+          padding: 10px 14px;
+          background: var(--ai-bg);
+          border: 1px solid var(--ai-border);
+          border-radius: 8px;
+          color: var(--text);
+          font-size: 12px;
+          cursor: pointer;
+        }
+        .save-btn:hover, .test-btn:hover {
+          background: var(--bg3);
+        }
+        .test-btn:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+        .connection-row {
           display: flex;
           align-items: center;
-          justify-content: space-between;
           gap: 12px;
-          width: 100%;
-          border: 1px solid var(--border);
-          background: var(--bg3);
-          color: var(--text);
-          padding: 12px 14px;
-          border-radius: 10px;
+        }
+        .status-ok {
+          color: var(--green);
+          font-size: 13px;
+        }
+        .status-fail {
+          color: var(--yellow);
+          font-size: 13px;
+        }
+        .advanced-toggle {
+          background: transparent;
+          border: none;
+          color: var(--text3);
+          font-size: 12px;
           cursor: pointer;
+          padding: 4px 0;
           text-align: left;
         }
-        .provider-item:hover {
-          border-color: rgba(76,141,255,0.28);
+        .advanced-panel {
+          background: var(--bg3);
+          border: 1px solid var(--border);
+          border-radius: 8px;
+          padding: 12px;
         }
-        .provider-item.active {
-          border-color: rgba(76,141,255,0.45);
-          background: rgba(76,141,255,0.08);
+        .advanced-row {
+          display: flex;
+          align-items: center;
+          gap: 8px;
         }
-        .provider-name {
-          font-size: 13px;
-          font-weight: 600;
-        }
-        .provider-desc {
-          font-size: 11px;
+        .advanced-row label {
+          font-size: 12px;
           color: var(--text2);
+          min-width: 50px;
         }
-        .status-card {
-          justify-content: flex-start;
-          align-items: flex-start;
+        .advanced-input {
+          flex: 1;
+          padding: 6px 10px;
+          background: var(--bg4);
+          border: 1px solid var(--border2);
+          border-radius: 4px;
+          color: var(--text);
+          font-size: 12px;
+          font-family: var(--mono);
         }
-        .status-card.ok {
-          border-color: rgba(71,209,108,0.28);
-          background: rgba(71,209,108,0.08);
-        }
-        .status-card.off {
-          border-color: rgba(255,255,255,0.08);
-        }
-        .status-dot {
-          width: 10px;
-          height: 10px;
-          border-radius: 50%;
-          margin-top: 5px;
-          background: ${available ? "var(--green)" : "var(--yellow)"};
-          box-shadow: 0 0 0 4px rgba(255,255,255,0.04);
+        .reset-btn {
+          padding: 4px 8px;
+          background: var(--bg4);
+          border: 1px solid var(--border2);
+          border-radius: 4px;
+          color: var(--text2);
+          font-size: 11px;
+          cursor: pointer;
         }
       ` })
   ] });
@@ -8837,7 +8810,7 @@ function Settings({ open, defaultTab = "ai", onClose }) {
     ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "settings-body", children: [
       activeTab === "appearance" && /* @__PURE__ */ jsxRuntimeExports.jsx(ThemeSelector, {}),
-      activeTab === "ai" && /* @__PURE__ */ jsxRuntimeExports.jsx(AIProviders, {}),
+      activeTab === "ai" && /* @__PURE__ */ jsxRuntimeExports.jsx(AISettings, {}),
       activeTab === "system" && /* @__PURE__ */ jsxRuntimeExports.jsx(SystemSettings, {})
     ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsx("style", { children: `
@@ -8959,59 +8932,6 @@ function SystemSettings() {
         .system-copy code {
           font-family: var(--mono);
           color: var(--text);
-        }
-      ` })
-  ] });
-}
-function ToggleRow({ label, checked, onChange }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "toggle-row", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "toggle-label", children: label }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
-      "button",
-      {
-        className: `toggle ${checked ? "on" : ""}`,
-        onClick: () => onChange(!checked),
-        role: "switch",
-        "aria-checked": checked,
-        children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "toggle-knob" })
-      }
-    ),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("style", { children: `
-        .toggle-row {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 12px;
-          padding: 12px 0;
-          border-bottom: 1px solid var(--border);
-        }
-        .toggle-row:last-child { border-bottom: none; }
-        .toggle-label {
-          font-size: 12px;
-          color: var(--text2);
-        }
-        .toggle {
-          width: 42px;
-          height: 24px;
-          border-radius: 999px;
-          border: 1px solid var(--border2);
-          background: var(--bg4);
-          padding: 2px;
-          cursor: pointer;
-        }
-        .toggle.on {
-          background: var(--ai-bg);
-          border-color: var(--ai-border);
-        }
-        .toggle-knob {
-          width: 18px;
-          height: 18px;
-          border-radius: 50%;
-          background: white;
-          transition: transform .18s ease;
-        }
-        .toggle.on .toggle-knob {
-          transform: translateX(18px);
         }
       ` })
   ] });
@@ -17848,10 +17768,22 @@ var Ic = ["cols", "rows"], Ue = 0, Dl = class extends D {
     for (Ue of t2) if (Ue && (Ue === 1 / 0 || isNaN(Ue) || Ue % 1 !== 0 || Ue < 0)) throw new Error("This API only accepts positive integers");
   }
 };
-function useTerminal(containerRef, tabId, shell = "powershell", cwd = "", theme, onSelectionChange) {
+function useTerminal(containerRef, tabId, shell = "powershell", cwd = "", theme, onSelectionChange, onCommandStart, onCommandComplete) {
   const terminalRef = reactExports.useRef(null);
   const fitAddonRef = reactExports.useRef(null);
   const resizeFrameRef = reactExports.useRef(null);
+  const callbacksRef = reactExports.useRef({
+    onSelectionChange,
+    onCommandStart,
+    onCommandComplete
+  });
+  reactExports.useEffect(() => {
+    callbacksRef.current = {
+      onSelectionChange,
+      onCommandStart,
+      onCommandComplete
+    };
+  }, [onSelectionChange, onCommandStart, onCommandComplete]);
   const resizePty = reactExports.useCallback(() => {
     if (!terminalRef.current) {
       return;
@@ -17869,27 +17801,23 @@ function useTerminal(containerRef, tabId, shell = "powershell", cwd = "", theme,
       cursorBlink: true,
       cursorStyle: "block",
       allowProposedApi: true,
-      theme: {
-        background: theme?.background ?? "#0f1115",
-        foreground: theme?.foreground ?? "#d8dee9",
-        cursor: theme?.accent ?? "#4c8dff",
-        cursorAccent: getCursorAccent(theme?.background ?? "#0f1115"),
-        selectionBackground: withAlpha(theme?.accent ?? "#4c8dff", "3d")
-      }
+      theme: createTerminalTheme(theme)
     });
     const fitAddon = new o();
     terminal.loadAddon(fitAddon);
     terminal.loadAddon(new L$1());
-    if (onSelectionChange) {
-      let selectionTimeout;
+    let selectionTimeout;
+    if (callbacksRef.current.onSelectionChange) {
       terminal.onSelectionChange(() => {
-        clearTimeout(selectionTimeout);
+        if (selectionTimeout) {
+          clearTimeout(selectionTimeout);
+        }
         selectionTimeout = setTimeout(() => {
           const selection = terminal.getSelection().trim();
           if (!selection || selection.length < 3) {
             return;
           }
-          onSelectionChange(selection, {
+          callbacksRef.current.onSelectionChange?.(selection, {
             x: terminal.buffer.active.cursorX * 8,
             y: terminal.buffer.active.cursorY * 20
           });
@@ -17911,6 +17839,12 @@ function useTerminal(containerRef, tabId, shell = "powershell", cwd = "", theme,
       if (id2 === tabId) {
         terminal.writeln(`\r
 [process exited with code ${code}]`);
+        callbacksRef.current.onCommandComplete?.();
+      }
+    });
+    const disposeCommand = window.api.onPtyCommand((id2, command) => {
+      if (id2 === tabId) {
+        callbacksRef.current.onCommandStart?.(command);
       }
     });
     terminalRef.current = terminal;
@@ -17936,6 +17870,9 @@ function useTerminal(containerRef, tabId, shell = "powershell", cwd = "", theme,
     });
     resizeObserver.observe(containerRef.current);
     return () => {
+      if (selectionTimeout) {
+        clearTimeout(selectionTimeout);
+      }
       if (resizeFrameRef.current !== null) {
         cancelAnimationFrame(resizeFrameRef.current);
         resizeFrameRef.current = null;
@@ -17944,17 +17881,53 @@ function useTerminal(containerRef, tabId, shell = "powershell", cwd = "", theme,
       containerRef.current?.removeEventListener("mousedown", handleClick);
       disposeOutput();
       disposeExit();
+      disposeCommand();
       window.api.killPty(tabId);
       terminal.dispose();
       terminalRef.current = null;
       fitAddonRef.current = null;
     };
-  }, [containerRef, onSelectionChange, resizePty, shell, tabId, theme]);
+  }, [containerRef, resizePty, shell, tabId]);
+  reactExports.useEffect(() => {
+    if (!terminalRef.current) {
+      return;
+    }
+    terminalRef.current.options.theme = createTerminalTheme(theme);
+  }, [theme]);
   const focus = reactExports.useCallback(() => {
     terminalRef.current?.focus();
   }, []);
   return {
     focus
+  };
+}
+function createTerminalTheme(theme) {
+  const background = theme?.background ?? "#0f1115";
+  const accent = theme?.accent ?? "#4c8dff";
+  const foreground = theme?.foreground ?? "#d8dee9";
+  const light = isLightColor(background);
+  return {
+    background,
+    foreground,
+    cursor: accent,
+    cursorAccent: getCursorAccent(background),
+    selectionBackground: withAlpha(accent, light ? "26" : "3d"),
+    black: light ? "#4b5563" : "#1f2430",
+    red: light ? "#c2410c" : "#f7768e",
+    green: light ? "#0f766e" : "#9ece6a",
+    yellow: light ? "#a16207" : "#e0af68",
+    blue: light ? "#2563eb" : "#7aa2f7",
+    magenta: light ? "#a21caf" : "#bb9af7",
+    cyan: light ? "#0f766e" : "#7dcfff",
+    white: foreground,
+    brightBlack: light ? "#64748b" : "#414868",
+    brightRed: light ? "#dc2626" : "#f7768e",
+    brightGreen: light ? "#059669" : "#9ece6a",
+    brightYellow: light ? "#b45309" : "#e0af68",
+    brightBlue: light ? "#1d4ed8" : "#7aa2f7",
+    brightMagenta: light ? "#9333ea" : "#c0a8ff",
+    brightCyan: light ? "#0891b2" : "#89ddff",
+    brightWhite: light ? "#0f172a" : "#d8dee9"
   };
 }
 function getCursorAccent(background) {
@@ -18193,7 +18166,7 @@ function ExplainTooltip({ selectedText, position, onClose }) {
             /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "ai-dot" }),
             "命令解释"
           ] }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "ep-summary", children: explainResult.summary || explainResult.reason }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "ep-summary", children: explainResult.summary }),
           /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "ep-parts", children: explainResult.parts?.map((part, i) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "ep-part", children: [
             /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "ep-token", children: part.token }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "ep-meaning", children: part.meaning })
@@ -18303,9 +18276,245 @@ function ExplainTooltip({ selectedText, position, onClose }) {
       ` })
   ] });
 }
+function CommandProgressBar({ progress, onCancel }) {
+  const { command, type, elapsed, progress: percent, output, isComplete } = progress;
+  const typeIcons = {
+    install: "📦",
+    download: "⬇️",
+    build: "🔨",
+    git: "📂",
+    docker: "🐳",
+    general: "⏳"
+  };
+  const typeLabels = {
+    install: "安装中",
+    download: "下载中",
+    build: "构建中",
+    git: "Git 操作中",
+    docker: "Docker 操作中",
+    general: "执行中"
+  };
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    "div",
+    {
+      style: {
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        background: "rgba(15, 23, 42, 0.95)",
+        borderBottom: "1px solid #334155",
+        padding: "8px 12px",
+        zIndex: 100,
+        fontFamily: "monospace",
+        fontSize: "13px"
+      },
+      children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", alignItems: "center", marginBottom: "6px" }, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { marginRight: "8px" }, children: typeIcons[type] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { style: { color: "#f1f5f9" }, children: [
+            typeLabels[type],
+            " ",
+            command.slice(0, 40),
+            command.length > 40 ? "..." : ""
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { style: { marginLeft: "auto", color: "#94a3b8" }, children: [
+            "⏱ ",
+            elapsed,
+            "s"
+          ] }),
+          !isComplete && /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "button",
+            {
+              onClick: onCancel,
+              style: {
+                marginLeft: "8px",
+                padding: "2px 6px",
+                background: "#374151",
+                border: "none",
+                borderRadius: "4px",
+                color: "#9ca3af",
+                cursor: "pointer",
+                fontSize: "11px"
+              },
+              children: "取消"
+            }
+          ),
+          isComplete && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { marginLeft: "8px", color: "#22c55e" }, children: "✓" })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "div",
+          {
+            style: {
+              height: "4px",
+              background: "#334155",
+              borderRadius: "2px",
+              overflow: "hidden"
+            },
+            children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "div",
+              {
+                style: {
+                  height: "100%",
+                  width: `${percent}%`,
+                  background: isComplete ? "#22c55e" : percent < 30 ? "#3b82f6" : percent < 70 ? "#f59e0b" : "#22c55e",
+                  borderRadius: "2px",
+                  transition: "width 0.3s ease, background 0.3s ease"
+                }
+              }
+            )
+          }
+        ),
+        output.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "div",
+          {
+            style: {
+              marginTop: "4px",
+              color: "#64748b",
+              fontSize: "11px",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap"
+            },
+            children: output[output.length - 1]
+          }
+        )
+      ]
+    }
+  );
+}
+const COMMAND_PATTERNS = [
+  // 安装类
+  { pattern: /^npm\s+(install|ci|add)/, type: "install", estimator: "npm" },
+  { pattern: /^yarn\s+(add|install)/, type: "install", estimator: "npm" },
+  { pattern: /^pnpm\s+(add|install)/, type: "install", estimator: "npm" },
+  { pattern: /^pip\s+(install|download)/, type: "install", estimator: "cargo" },
+  { pattern: /^cargo\s+(build|install|fetch)/, type: "install", estimator: "cargo" },
+  { pattern: /^gem\s+install/, type: "install", estimator: "cargo" },
+  // 下载类
+  { pattern: /^curl\s+-/, type: "download", estimator: "curl" },
+  { pattern: /^wget\s+-/, type: "download", estimator: "curl" },
+  // 构建类
+  { pattern: /^make(\s|$)/, type: "build", estimator: "time" },
+  { pattern: /^cmake\s+/, type: "build", estimator: "time" },
+  { pattern: /^gradle\s+/, type: "build", estimator: "time" },
+  { pattern: /^mvn\s+/, type: "build", estimator: "time" },
+  // Git 类
+  { pattern: /^git\s+clone/, type: "git", estimator: "curl" },
+  { pattern: /^git\s+(pull|fetch|checkout)/, type: "git", estimator: "time" },
+  // Docker 类
+  { pattern: /^docker\s+(build|pull|run)/, type: "docker", estimator: "curl" }
+];
+function classifyCommand(command) {
+  const trimmed = command.trim();
+  for (const cp of COMMAND_PATTERNS) {
+    if (cp.pattern.test(trimmed)) {
+      return {
+        raw: trimmed,
+        type: cp.type,
+        estimator: cp.estimator,
+        isLongRunning: true
+      };
+    }
+  }
+  return null;
+}
+const DEFAULT_OPTIONS = {
+  minDuration: 3e3,
+  autoHideDelay: 2e3
+};
+function useCommandProgress(options = {}) {
+  const opts = { ...DEFAULT_OPTIONS, ...options };
+  const [progress, setProgress] = reactExports.useState(null);
+  const [isVisible, setIsVisible] = reactExports.useState(false);
+  const intervalRef = reactExports.useRef(null);
+  const outputBufferRef = reactExports.useRef([]);
+  const startTracking = reactExports.useCallback((command) => {
+    const classified = classifyCommand(command);
+    if (!classified) {
+      return;
+    }
+    const startTime = Date.now();
+    outputBufferRef.current = [];
+    setProgress({
+      command: classified.raw,
+      type: classified.type,
+      startTime,
+      elapsed: 0,
+      progress: 0,
+      output: [],
+      isComplete: false
+    });
+    setIsVisible(true);
+    intervalRef.current = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - startTime) / 1e3);
+      setProgress((prev) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          elapsed,
+          // 基于时间的伪进度（无法准确估算时）
+          progress: Math.min(95, elapsed * 10)
+        };
+      });
+    }, 1e3);
+  }, []);
+  const addOutput = reactExports.useCallback((line) => {
+    outputBufferRef.current.push(line);
+    if (outputBufferRef.current.length > 5) {
+      outputBufferRef.current.shift();
+    }
+    setProgress((prev) => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        output: [...outputBufferRef.current]
+      };
+    });
+  }, []);
+  const complete = reactExports.useCallback(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    setProgress((prev) => {
+      if (!prev) return null;
+      return { ...prev, progress: 100, isComplete: true };
+    });
+    setTimeout(() => {
+      setIsVisible(false);
+      setProgress(null);
+    }, opts.autoHideDelay);
+  }, [opts.autoHideDelay]);
+  const cancel = reactExports.useCallback(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    setIsVisible(false);
+    setProgress(null);
+    outputBufferRef.current = [];
+  }, []);
+  reactExports.useEffect(() => {
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, []);
+  return {
+    progress,
+    isVisible,
+    startTracking,
+    addOutput,
+    complete,
+    cancel
+  };
+}
 function Terminal() {
   const containerRef = reactExports.useRef(null);
   const [tooltip, setTooltip] = reactExports.useState(null);
+  const { progress, isVisible, startTracking, complete } = useCommandProgress();
   const activeTabId = useTabsStore((state) => state.activeTabId);
   const tabs = useTabsStore((state) => state.tabs);
   const activeTab = tabs.find((tab) => tab.id === activeTabId);
@@ -18320,7 +18529,9 @@ function Terminal() {
     activeTab?.shell,
     activeTab?.cwd,
     theme,
-    handleSelectionChange
+    handleSelectionChange,
+    startTracking,
+    complete
   );
   reactExports.useEffect(() => {
     setTooltip(null);
@@ -18340,7 +18551,17 @@ function Terminal() {
         /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "shell-path", children: activeTab.cwd === "~" ? "默认目录" : activeTab.cwd })
       ] })
     ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "terminal-output", ref: containerRef, onMouseDown: () => focus() }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "div",
+      {
+        className: "terminal-output",
+        ref: containerRef,
+        tabIndex: 0,
+        onMouseDown: () => focus(),
+        onFocus: () => focus()
+      }
+    ),
+    isVisible && progress && /* @__PURE__ */ jsxRuntimeExports.jsx(CommandProgressBar, { progress }),
     errorCardOpen && /* @__PURE__ */ jsxRuntimeExports.jsx(AICard, {}),
     tooltip && /* @__PURE__ */ jsxRuntimeExports.jsx(
       ExplainTooltip,

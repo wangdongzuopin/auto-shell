@@ -26,6 +26,7 @@ export interface ElectronAPI {
 
   getKey: (provider: ProviderType) => Promise<string | null>;
   saveKey: (provider: ProviderType, key: string) => Promise<boolean>;
+  pathExists: (targetPath: string) => Promise<boolean>;
 
   createPty: (id: string, shell: string, cwd: string) => Promise<string>;
   writePty: (id: string, data: string) => void;
@@ -33,6 +34,7 @@ export interface ElectronAPI {
   killPty: (id: string) => void;
   onPtyOutput: (callback: (id: string, data: string) => void) => () => void;
   onPtyExit: (callback: (id: string, code: number) => void) => () => void;
+  onPtyCommand: (callback: (id: string, command: string) => void) => () => void;
 
   minimizeWindow: () => void;
   maximizeWindow: () => void;
@@ -82,6 +84,7 @@ const api: ElectronAPI = {
 
   getKey: (provider) => ipcRenderer.invoke(IPC.KEY_GET, provider),
   saveKey: (provider, key) => ipcRenderer.invoke(IPC.KEY_SAVE, provider, key),
+  pathExists: (targetPath) => ipcRenderer.invoke(IPC.PATH_EXISTS, targetPath),
 
   createPty: (id, shell, cwd) => ipcRenderer.invoke('pty:create', id, shell, cwd),
   writePty: (id, data) => ipcRenderer.send('pty:input', id, data),
@@ -96,6 +99,11 @@ const api: ElectronAPI = {
     const listener = (_event: Electron.IpcRendererEvent, id: string, code: number) => callback(id, code);
     ipcRenderer.on('pty:exit', listener);
     return () => ipcRenderer.removeListener('pty:exit', listener);
+  },
+  onPtyCommand: (callback: (id: string, command: string) => void) => {
+    const listener = (_event: Electron.IpcRendererEvent, id: string, command: string) => callback(id, command);
+    ipcRenderer.on(IPC.PTY_COMMAND, listener);
+    return () => ipcRenderer.removeListener(IPC.PTY_COMMAND, listener);
   },
 
   minimizeWindow: () => ipcRenderer.send(IPC.WINDOW_MINIMIZE),
