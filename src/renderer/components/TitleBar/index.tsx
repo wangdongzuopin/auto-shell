@@ -30,31 +30,39 @@ export function TitleBar() {
           align-items: stretch;
           justify-content: space-between;
           height: 34px;
-          background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0));
+          background:
+            linear-gradient(180deg, color-mix(in srgb, var(--bg2) 76%, white 24%), color-mix(in srgb, var(--bg) 92%, white 8%));
           border-bottom: 1px solid var(--border);
           -webkit-app-region: drag;
           user-select: none;
+          backdrop-filter: blur(18px) saturate(1.15);
         }
         .title-bar-drag {
           display: flex;
           align-items: center;
-          gap: 10px;
-          padding-left: 14px;
+          gap: 12px;
+          padding-left: 16px;
           flex: 1;
           min-width: 0;
         }
         .title-main {
           font-size: 12px;
-          font-weight: 600;
+          font-weight: 700;
+          letter-spacing: 0.01em;
           color: var(--text);
         }
         .title-sub {
           font-size: 11px;
           color: var(--text3);
+          padding: 3px 8px;
+          border-radius: 999px;
+          background: color-mix(in srgb, var(--bg3) 88%, white 12%);
+          border: 1px solid var(--border);
         }
         .title-bar-controls {
           display: flex;
           -webkit-app-region: no-drag;
+          padding-right: 2px;
         }
         .title-bar-btn {
           width: 46px;
@@ -66,10 +74,10 @@ export function TitleBar() {
           background: transparent;
           color: var(--text2);
           cursor: pointer;
-          transition: background .12s ease, color .12s ease;
+          transition: background .14s ease, color .14s ease;
         }
         .title-bar-btn:hover {
-          background: rgba(255,255,255,0.05);
+          background: color-mix(in srgb, var(--bg3) 88%, white 12%);
           color: var(--text);
         }
         .title-bar-btn.close:hover {

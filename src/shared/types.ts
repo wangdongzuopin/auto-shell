@@ -27,18 +27,10 @@ export interface ProviderSettings {
 
 export type ProviderConfigs = Record<ProviderType, ProviderSettings>;
 
-export interface AppConfig {
-  provider: ProviderType;
-  providerConfig: ProviderSettings;
-  providerConfigs: ProviderConfigs;
-  aiFeatures: FeatureToggles;
-  theme: Theme;
-}
-
 export interface ModelConfig {
-  baseUrl?: string;        // 自定义端点（可选）
-  temperature?: number;     // 可选自定义
-  maxTokens?: number;       // 可选自定义
+  baseUrl?: string;
+  temperature?: number;
+  maxTokens?: number;
 }
 
 export interface AppConfig {
@@ -47,12 +39,24 @@ export interface AppConfig {
   providerConfigs: ProviderConfigs;
   aiFeatures: FeatureToggles;
   theme: Theme;
-  // 新增
-  currentModel: string;     // 'claude-3-5-sonnet'
-  modelConfig: ModelConfig; // 用户自定义配置
+  currentModel: string;
+  modelConfig: ModelConfig;
 }
 
 export interface ChatMessage {
   role: 'system' | 'user' | 'assistant';
   content: string;
+}
+
+export interface TerminalTabState {
+  id: string;
+  name: string;
+  shell: string;
+  cwd: string;
+}
+
+export interface TerminalSession {
+  tabs: TerminalTabState[];
+  activeTabId: string | null;
+  commandHistoryByCwd: Record<string, string[]>;
 }

@@ -8,6 +8,8 @@ import type {
   ProviderConfigs,
   ProviderSettings,
   ProviderType,
+  TerminalSession,
+  TerminalTabState,
   Theme
 } from '../shared/types';
 
@@ -19,10 +21,12 @@ interface PersistedConfig {
   apiKeys: Partial<Record<ProviderType, string>>;
   currentModel: string;
   modelConfig: ModelConfig;
+  terminalSession: TerminalSession;
 }
 
 const CONFIG_DIR = path.join(os.homedir(), '.autoshell');
 const CONFIG_PATH = path.join(CONFIG_DIR, 'config.json');
+const MAX_HISTORY_PER_DIRECTORY = 20;
 
 const defaultProviderConfigs: ProviderConfigs = {
   minimax: {
@@ -71,9 +75,13 @@ const defaultConfig: PersistedConfig = {
   aiFeatures: defaultFeatures,
   theme: defaultTheme,
   apiKeys: {},
-  // 新增默认值
   currentModel: 'MiniMax-M2.7',
   modelConfig: {},
+  terminalSession: {
+    tabs: [],
+    activeTabId: null,
+    commandHistoryByCwd: {}
+  }
 };
 
 function normalizeProviderConfig(provider: ProviderType, config: ProviderSettings): ProviderSettings {
@@ -117,7 +125,61 @@ function normalizePersistedConfig(input?: Partial<PersistedConfig>): PersistedCo
     },
     apiKeys: input?.apiKeys ?? {},
     currentModel: input?.currentModel ?? defaultConfig.currentModel,
-    modelConfig: input?.modelConfig ?? defaultConfig.modelConfig
+    modelConfig: input?.modelConfig ?? defaultConfig.modelConfig,
+    terminalSession: normalizeTerminalSession(input?.terminalSession)
+  };
+}
+
+function normalizeTerminalSession(input?: Partial<TerminalSession>): TerminalSession {
+  const tabs = Array.isArray(input?.tabs)
+    ? input.tabs
+        .map(normalizeTabSnapshot)
+        .filter((tab): tab is TerminalTabState => Boolean(tab))
+    : [];
+
+  const activeTabId =
+    typeof input?.activeTabId === 'string' && tabs.some((tab) => tab.id === input.activeTabId)
+      ? input.activeTabId
+      : tabs[0]?.id ?? null;
+
+  const commandHistoryByCwd = Object.fromEntries(
+    Object.entries(input?.commandHistoryByCwd ?? {}).flatMap(([cwd, commands]) => {
+      if (typeof cwd !== 'string' || !cwd.trim() || !Array.isArray(commands)) {
+        return [];
+      }
+
+      const normalizedCommands = commands
+        .filter((command): command is string => typeof command === 'string')
+        .map((command) => command.trim())
+        .filter(Boolean)
+        .slice(0, MAX_HISTORY_PER_DIRECTORY);
+
+      return normalizedCommands.length > 0 ? [[cwd, normalizedCommands]] : [];
+    })
+  );
+
+  return {
+    tabs,
+    activeTabId,
+    commandHistoryByCwd
+  };
+}
+
+function normalizeTabSnapshot(tab: unknown): TerminalTabState | null {
+  if (!tab || typeof tab !== 'object') {
+    return null;
+  }
+
+  const value = tab as Partial<TerminalTabState>;
+  if (!value.id || !value.name || !value.shell) {
+    return null;
+  }
+
+  return {
+    id: String(value.id),
+    name: String(value.name),
+    shell: String(value.shell),
+    cwd: typeof value.cwd === 'string' && value.cwd.trim() ? value.cwd : '~'
   };
 }
 
@@ -212,6 +274,47 @@ export function setFeatures(features: FeatureToggles) {
     ...current,
     aiFeatures: features
   }));
+}
+
+export function getTerminalSession(): TerminalSession {
+  return readPersistedConfig().terminalSession;
+}
+
+export function saveTerminalSession(session: TerminalSession) {
+  updatePersistedConfig((current) => ({
+    ...current,
+    terminalSession: normalizeTerminalSession(session)
+  }));
+}
+
+export function recordTerminalCommand(cwd: string, command: string) {
+  const normalizedCwd = normalizeCwdKey(cwd);
+  const normalizedCommand = command.trim();
+
+  if (!normalizedCommand) {
+    return;
+  }
+
+  updatePersistedConfig((current) => {
+    const existing = current.terminalSession.commandHistoryByCwd[normalizedCwd] ?? [];
+    const nextHistory = [normalizedCommand, ...existing.filter((item) => item !== normalizedCommand)]
+      .slice(0, MAX_HISTORY_PER_DIRECTORY);
+
+    return {
+      ...current,
+      terminalSession: {
+        ...current.terminalSession,
+        commandHistoryByCwd: {
+          ...current.terminalSession.commandHistoryByCwd,
+          [normalizedCwd]: nextHistory
+        }
+      }
+    };
+  });
+}
+
+function normalizeCwdKey(cwd: string): string {
+  return cwd?.trim() || '~';
 }
 
 export { CONFIG_DIR, CONFIG_PATH, defaultProviderConfigs };

@@ -20,6 +20,11 @@ const IPC = {
   KEY_SAVE: "key:save",
   KEY_GET: "key:get",
   PATH_EXISTS: "path:exists",
+  PATH_RESOLVE_PROJECT: "path:resolve-project",
+  PATH_FIND_PROJECT_CANDIDATES: "path:find-project-candidates",
+  TERMINAL_SESSION_GET: "terminal-session:get",
+  TERMINAL_SESSION_SAVE: "terminal-session:save",
+  TERMINAL_HISTORY_RECORD: "terminal-history:record",
   // PTY command events
   PTY_COMMAND: "pty:command",
   // Window controls
@@ -67,6 +72,11 @@ const api = {
   getKey: (provider) => electron.ipcRenderer.invoke(IPC.KEY_GET, provider),
   saveKey: (provider, key) => electron.ipcRenderer.invoke(IPC.KEY_SAVE, provider, key),
   pathExists: (targetPath) => electron.ipcRenderer.invoke(IPC.PATH_EXISTS, targetPath),
+  resolveProjectPath: (input) => electron.ipcRenderer.invoke(IPC.PATH_RESOLVE_PROJECT, input),
+  findProjectCandidates: (input) => electron.ipcRenderer.invoke(IPC.PATH_FIND_PROJECT_CANDIDATES, input),
+  getTerminalSession: () => electron.ipcRenderer.invoke(IPC.TERMINAL_SESSION_GET),
+  saveTerminalSession: (session) => electron.ipcRenderer.invoke(IPC.TERMINAL_SESSION_SAVE, session),
+  recordTerminalCommand: (cwd, command) => electron.ipcRenderer.invoke(IPC.TERMINAL_HISTORY_RECORD, cwd, command),
   createPty: (id, shell, cwd) => electron.ipcRenderer.invoke("pty:create", id, shell, cwd),
   writePty: (id, data) => electron.ipcRenderer.send("pty:input", id, data),
   resizePty: (id, cols, rows) => electron.ipcRenderer.send("pty:resize", id, cols, rows),

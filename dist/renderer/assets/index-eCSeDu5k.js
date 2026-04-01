@@ -7257,48 +7257,6 @@ function useAI() {
     checkAvailability
   };
 }
-const platform = detectPlatform$2();
-const defaultShell = getDefaultShell(platform);
-const shellNames = {
-  powershell: "PowerShell",
-  cmd: "CMD",
-  wsl: "WSL",
-  "git-bash": "Git Bash",
-  zsh: "Zsh",
-  bash: "Bash"
-};
-const shellOptions = getShellOptions(platform);
-let tabCounter = 1;
-const useTabsStore = create((set, get) => ({
-  tabs: [
-    { id: "1", name: shellNames[defaultShell], shell: defaultShell, cwd: "~" }
-  ],
-  activeTabId: "1",
-  sidebarOpen: false,
-  addTab: (shell = defaultShell) => {
-    const id2 = String(++tabCounter);
-    const name = shellNames[shell];
-    set((state) => ({
-      tabs: [...state.tabs, { id: id2, name, shell, cwd: "~" }],
-      activeTabId: id2
-    }));
-  },
-  closeTab: (id2) => {
-    const { tabs, activeTabId } = get();
-    if (tabs.length === 1) return;
-    const newTabs = tabs.filter((t2) => t2.id !== id2);
-    const newActive = activeTabId === id2 ? newTabs[newTabs.length - 1].id : activeTabId;
-    set({ tabs: newTabs, activeTabId: newActive });
-  },
-  setActiveTab: (id2) => set({ activeTabId: id2 }),
-  setTabCwd: (id2, cwd) => set((state) => ({
-    tabs: state.tabs.map((tab) => tab.id === id2 ? { ...tab, cwd } : tab)
-  })),
-  renameTab: (id2, name) => set((state) => ({
-    tabs: state.tabs.map((tab) => tab.id === id2 ? { ...tab, name } : tab)
-  })),
-  toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen }))
-}));
 function detectPlatform$2() {
   const value = typeof navigator === "undefined" ? "" : navigator.userAgent.toLowerCase();
   if (value.includes("mac")) {
@@ -7309,6 +7267,130 @@ function detectPlatform$2() {
   }
   return "linux";
 }
+const platform = detectPlatform$2();
+const defaultShell = getDefaultShell(platform);
+const shellNames = {
+  powershell: "PowerShell",
+  cmd: "CMD",
+  wsl: "WSL",
+  "git-bash": "Git Bash",
+  zsh: "Zsh",
+  bash: "Bash"
+};
+const defaultTabs = createDefaultTabs();
+let tabCounter = 1;
+const useTabsStore = create((set, get) => ({
+  tabs: defaultTabs,
+  activeTabId: defaultTabs[0]?.id ?? null,
+  sidebarOpen: false,
+  commandHistoryByCwd: {},
+  sessionLoaded: false,
+  addTab: (shell = defaultShell) => {
+    const id2 = String(++tabCounter);
+    const name = shellNames[shell];
+    set((state) => ({
+      tabs: [...state.tabs, { id: id2, name, shell, cwd: "~" }],
+      activeTabId: id2
+    }));
+    void persistSessionSnapshot(get());
+  },
+  closeTab: (id2) => {
+    const { tabs, activeTabId } = get();
+    if (tabs.length === 1) {
+      return;
+    }
+    const newTabs = tabs.filter((tab) => tab.id !== id2);
+    const newActiveTabId = activeTabId === id2 ? newTabs[newTabs.length - 1]?.id ?? null : activeTabId;
+    set({ tabs: newTabs, activeTabId: newActiveTabId });
+    void persistSessionSnapshot(get());
+  },
+  setActiveTab: (id2) => {
+    set({ activeTabId: id2 });
+    void persistSessionSnapshot(get());
+  },
+  setTabCwd: (id2, cwd) => {
+    const nextCwd = normalizeCwd(cwd);
+    set((state) => ({
+      tabs: state.tabs.map((tab) => tab.id === id2 ? { ...tab, cwd: nextCwd } : tab)
+    }));
+    void persistSessionSnapshot(get());
+  },
+  renameTab: (id2, name) => {
+    set((state) => ({
+      tabs: state.tabs.map((tab) => tab.id === id2 ? { ...tab, name } : tab)
+    }));
+    void persistSessionSnapshot(get());
+  },
+  toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
+  loadSession: async () => {
+    try {
+      const session = await window.api.getTerminalSession();
+      const nextTabs = session.tabs.length > 0 ? session.tabs.map(toTab) : createDefaultTabs();
+      const nextActiveTabId = session.activeTabId && nextTabs.some((tab) => tab.id === session.activeTabId) ? session.activeTabId : nextTabs[0]?.id ?? null;
+      tabCounter = nextTabs.reduce((max, tab) => {
+        const numericId = Number.parseInt(tab.id, 10);
+        return Number.isFinite(numericId) ? Math.max(max, numericId) : max;
+      }, 1);
+      set({
+        tabs: nextTabs,
+        activeTabId: nextActiveTabId,
+        commandHistoryByCwd: session.commandHistoryByCwd ?? {},
+        sessionLoaded: true
+      });
+    } catch (error) {
+      console.error("Failed to load terminal session:", error);
+      set({ sessionLoaded: true });
+    }
+  },
+  recordCommand: async (cwd, command) => {
+    const normalizedCwd = normalizeCwd(cwd);
+    const normalizedCommand = command.trim();
+    if (!normalizedCommand) {
+      return;
+    }
+    set((state) => ({
+      commandHistoryByCwd: {
+        ...state.commandHistoryByCwd,
+        [normalizedCwd]: [
+          normalizedCommand,
+          ...(state.commandHistoryByCwd[normalizedCwd] ?? []).filter((item) => item !== normalizedCommand)
+        ].slice(0, 20)
+      }
+    }));
+    void persistSessionSnapshot(get());
+    await window.api.recordTerminalCommand(normalizedCwd, normalizedCommand);
+  }
+}));
+function createDefaultTabs() {
+  return [{ id: "1", name: shellNames[defaultShell], shell: defaultShell, cwd: "~" }];
+}
+function toTab(tab) {
+  return {
+    id: tab.id,
+    name: tab.name,
+    shell: isTabShell(tab.shell) ? tab.shell : defaultShell,
+    cwd: normalizeCwd(tab.cwd)
+  };
+}
+function isTabShell(value) {
+  return value in shellNames;
+}
+async function persistSessionSnapshot(state) {
+  const session = {
+    tabs: state.tabs.map((tab) => ({
+      id: tab.id,
+      name: tab.name,
+      shell: tab.shell,
+      cwd: normalizeCwd(tab.cwd)
+    })),
+    activeTabId: state.activeTabId,
+    commandHistoryByCwd: state.commandHistoryByCwd
+  };
+  await window.api.saveTerminalSession(session);
+}
+function normalizeCwd(cwd) {
+  return cwd?.trim() || "~";
+}
 function getDefaultShell(currentPlatform) {
   switch (currentPlatform) {
     case "macos":
@@ -7317,27 +7399,6 @@ function getDefaultShell(currentPlatform) {
       return "bash";
     default:
       return "powershell";
-  }
-}
-function getShellOptions(currentPlatform) {
-  switch (currentPlatform) {
-    case "macos":
-      return [
-        { id: "zsh", label: "Zsh", description: "macOS 默认 shell，适合日常开发和命令行工作。" },
-        { id: "bash", label: "Bash", description: "经典 Unix shell，兼容多数脚本场景。" }
-      ];
-    case "linux":
-      return [
-        { id: "bash", label: "Bash", description: "Linux 默认 shell，适合常规命令和脚本。" },
-        { id: "zsh", label: "Zsh", description: "更现代的交互式 shell 体验。" }
-      ];
-    default:
-      return [
-        { id: "powershell", label: "PowerShell", description: "Windows 默认 shell，适合系统管理和脚本。" },
-        { id: "cmd", label: "CMD", description: "经典命令提示符，兼容老式命令。" },
-        { id: "wsl", label: "WSL", description: "进入 Linux 子系统环境。" },
-        { id: "git-bash", label: "Git Bash", description: "更接近 Unix 的 Bash 体验。" }
-      ];
   }
 }
 const defaultTheme = {
@@ -7595,6 +7656,7 @@ function AIChatPanel({ open, onClose }) {
     }
   ]);
   const [loading, setLoading] = reactExports.useState(false);
+  const [pendingSelection, setPendingSelection] = reactExports.useState(null);
   const platform2 = reactExports.useMemo(() => detectPlatform$1(), []);
   const modelLabel = reactExports.useMemo(() => `${provider} / ${configs[provider].model}`, [configs, provider]);
   const tabLabel = reactExports.useMemo(() => {
@@ -7604,36 +7666,71 @@ function AIChatPanel({ open, onClose }) {
     return `${shellNames[activeTab.shell]} / ${activeTab.cwd === "~" ? "默认目录" : activeTab.cwd}`;
   }, [activeTab]);
   const placeholder = reactExports.useMemo(() => {
-    return platform2 === "windows" ? "例如：帮我写一个 PowerShell 脚本，或输入“切换到 D:\\Agent\\auto-shell”" : "例如：帮我写一个 zsh 脚本，或输入“切换到 ~/projects/auto-shell”";
-  }, [platform2]);
-  if (!open) return null;
+    if (pendingSelection) {
+      return "输入 1 / 2 / 第一个 来确认候选目录";
+    }
+    return platform2 === "windows" ? "例如：切换到 D 盘的 Center 目录下 moa 项目" : "例如：切换到 projects 目录里的 auto-shell 项目";
+  }, [pendingSelection, platform2]);
+  if (!open) {
+    return null;
+  }
   const handleSend = async () => {
     const trimmed = input.trim();
-    if (!trimmed || loading) return;
+    if (!trimmed || loading) {
+      return;
+    }
     if (!activeTabId || !activeTab) {
       toast("当前没有可用的终端窗口");
       return;
     }
-    const switchTarget = parseProjectSwitchInput(trimmed);
-    if (switchTarget) {
-      const exists = await window.api.pathExists(switchTarget);
-      if (!exists) {
-        setMessages((current) => [
-          ...current,
-          { role: "user", content: trimmed },
-          { role: "assistant", content: `找不到该目录：${switchTarget}` }
-        ]);
+    if (pendingSelection) {
+      const selectionIndex = parseCandidateSelection(trimmed, pendingSelection.candidates.length);
+      if (selectionIndex !== null) {
+        const chosenPath = pendingSelection.candidates[selectionIndex];
+        executeDirectorySwitch(activeTab.shell, activeTabId, chosenPath, trimmed);
+        setPendingSelection(null);
         setInput("");
-        toast(`目录不存在：${switchTarget}`);
         return;
       }
-      const command = buildChangeDirectoryCommand(activeTab.shell, switchTarget);
-      window.api.writePty(activeTabId, `${command}\r`);
-      setTabCwd(activeTabId, switchTarget);
       setMessages((current) => [
         ...current,
         { role: "user", content: trimmed },
-        { role: "assistant", content: `已在当前终端执行目录切换：${switchTarget}` }
+        {
+          role: "assistant",
+          content: `请直接回复候选序号，例如 1、2，或者“第一个”。
+${formatCandidates(pendingSelection.candidates)}`
+        }
+      ]);
+      setInput("");
+      return;
+    }
+    const switchRequest = parseProjectSwitchInput(trimmed);
+    if (switchRequest) {
+      const candidates = await window.api.findProjectCandidates(switchRequest);
+      if (candidates.length === 0) {
+        setMessages((current) => [
+          ...current,
+          { role: "user", content: trimmed },
+          { role: "assistant", content: `没有找到匹配的项目目录：${switchRequest}` }
+        ]);
+        setInput("");
+        toast(`没有找到匹配目录：${switchRequest}`);
+        return;
+      }
+      if (candidates.length === 1) {
+        executeDirectorySwitch(activeTab.shell, activeTabId, candidates[0], trimmed);
+        setInput("");
+        return;
+      }
+      setPendingSelection({ request: switchRequest, candidates });
+      setMessages((current) => [
+        ...current,
+        { role: "user", content: trimmed },
+        {
+          role: "assistant",
+          content: `找到了多个可能的目录，请回复序号确认要切换到哪一个：
+${formatCandidates(candidates)}`
+        }
       ]);
       setInput("");
       return;
@@ -7647,7 +7744,7 @@ function AIChatPanel({ open, onClose }) {
         {
           role: "system",
           content: [
-            `你是一个中文终端助手，当前服务的平台是 ${platformLabel(platform2)}。`,
+            `你是一个中文终端助手，当前平台是 ${platformLabel(platform2)}。`,
             "回答要直接、可执行、准确，优先给出当前平台和当前 shell 可直接执行的命令。",
             `当前 shell: ${shellNames[activeTab.shell]}`,
             `当前工作目录: ${activeTab.cwd}`,
@@ -7715,6 +7812,16 @@ function AIChatPanel({ open, onClose }) {
       setLoading(false);
     }
   };
+  const executeDirectorySwitch = (shell, tabId, targetPath, userContent) => {
+    const command = buildChangeDirectoryCommand(shell, targetPath);
+    window.api.writePty(tabId, `${command}\r`);
+    setTabCwd(tabId, targetPath);
+    setMessages((current) => [
+      ...current,
+      { role: "user", content: userContent },
+      { role: "assistant", content: `已切换到：${targetPath}` }
+    ]);
+  };
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-panel", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-header", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
@@ -7722,7 +7829,7 @@ function AIChatPanel({ open, onClose }) {
         /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "chat-meta", children: modelLabel }),
         /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "chat-context", children: tabLabel })
       ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "chat-close", onClick: onClose, children: "×" })
+      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "chat-close", onClick: onClose, "aria-label": "关闭助手", children: "×" })
     ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "chat-messages", children: messages.map((message, index) => {
       const previous = index > 0 ? messages[index - 1] : null;
@@ -7969,16 +8076,33 @@ function AIChatPanel({ open, onClose }) {
 function parseProjectSwitchInput(input) {
   const trimmed = input.trim();
   const patterns = [
-    /^(?:切换到|进入|打开项目|切换项目到)\s*(.+)$/i,
+    /^(?:切换到|切到|进入|打开项目|打开|前往|去到|跳到|切换项目到)\s*(.+)$/i,
     /^cd\s+(.+)$/i
   ];
   for (const pattern of patterns) {
     const match = trimmed.match(pattern);
     if (match?.[1]) {
-      return normalizeProjectPath(stripWrappingQuotes$1(match[1].trim()));
+      return normalizeProjectQuery(stripWrappingQuotes(match[1].trim()));
     }
   }
   return null;
+}
+function parseCandidateSelection(input, count) {
+  const trimmed = input.trim();
+  const directNumber = Number.parseInt(trimmed, 10);
+  if (Number.isInteger(directNumber) && directNumber >= 1 && directNumber <= count) {
+    return directNumber - 1;
+  }
+  const aliases = ["一", "二", "三", "四", "五"];
+  for (let index = 0; index < Math.min(count, aliases.length); index += 1) {
+    if (trimmed === `第${aliases[index]}个` || trimmed === `${aliases[index]}`) {
+      return index;
+    }
+  }
+  return null;
+}
+function formatCandidates(candidates) {
+  return candidates.map((candidate, index) => `${index + 1}. ${candidate}`).join("\n");
 }
 function buildChangeDirectoryCommand(shell, targetPath) {
   const quotedPath = `"${targetPath.replace(/"/g, '\\"')}"`;
@@ -7987,23 +8111,18 @@ function buildChangeDirectoryCommand(shell, targetPath) {
       return `Set-Location -LiteralPath ${quotedPath}`;
     case "cmd":
       return `cd /d ${quotedPath}`;
-    case "wsl":
-    case "git-bash":
-    case "zsh":
-    case "bash":
-      return `cd ${quotedPath}`;
     default:
       return `cd ${quotedPath}`;
   }
 }
-function stripWrappingQuotes$1(value) {
+function stripWrappingQuotes(value) {
   if (value.startsWith('"') && value.endsWith('"') || value.startsWith("'") && value.endsWith("'")) {
     return value.slice(1, -1);
   }
   return value;
 }
-function normalizeProjectPath(value) {
-  return value.replace(/[。！!，,\s]+$/g, "").replace(/(?:目录|文件夹|项目目录|这个目录|该目录)$/i, "").trim();
+function normalizeProjectQuery(value) {
+  return value.replace(/[。！!？?]+$/g, "").replace(/(?:这个|那个|该)?(?:目录|文件夹|项目目录|项目)$/g, "").trim();
 }
 function detectPlatform$1() {
   const value = typeof navigator === "undefined" ? "" : navigator.userAgent.toLowerCase();
@@ -8068,23 +8187,35 @@ function QuickCommands() {
   const activeTabId = useTabsStore((state) => state.activeTabId);
   const tabs = useTabsStore((state) => state.tabs);
   const setTabCwd = useTabsStore((state) => state.setTabCwd);
+  const commandHistoryByCwd = useTabsStore((state) => state.commandHistoryByCwd);
   const activeTab = tabs.find((tab) => tab.id === activeTabId) ?? null;
   const platform2 = reactExports.useMemo(() => detectPlatform(), []);
   const allCommands = reactExports.useMemo(() => {
-    const projectCommands = activeTab ? [
-      {
-        group: "项目切换",
-        commands: getProjectPaths(platform2).map((project) => ({
-          name: project.name,
-          cmd: buildCdCommand(activeTab.shell, project.path),
-          preview: project.path,
-          actionLabel: "切换项目"
-        }))
-      }
-    ] : [];
+    if (!activeTab) {
+      return [...BASE_COMMANDS.common, platform2 === "windows" ? BASE_COMMANDS.windows : BASE_COMMANDS.unix];
+    }
+    const currentDirectoryHistory = (commandHistoryByCwd[activeTab.cwd] ?? []).map((command) => ({
+      name: getHistoryCommandLabel(command),
+      cmd: command,
+      preview: activeTab.cwd,
+      actionLabel: "再次执行"
+    }));
+    const historyGroup = currentDirectoryHistory.length > 0 ? [{
+      group: "当前目录历史",
+      commands: currentDirectoryHistory
+    }] : [];
+    const projectGroup = [{
+      group: "项目切换",
+      commands: getProjectPaths(platform2).map((project) => ({
+        name: project.name,
+        cmd: buildCdCommand(activeTab.shell, project.path),
+        preview: project.path,
+        actionLabel: "切换项目"
+      }))
+    }];
     const systemCommands = platform2 === "windows" ? BASE_COMMANDS.windows : BASE_COMMANDS.unix;
-    return [...projectCommands, ...BASE_COMMANDS.common, systemCommands];
-  }, [activeTab, platform2]);
+    return [...historyGroup, ...projectGroup, ...BASE_COMMANDS.common, systemCommands];
+  }, [activeTab, commandHistoryByCwd, platform2]);
   const filteredCommands = reactExports.useMemo(
     () => allCommands.map((group) => ({
       ...group,
@@ -8246,24 +8377,22 @@ function QuickCommands() {
           white-space: nowrap;
         }
         .cmd-preview {
+          font-size: 11px;
+          color: var(--text3);
           font-family: var(--mono);
-          font-size: 10px;
-          color: var(--text2);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
         .cmd-run {
-          font-size: 10px;
-          color: var(--accent);
-          white-space: nowrap;
           flex-shrink: 0;
+          font-size: 11px;
+          color: var(--accent);
         }
         .cmd-empty {
-          font-size: 12px;
+          padding: 14px 10px;
           color: var(--text3);
-          text-align: center;
-          padding: 24px 12px;
+          font-size: 12px;
         }
       ` })
   ] });
@@ -8271,51 +8400,51 @@ function QuickCommands() {
 function getProjectPaths(platform2) {
   if (platform2 === "windows") {
     return [
-      { name: "Home", path: "~" },
       { name: "auto-shell", path: "D:\\Agent\\auto-shell" },
-      { name: "Center", path: "D:\\Center" }
+      { name: "claude-code-rev", path: "D:\\Agent\\claude-code-rev" },
+      { name: "Center", path: "D:\\Agent\\Center" }
     ];
   }
   return [
-    { name: "Home", path: "~" },
-    { name: "Desktop", path: "~/Desktop" },
-    { name: "Projects", path: "~/Projects" }
+    { name: "auto-shell", path: "~/projects/auto-shell" },
+    { name: "workspace", path: "~/projects/workspace" },
+    { name: "dotfiles", path: "~/dotfiles" }
   ];
 }
 function buildCdCommand(shell, targetPath) {
-  const quotedPath = `"${targetPath.replace(/"/g, '\\"')}"`;
-  switch (shell) {
-    case "powershell":
-      return `Set-Location -LiteralPath ${quotedPath}`;
-    case "cmd":
-      return targetPath === "~" ? "cd /d %USERPROFILE%" : `cd /d ${quotedPath}`;
-    case "wsl":
-    case "git-bash":
-    case "zsh":
-    case "bash":
-      return targetPath === "~" ? "cd ~" : `cd ${quotedPath}`;
-    default:
-      return targetPath === "~" ? "cd ~" : `cd ${quotedPath}`;
+  if (shell === "powershell") {
+    return `Set-Location -LiteralPath "${targetPath}"`;
   }
+  if (shell === "cmd") {
+    return `cd /d "${targetPath}"`;
+  }
+  return `cd "${targetPath}"`;
 }
 function parseCwdCommand(command) {
   const trimmed = command.trim();
-  const patterns = [
-    /^(?:cd\s+\/d|cd|Set-Location\s+-LiteralPath|Set-Location)\s+(.+)$/i
-  ];
-  for (const pattern of patterns) {
-    const match = trimmed.match(pattern);
-    if (match?.[1]) {
-      return stripWrappingQuotes(match[1].trim());
-    }
+  if (!trimmed) {
+    return null;
+  }
+  const powershellMatch = trimmed.match(/^set-location(?:\s+-literalpath|\s+-path)?\s+(.+)$/i);
+  if (powershellMatch) {
+    return cleanQuotedPath(powershellMatch[1]);
+  }
+  const windowsCdMatch = trimmed.match(/^cd\s+\/d\s+(.+)$/i);
+  if (windowsCdMatch) {
+    return cleanQuotedPath(windowsCdMatch[1]);
+  }
+  const genericCdMatch = trimmed.match(/^cd\s+(.+)$/i);
+  if (genericCdMatch) {
+    return cleanQuotedPath(genericCdMatch[1]);
   }
   return null;
 }
-function stripWrappingQuotes(value) {
-  if (value.startsWith('"') && value.endsWith('"') || value.startsWith("'") && value.endsWith("'")) {
-    return value.slice(1, -1);
-  }
-  return value;
+function cleanQuotedPath(value) {
+  return value.trim().replace(/^['"]|['"]$/g, "");
+}
+function getHistoryCommandLabel(command) {
+  const compact = command.replace(/\s+/g, " ").trim();
+  return compact.length > 28 ? `${compact.slice(0, 28)}...` : compact;
 }
 function detectPlatform() {
   const value = typeof navigator === "undefined" ? "" : navigator.userAgent.toLowerCase();
@@ -8937,50 +9066,22 @@ function SystemSettings() {
   ] });
 }
 function TabBar({ onOpenChat, onOpenSettings }) {
+  const platform2 = detectPlatform$2();
   const { tabs, activeTabId, addTab, closeTab, setActiveTab, toggleSidebar } = useTabsStore();
   const sidebarOpen = useTabsStore((state) => state.sidebarOpen);
-  const [menuOpen, setMenuOpen] = reactExports.useState(false);
-  const addButtonRef = reactExports.useRef(null);
-  const menuRef = reactExports.useRef(null);
-  reactExports.useEffect(() => {
-    if (!menuOpen) {
-      return;
-    }
-    const handlePointerDown = (event) => {
-      const target = event.target;
-      if (menuRef.current?.contains(target) || addButtonRef.current?.contains(target)) {
-        return;
-      }
-      setMenuOpen(false);
-    };
-    const handleEscape = (event) => {
-      if (event.key === "Escape") {
-        setMenuOpen(false);
-      }
-    };
-    window.addEventListener("mousedown", handlePointerDown);
-    window.addEventListener("keydown", handleEscape);
-    return () => {
-      window.removeEventListener("mousedown", handlePointerDown);
-      window.removeEventListener("keydown", handleEscape);
-    };
-  }, [menuOpen]);
   const handleCloseTab = (event, id2) => {
     event.stopPropagation();
     closeTab(id2);
   };
-  const handleCreateTab = (shell) => {
-    addTab(shell);
-    setMenuOpen(false);
-  };
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { id: "tabbar", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "tabs", children: [
+      platform2 === "macos" && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mac-traffic-gap", "aria-hidden": "true" }),
       tabs.map((tab) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
         "button",
         {
           className: `tab ${tab.id === activeTabId ? "active" : ""}`,
           onClick: () => setActiveTab(tab.id),
-          title: `${tab.name} · ${shellNames[tab.shell]}`,
+          title: `${tab.name} / ${shellNames[tab.shell]}`,
           children: [
             /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "tab-dot" }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "tab-name", children: tab.name }),
@@ -8990,33 +9091,16 @@ function TabBar({ onOpenChat, onOpenSettings }) {
         },
         tab.id
       )),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "tab-add-wrap", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
-          "button",
-          {
-            ref: addButtonRef,
-            className: `tab-add ${menuOpen ? "active" : ""}`,
-            onClick: () => setMenuOpen((current) => !current),
-            title: "新建终端",
-            "aria-expanded": menuOpen,
-            "aria-haspopup": "menu",
-            children: "+"
-          }
-        ),
-        menuOpen && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "shell-menu", ref: menuRef, role: "menu", children: shellOptions.map((option) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
-          "button",
-          {
-            className: "shell-menu-item",
-            onClick: () => handleCreateTab(option.id),
-            role: "menuitem",
-            children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "shell-menu-title", children: option.label }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "shell-menu-desc", children: option.description })
-            ]
-          },
-          option.id
-        )) })
-      ] })
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "tab-add-wrap", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "button",
+        {
+          className: "tab-add",
+          onClick: () => addTab(),
+          title: "新建终端",
+          "aria-label": "新建终端",
+          children: "+"
+        }
+      ) })
     ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "toolbar", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -9032,11 +9116,11 @@ function TabBar({ onOpenChat, onOpenSettings }) {
           ] })
         }
       ),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "icon-btn", onClick: onOpenChat, title: "AI 对话", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "16", height: "16", viewBox: "0 0 16 16", fill: "none", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "icon-btn", onClick: onOpenChat, title: "Assistant 对话", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "16", height: "16", viewBox: "0 0 16 16", fill: "none", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M3 4.25C3 3.56 3.56 3 4.25 3h7.5C12.44 3 13 3.56 13 4.25v5.5c0 .69-.56 1.25-1.25 1.25H7l-2.75 2v-2H4.25C3.56 11 3 10.44 3 9.75v-5.5Z", stroke: "currentColor", strokeWidth: "1.2", strokeLinejoin: "round" }),
         /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M5.5 6.25h5M5.5 8.25h3.5", stroke: "currentColor", strokeWidth: "1.2", strokeLinecap: "round" })
       ] }) }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "icon-btn", onClick: onOpenSettings, title: "模型配置", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "16", height: "16", viewBox: "0 0 16 16", fill: "none", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "icon-btn", onClick: onOpenSettings, title: "设置", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "16", height: "16", viewBox: "0 0 16 16", fill: "none", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M8 2.5 9.35 3l1.38-.5 1 1.73-.88 1.2.38 1.43 1.42.56v2.16l-1.42.56-.38 1.43.88 1.2-1 1.73-1.38-.5L8 13.5l-1.35.5-1.38.5-1-1.73.88-1.2-.38-1.43-1.42-.56V7.42l1.42-.56.38-1.43-.88-1.2 1-1.73 1.38.5L8 2.5Z", stroke: "currentColor", strokeWidth: "1.05", strokeLinejoin: "round" }),
         /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "8", cy: "8", r: "2.1", stroke: "currentColor", strokeWidth: "1.2" })
       ] }) })
@@ -9045,23 +9129,28 @@ function TabBar({ onOpenChat, onOpenSettings }) {
         #tabbar {
           display: flex;
           align-items: center;
-          gap: 8px;
-          padding: 0 10px 0 12px;
-          background: linear-gradient(180deg, color-mix(in srgb, var(--bg2) 88%, white 12%), var(--bg));
+          gap: 10px;
+          padding: 0 12px;
+          background:
+            linear-gradient(180deg, color-mix(in srgb, var(--bg2) 82%, white 18%), color-mix(in srgb, var(--bg) 92%, white 8%));
           border-bottom: 1px solid var(--border);
           user-select: none;
+          backdrop-filter: blur(16px) saturate(1.08);
         }
         .tabs {
           display: flex;
           align-items: center;
-          gap: 4px;
+          gap: 6px;
           flex: 1;
-          overflow: hidden;
+          min-width: 0;
+        }
+        .mac-traffic-gap {
+          width: 72px;
+          flex-shrink: 0;
         }
         .tab,
         .tab-add,
-        .icon-btn,
-        .shell-menu-item {
+        .icon-btn {
           border: 1px solid transparent;
           background: transparent;
         }
@@ -9069,31 +9158,31 @@ function TabBar({ onOpenChat, onOpenSettings }) {
           display: flex;
           align-items: center;
           gap: 8px;
-          height: 30px;
-          padding: 0 12px;
-          border-radius: 8px 8px 0 0;
+          height: 34px;
+          padding: 0 14px;
+          border-radius: 12px;
           font-size: 12px;
           font-family: var(--sans);
           color: var(--text2);
           cursor: pointer;
           white-space: nowrap;
           min-width: 0;
+          transition: background .16s ease, border-color .16s ease, color .16s ease, transform .16s ease;
         }
         .tab:hover {
           background: color-mix(in srgb, var(--bg3) 90%, white 10%);
           color: var(--text);
         }
         .tab.active {
-          background: var(--bg);
+          background: color-mix(in srgb, var(--bg) 86%, white 14%);
           color: var(--text);
           border-color: var(--border);
-          border-bottom-color: var(--bg);
-          box-shadow: inset 0 1px 0 var(--border);
+          box-shadow: 0 8px 22px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.08);
         }
         .tab-dot {
           width: 7px;
           height: 7px;
-          border-radius: 2px;
+          border-radius: 3px;
           background: rgba(76,141,255,0.8);
           flex-shrink: 0;
         }
@@ -9130,68 +9219,31 @@ function TabBar({ onOpenChat, onOpenSettings }) {
           color: var(--text);
         }
         .tab-add-wrap {
-          position: relative;
           flex-shrink: 0;
         }
         .tab-add,
         .icon-btn {
-          width: 30px;
-          height: 30px;
+          width: 34px;
+          height: 34px;
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          border-radius: 8px;
+          border-radius: 12px;
           color: var(--text2);
           cursor: pointer;
+          transition: background .16s ease, border-color .16s ease, color .16s ease, transform .16s ease;
         }
         .tab-add:hover,
-        .tab-add.active,
         .icon-btn:hover {
           background: color-mix(in srgb, var(--bg3) 90%, white 10%);
           border-color: var(--border);
           color: var(--text);
-        }
-        .shell-menu {
-          position: absolute;
-          top: calc(100% + 8px);
-          left: 0;
-          width: 240px;
-          padding: 8px;
-          background: color-mix(in srgb, var(--bg2) 94%, white 6%);
-          border: 1px solid var(--border2);
-          border-radius: 12px;
-          box-shadow: var(--shadow-soft);
-          z-index: 20;
-        }
-        .shell-menu-item {
-          width: 100%;
-          display: flex;
-          flex-direction: column;
-          align-items: flex-start;
-          gap: 3px;
-          padding: 10px 12px;
-          border-radius: 10px;
-          color: var(--text);
-          cursor: pointer;
-          text-align: left;
-        }
-        .shell-menu-item:hover {
-          background: rgba(76,141,255,0.08);
-          border-color: rgba(76,141,255,0.18);
-        }
-        .shell-menu-title {
-          font-size: 12px;
-          font-weight: 600;
-        }
-        .shell-menu-desc {
-          font-size: 11px;
-          color: var(--text3);
-          line-height: 1.45;
+          transform: translateY(-1px);
         }
         .toolbar {
           display: flex;
           align-items: center;
-          gap: 4px;
+          gap: 6px;
         }
         .icon-btn.active {
           color: var(--accent);
@@ -18512,17 +18564,31 @@ function useCommandProgress(options = {}) {
   };
 }
 function Terminal() {
+  const platform2 = detectPlatform$2();
   const containerRef = reactExports.useRef(null);
   const [tooltip, setTooltip] = reactExports.useState(null);
   const { progress, isVisible, startTracking, complete } = useCommandProgress();
   const activeTabId = useTabsStore((state) => state.activeTabId);
   const tabs = useTabsStore((state) => state.tabs);
+  const recordCommand = useTabsStore((state) => state.recordCommand);
+  const setTabCwd = useTabsStore((state) => state.setTabCwd);
   const activeTab = tabs.find((tab) => tab.id === activeTabId);
   const errorCardOpen = useAIStore((state) => state.errorCardOpen);
   const theme = useSettingsStore((state) => state.theme);
   const handleSelectionChange = reactExports.useCallback((selection, position) => {
     setTooltip({ text: selection, position });
   }, []);
+  const handleCommandStart = reactExports.useCallback((command) => {
+    startTracking(command);
+    if (!activeTabId || !activeTab) {
+      return;
+    }
+    void recordCommand(activeTab.cwd, command);
+    const nextCwd = parseNextCwd(activeTab.shell, activeTab.cwd, command);
+    if (nextCwd) {
+      setTabCwd(activeTabId, nextCwd);
+    }
+  }, [activeTab, activeTabId, recordCommand, setTabCwd, startTracking]);
   const { focus } = useTerminal(
     containerRef,
     activeTabId || "1",
@@ -18530,7 +18596,7 @@ function Terminal() {
     activeTab?.cwd,
     theme,
     handleSelectionChange,
-    startTracking,
+    handleCommandStart,
     complete
   );
   reactExports.useEffect(() => {
@@ -18547,7 +18613,7 @@ function Terminal() {
       ] }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "shell-meta", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "shell-kind", children: shellNames[activeTab.shell] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "shell-hint", children: "直接在终端中输入命令" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "shell-hint", children: platform2 === "macos" ? "在终端内直接输入命令" : "直接在终端中输入命令" }),
         /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "shell-path", children: activeTab.cwd === "~" ? "默认目录" : activeTab.cwd })
       ] })
     ] }),
@@ -18585,16 +18651,17 @@ function Terminal() {
           align-items: center;
           justify-content: space-between;
           gap: 12px;
-          padding: 0 18px;
-          min-height: 38px;
+          padding: 0 20px;
+          min-height: 42px;
           border-bottom: 1px solid var(--border);
-          background: color-mix(in srgb, var(--bg2) 88%, white 12%);
+          background:
+            linear-gradient(180deg, color-mix(in srgb, var(--bg2) 88%, white 12%), color-mix(in srgb, var(--bg) 96%, white 4%));
         }
         .shell-chip {
           display: inline-flex;
           align-items: center;
           gap: 7px;
-          padding: 4px 12px;
+          padding: 5px 12px;
           border-radius: 999px;
           font-size: 11px;
           font-family: var(--mono);
@@ -18640,7 +18707,7 @@ function Terminal() {
         }
         .terminal-output {
           flex: 1;
-          padding: 14px 18px;
+          padding: 16px 20px;
           overflow: hidden;
           cursor: text;
           background: var(--bg);
@@ -18657,6 +18724,87 @@ function Terminal() {
         }
       ` })
   ] });
+}
+function parseNextCwd(shell, currentCwd, command) {
+  const trimmed = command.trim();
+  if (!trimmed) {
+    return null;
+  }
+  const target = extractTargetPath(shell, trimmed);
+  if (!target) {
+    return null;
+  }
+  return resolvePath(currentCwd, target, shell === "powershell" || shell === "cmd");
+}
+function extractTargetPath(shell, command) {
+  if (shell === "powershell") {
+    const setLocationMatch = command.match(/^set-location(?:\s+-literalpath|\s+-path)?\s+(.+)$/i);
+    if (setLocationMatch) {
+      return cleanPathToken(setLocationMatch[1]);
+    }
+  }
+  const cdMatch = command.match(/^(?:cd|chdir)\s+(.+)$/i);
+  if (!cdMatch) {
+    return null;
+  }
+  return cleanPathToken(cdMatch[1]);
+}
+function cleanPathToken(value) {
+  const withoutComment = value.split(/\s+#/)[0].trim();
+  const unquoted = withoutComment.replace(/^['"]|['"]$/g, "");
+  return unquoted.trim();
+}
+function resolvePath(currentCwd, target, windowsStyle) {
+  if (!target || target === ".") {
+    return currentCwd;
+  }
+  if (target === "~") {
+    return "~";
+  }
+  if (target.startsWith("~/")) {
+    return target;
+  }
+  if (windowsStyle) {
+    if (/^[a-zA-Z]:[\\/]/.test(target) || target.startsWith("\\\\")) {
+      return normalizeSegments(target, true);
+    }
+  } else if (target.startsWith("/")) {
+    return normalizeSegments(target, false);
+  }
+  const separator = windowsStyle ? "\\" : "/";
+  const base = currentCwd === "~" ? "~" : currentCwd;
+  const joined = base.endsWith(separator) || base === "~" ? `${base}${target}` : `${base}${separator}${target}`;
+  return normalizeSegments(joined, windowsStyle);
+}
+function normalizeSegments(value, windowsStyle) {
+  const separator = windowsStyle ? "\\" : "/";
+  const normalized = windowsStyle ? value.replace(/\//g, "\\") : value.replace(/\\/g, "/");
+  const isUnc = windowsStyle && normalized.startsWith("\\\\");
+  const driveMatch = windowsStyle ? normalized.match(/^[a-zA-Z]:/) : null;
+  const homePrefix = normalized.startsWith("~") ? "~" : "";
+  const remainder = homePrefix ? normalized.slice(1) : driveMatch ? normalized.slice(driveMatch[0].length) : isUnc ? normalized.slice(2) : normalized;
+  const segments = remainder.split(/[\\/]+/).filter(Boolean).reduce((parts, segment) => {
+    if (segment === ".") {
+      return parts;
+    }
+    if (segment === "..") {
+      parts.pop();
+      return parts;
+    }
+    parts.push(segment);
+    return parts;
+  }, []);
+  const body = segments.join(separator);
+  if (homePrefix) {
+    return body ? `~${separator}${body}` : "~";
+  }
+  if (driveMatch) {
+    return body ? `${driveMatch[0]}${separator}${body}` : `${driveMatch[0]}${separator}`;
+  }
+  if (isUnc) {
+    return body ? `\\\\${body}` : "\\\\";
+  }
+  return normalized.startsWith(separator) ? `${separator}${body}` : body;
 }
 function TitleBar() {
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "title-bar", children: [
@@ -18675,31 +18823,39 @@ function TitleBar() {
           align-items: stretch;
           justify-content: space-between;
           height: 34px;
-          background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0));
+          background:
+            linear-gradient(180deg, color-mix(in srgb, var(--bg2) 76%, white 24%), color-mix(in srgb, var(--bg) 92%, white 8%));
           border-bottom: 1px solid var(--border);
           -webkit-app-region: drag;
           user-select: none;
+          backdrop-filter: blur(18px) saturate(1.15);
         }
         .title-bar-drag {
           display: flex;
           align-items: center;
-          gap: 10px;
-          padding-left: 14px;
+          gap: 12px;
+          padding-left: 16px;
           flex: 1;
           min-width: 0;
         }
         .title-main {
           font-size: 12px;
-          font-weight: 600;
+          font-weight: 700;
+          letter-spacing: 0.01em;
           color: var(--text);
         }
         .title-sub {
           font-size: 11px;
           color: var(--text3);
+          padding: 3px 8px;
+          border-radius: 999px;
+          background: color-mix(in srgb, var(--bg3) 88%, white 12%);
+          border: 1px solid var(--border);
         }
         .title-bar-controls {
           display: flex;
           -webkit-app-region: no-drag;
+          padding-right: 2px;
         }
         .title-bar-btn {
           width: 46px;
@@ -18711,10 +18867,10 @@ function TitleBar() {
           background: transparent;
           color: var(--text2);
           cursor: pointer;
-          transition: background .12s ease, color .12s ease;
+          transition: background .14s ease, color .14s ease;
         }
         .title-bar-btn:hover {
-          background: rgba(255,255,255,0.05);
+          background: color-mix(in srgb, var(--bg3) 88%, white 12%);
           color: var(--text);
         }
         .title-bar-btn.close:hover {
@@ -18729,11 +18885,14 @@ function App() {
   const [chatOpen, setChatOpen] = reactExports.useState(true);
   const [settingsTab, setSettingsTab] = reactExports.useState("ai");
   const loadSettings = useSettingsStore((state) => state.load);
+  const loadSession = useTabsStore((state) => state.loadSession);
+  const platform2 = detectPlatform$2();
   reactExports.useEffect(() => {
     void loadSettings();
-  }, [loadSettings]);
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "app", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(TitleBar, {}),
+    void loadSession();
+  }, [loadSession, loadSettings]);
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "app", "data-platform": platform2, children: [
+    platform2 !== "macos" && /* @__PURE__ */ jsxRuntimeExports.jsx(TitleBar, {}),
     /* @__PURE__ */ jsxRuntimeExports.jsx(
       TabBar,
       {
@@ -18754,7 +18913,7 @@ function App() {
     /* @__PURE__ */ jsxRuntimeExports.jsx("style", { children: `
         .app {
           display: grid;
-          grid-template-rows: 34px var(--tab-h) 1fr;
+          grid-template-rows: ${platform2 === "macos" ? "var(--tab-h) 1fr" : "34px var(--tab-h) 1fr"};
           height: 100vh;
         }
         .main {

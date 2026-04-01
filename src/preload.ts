@@ -1,6 +1,14 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { IPC } from './shared/ipc-channels';
-import type { AppConfig, ChatMessage, FeatureToggles, ProviderSettings, ProviderType, Theme } from './shared/types';
+import type {
+  AppConfig,
+  ChatMessage,
+  FeatureToggles,
+  ProviderSettings,
+  ProviderType,
+  TerminalSession,
+  Theme
+} from './shared/types';
 
 export interface ElectronAPI {
   checkAIAvailable: () => Promise<boolean>;
@@ -27,6 +35,11 @@ export interface ElectronAPI {
   getKey: (provider: ProviderType) => Promise<string | null>;
   saveKey: (provider: ProviderType, key: string) => Promise<boolean>;
   pathExists: (targetPath: string) => Promise<boolean>;
+  resolveProjectPath: (input: string) => Promise<string | null>;
+  findProjectCandidates: (input: string) => Promise<string[]>;
+  getTerminalSession: () => Promise<TerminalSession>;
+  saveTerminalSession: (session: TerminalSession) => Promise<boolean>;
+  recordTerminalCommand: (cwd: string, command: string) => Promise<boolean>;
 
   createPty: (id: string, shell: string, cwd: string) => Promise<string>;
   writePty: (id: string, data: string) => void;
@@ -85,6 +98,11 @@ const api: ElectronAPI = {
   getKey: (provider) => ipcRenderer.invoke(IPC.KEY_GET, provider),
   saveKey: (provider, key) => ipcRenderer.invoke(IPC.KEY_SAVE, provider, key),
   pathExists: (targetPath) => ipcRenderer.invoke(IPC.PATH_EXISTS, targetPath),
+  resolveProjectPath: (input) => ipcRenderer.invoke(IPC.PATH_RESOLVE_PROJECT, input),
+  findProjectCandidates: (input) => ipcRenderer.invoke(IPC.PATH_FIND_PROJECT_CANDIDATES, input),
+  getTerminalSession: () => ipcRenderer.invoke(IPC.TERMINAL_SESSION_GET),
+  saveTerminalSession: (session) => ipcRenderer.invoke(IPC.TERMINAL_SESSION_SAVE, session),
+  recordTerminalCommand: (cwd, command) => ipcRenderer.invoke(IPC.TERMINAL_HISTORY_RECORD, cwd, command),
 
   createPty: (id, shell, cwd) => ipcRenderer.invoke('pty:create', id, shell, cwd),
   writePty: (id, data) => ipcRenderer.send('pty:input', id, data),

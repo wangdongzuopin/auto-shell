@@ -20,6 +20,11 @@ export const IPC = {
   KEY_SAVE:                    'key:save',
   KEY_GET:                     'key:get',
   PATH_EXISTS:                 'path:exists',
+  PATH_RESOLVE_PROJECT:        'path:resolve-project',
+  PATH_FIND_PROJECT_CANDIDATES:'path:find-project-candidates',
+  TERMINAL_SESSION_GET:        'terminal-session:get',
+  TERMINAL_SESSION_SAVE:       'terminal-session:save',
+  TERMINAL_HISTORY_RECORD:     'terminal-history:record',
 
   // PTY command events
   PTY_COMMAND:         'pty:command',

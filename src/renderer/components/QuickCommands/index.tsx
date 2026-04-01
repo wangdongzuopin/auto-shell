@@ -64,27 +64,42 @@ export function QuickCommands() {
   const activeTabId = useTabsStore((state) => state.activeTabId);
   const tabs = useTabsStore((state) => state.tabs);
   const setTabCwd = useTabsStore((state) => state.setTabCwd);
+  const commandHistoryByCwd = useTabsStore((state) => state.commandHistoryByCwd);
   const activeTab = tabs.find((tab) => tab.id === activeTabId) ?? null;
   const platform = useMemo(() => detectPlatform(), []);
 
   const allCommands = useMemo<QuickCommandGroup[]>(() => {
-    const projectCommands = activeTab
-      ? [
-          {
-            group: '项目切换',
-            commands: getProjectPaths(platform).map((project) => ({
-              name: project.name,
-              cmd: buildCdCommand(activeTab.shell, project.path),
-              preview: project.path,
-              actionLabel: '切换项目'
-            }))
-          }
-        ]
+    if (!activeTab) {
+      return [...BASE_COMMANDS.common, platform === 'windows' ? BASE_COMMANDS.windows : BASE_COMMANDS.unix];
+    }
+
+    const currentDirectoryHistory = (commandHistoryByCwd[activeTab.cwd] ?? []).map((command) => ({
+      name: getHistoryCommandLabel(command),
+      cmd: command,
+      preview: activeTab.cwd,
+      actionLabel: '再次执行'
+    }));
+
+    const historyGroup = currentDirectoryHistory.length > 0
+      ? [{
+          group: '当前目录历史',
+          commands: currentDirectoryHistory
+        }]
       : [];
 
+    const projectGroup = [{
+      group: '项目切换',
+      commands: getProjectPaths(platform).map((project) => ({
+        name: project.name,
+        cmd: buildCdCommand(activeTab.shell, project.path),
+        preview: project.path,
+        actionLabel: '切换项目'
+      }))
+    }];
+
     const systemCommands = platform === 'windows' ? BASE_COMMANDS.windows : BASE_COMMANDS.unix;
-    return [...projectCommands, ...BASE_COMMANDS.common, systemCommands];
-  }, [activeTab, platform]);
+    return [...historyGroup, ...projectGroup, ...BASE_COMMANDS.common, systemCommands];
+  }, [activeTab, commandHistoryByCwd, platform]);
 
   const filteredCommands = useMemo(
     () =>
@@ -258,24 +273,22 @@ export function QuickCommands() {
           white-space: nowrap;
         }
         .cmd-preview {
+          font-size: 11px;
+          color: var(--text3);
           font-family: var(--mono);
-          font-size: 10px;
-          color: var(--text2);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
         .cmd-run {
-          font-size: 10px;
-          color: var(--accent);
-          white-space: nowrap;
           flex-shrink: 0;
+          font-size: 11px;
+          color: var(--accent);
         }
         .cmd-empty {
-          font-size: 12px;
+          padding: 14px 10px;
           color: var(--text3);
-          text-align: center;
-          padding: 24px 12px;
+          font-size: 12px;
         }
       `}</style>
     </div>
@@ -285,58 +298,62 @@ export function QuickCommands() {
 function getProjectPaths(platform: AppPlatform) {
   if (platform === 'windows') {
     return [
-      { name: 'Home', path: '~' },
       { name: 'auto-shell', path: 'D:\\Agent\\auto-shell' },
-      { name: 'Center', path: 'D:\\Center' }
+      { name: 'claude-code-rev', path: 'D:\\Agent\\claude-code-rev' },
+      { name: 'Center', path: 'D:\\Agent\\Center' }
     ];
   }
 
   return [
-    { name: 'Home', path: '~' },
-    { name: 'Desktop', path: '~/Desktop' },
-    { name: 'Projects', path: '~/Projects' }
+    { name: 'auto-shell', path: '~/projects/auto-shell' },
+    { name: 'workspace', path: '~/projects/workspace' },
+    { name: 'dotfiles', path: '~/dotfiles' }
   ];
 }
 
 function buildCdCommand(shell: string, targetPath: string): string {
-  const quotedPath = `"${targetPath.replace(/"/g, '\\"')}"`;
-
-  switch (shell) {
-    case 'powershell':
-      return `Set-Location -LiteralPath ${quotedPath}`;
-    case 'cmd':
-      return targetPath === '~' ? 'cd /d %USERPROFILE%' : `cd /d ${quotedPath}`;
-    case 'wsl':
-    case 'git-bash':
-    case 'zsh':
-    case 'bash':
-      return targetPath === '~' ? 'cd ~' : `cd ${quotedPath}`;
-    default:
-      return targetPath === '~' ? 'cd ~' : `cd ${quotedPath}`;
+  if (shell === 'powershell') {
+    return `Set-Location -LiteralPath "${targetPath}"`;
   }
+
+  if (shell === 'cmd') {
+    return `cd /d "${targetPath}"`;
+  }
+
+  return `cd "${targetPath}"`;
 }
 
 function parseCwdCommand(command: string): string | null {
   const trimmed = command.trim();
-  const patterns = [
-    /^(?:cd\s+\/d|cd|Set-Location\s+-LiteralPath|Set-Location)\s+(.+)$/i
-  ];
+  if (!trimmed) {
+    return null;
+  }
 
-  for (const pattern of patterns) {
-    const match = trimmed.match(pattern);
-    if (match?.[1]) {
-      return stripWrappingQuotes(match[1].trim());
-    }
+  const powershellMatch = trimmed.match(/^set-location(?:\s+-literalpath|\s+-path)?\s+(.+)$/i);
+  if (powershellMatch) {
+    return cleanQuotedPath(powershellMatch[1]);
+  }
+
+  const windowsCdMatch = trimmed.match(/^cd\s+\/d\s+(.+)$/i);
+  if (windowsCdMatch) {
+    return cleanQuotedPath(windowsCdMatch[1]);
+  }
+
+  const genericCdMatch = trimmed.match(/^cd\s+(.+)$/i);
+  if (genericCdMatch) {
+    return cleanQuotedPath(genericCdMatch[1]);
   }
 
   return null;
 }
 
-function stripWrappingQuotes(value: string): string {
-  if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
-    return value.slice(1, -1);
-  }
-  return value;
+function cleanQuotedPath(value: string): string {
+  return value.trim().replace(/^['"]|['"]$/g, '');
+}
+
+function getHistoryCommandLabel(command: string): string {
+  const compact = command.replace(/\s+/g, ' ').trim();
+  return compact.length > 28 ? `${compact.slice(0, 28)}...` : compact;
 }
 
 function detectPlatform(): AppPlatform {

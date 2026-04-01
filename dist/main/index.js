@@ -659,6 +659,11 @@ const IPC = {
   KEY_SAVE: "key:save",
   KEY_GET: "key:get",
   PATH_EXISTS: "path:exists",
+  PATH_RESOLVE_PROJECT: "path:resolve-project",
+  PATH_FIND_PROJECT_CANDIDATES: "path:find-project-candidates",
+  TERMINAL_SESSION_GET: "terminal-session:get",
+  TERMINAL_SESSION_SAVE: "terminal-session:save",
+  TERMINAL_HISTORY_RECORD: "terminal-history:record",
   // PTY command events
   PTY_COMMAND: "pty:command",
   // Window controls
@@ -668,6 +673,7 @@ const IPC = {
 };
 const CONFIG_DIR = path__namespace.join(os__namespace.homedir(), ".autoshell");
 const CONFIG_PATH = path__namespace.join(CONFIG_DIR, "config.json");
+const MAX_HISTORY_PER_DIRECTORY = 20;
 const defaultProviderConfigs = {
   minimax: {
     baseUrl: "https://api.minimaxi.com/anthropic",
@@ -712,9 +718,13 @@ const defaultConfig = {
   aiFeatures: defaultFeatures,
   theme: defaultTheme,
   apiKeys: {},
-  // 新增默认值
   currentModel: "MiniMax-M2.7",
-  modelConfig: {}
+  modelConfig: {},
+  terminalSession: {
+    tabs: [],
+    activeTabId: null,
+    commandHistoryByCwd: {}
+  }
 };
 function normalizeProviderConfig(provider, config) {
   if (provider === "minimax" && config.baseUrl === "https://api.minimaxi.com/v1") {
@@ -752,7 +762,41 @@ function normalizePersistedConfig(input) {
     },
     apiKeys: input?.apiKeys ?? {},
     currentModel: input?.currentModel ?? defaultConfig.currentModel,
-    modelConfig: input?.modelConfig ?? defaultConfig.modelConfig
+    modelConfig: input?.modelConfig ?? defaultConfig.modelConfig,
+    terminalSession: normalizeTerminalSession(input?.terminalSession)
+  };
+}
+function normalizeTerminalSession(input) {
+  const tabs = Array.isArray(input?.tabs) ? input.tabs.map(normalizeTabSnapshot).filter((tab) => Boolean(tab)) : [];
+  const activeTabId = typeof input?.activeTabId === "string" && tabs.some((tab) => tab.id === input.activeTabId) ? input.activeTabId : tabs[0]?.id ?? null;
+  const commandHistoryByCwd = Object.fromEntries(
+    Object.entries(input?.commandHistoryByCwd ?? {}).flatMap(([cwd, commands]) => {
+      if (typeof cwd !== "string" || !cwd.trim() || !Array.isArray(commands)) {
+        return [];
+      }
+      const normalizedCommands = commands.filter((command) => typeof command === "string").map((command) => command.trim()).filter(Boolean).slice(0, MAX_HISTORY_PER_DIRECTORY);
+      return normalizedCommands.length > 0 ? [[cwd, normalizedCommands]] : [];
+    })
+  );
+  return {
+    tabs,
+    activeTabId,
+    commandHistoryByCwd
+  };
+}
+function normalizeTabSnapshot(tab) {
+  if (!tab || typeof tab !== "object") {
+    return null;
+  }
+  const value = tab;
+  if (!value.id || !value.name || !value.shell) {
+    return null;
+  }
+  return {
+    id: String(value.id),
+    name: String(value.name),
+    shell: String(value.shell),
+    cwd: typeof value.cwd === "string" && value.cwd.trim() ? value.cwd : "~"
   };
 }
 function writePersistedConfig(config) {
@@ -834,9 +878,44 @@ function setFeatures(features) {
     aiFeatures: features
   }));
 }
+function getTerminalSession() {
+  return readPersistedConfig().terminalSession;
+}
+function saveTerminalSession(session) {
+  updatePersistedConfig((current) => ({
+    ...current,
+    terminalSession: normalizeTerminalSession(session)
+  }));
+}
+function recordTerminalCommand(cwd, command) {
+  const normalizedCwd = normalizeCwdKey(cwd);
+  const normalizedCommand = command.trim();
+  if (!normalizedCommand) {
+    return;
+  }
+  updatePersistedConfig((current) => {
+    const existing = current.terminalSession.commandHistoryByCwd[normalizedCwd] ?? [];
+    const nextHistory = [normalizedCommand, ...existing.filter((item) => item !== normalizedCommand)].slice(0, MAX_HISTORY_PER_DIRECTORY);
+    return {
+      ...current,
+      terminalSession: {
+        ...current.terminalSession,
+        commandHistoryByCwd: {
+          ...current.terminalSession.commandHistoryByCwd,
+          [normalizedCwd]: nextHistory
+        }
+      }
+    };
+  });
+}
+function normalizeCwdKey(cwd) {
+  return cwd?.trim() || "~";
+}
 let currentProvider = null;
 async function getProvider() {
-  if (currentProvider) return currentProvider;
+  if (currentProvider) {
+    return currentProvider;
+  }
   const config = getConfig();
   const apiKey = await getApiKey(config.provider);
   currentProvider = createProvider({
@@ -918,12 +997,170 @@ function registerIpcHandlers() {
     if (!targetPath) {
       return false;
     }
-    try {
-      return fs__namespace.existsSync(targetPath);
-    } catch {
-      return false;
-    }
+    return safeExists(targetPath);
   });
+  electron.ipcMain.handle(IPC.PATH_RESOLVE_PROJECT, async (_event, input) => {
+    return findProjectCandidates(input, 1)[0] ?? null;
+  });
+  electron.ipcMain.handle(IPC.PATH_FIND_PROJECT_CANDIDATES, async (_event, input) => {
+    return findProjectCandidates(input, 5);
+  });
+  electron.ipcMain.handle(IPC.TERMINAL_SESSION_GET, () => getTerminalSession());
+  electron.ipcMain.handle(IPC.TERMINAL_SESSION_SAVE, (_event, session) => {
+    saveTerminalSession(session);
+    return true;
+  });
+  electron.ipcMain.handle(IPC.TERMINAL_HISTORY_RECORD, (_event, cwd, command) => {
+    recordTerminalCommand(cwd, command);
+    return true;
+  });
+}
+function findProjectCandidates(input, limit) {
+  const normalizedInput = input.trim();
+  if (!normalizedInput) {
+    return [];
+  }
+  const explicitPath = normalizeExplicitPath(normalizedInput);
+  if (explicitPath && safeExists(explicitPath)) {
+    return [explicitPath];
+  }
+  const driveHint = extractDriveHint(normalizedInput);
+  const tokens = extractProjectTokens(normalizedInput);
+  if (tokens.length === 0) {
+    return [];
+  }
+  const roots = getSearchRoots(driveHint);
+  const matches = /* @__PURE__ */ new Map();
+  for (const root of roots) {
+    for (const candidate of resolveFromRoot(root, tokens, limit)) {
+      const existing = matches.get(candidate.path);
+      if (!existing || candidate.score > existing.score || candidate.depth < existing.depth) {
+        matches.set(candidate.path, candidate);
+      }
+    }
+  }
+  return [...matches.values()].sort((a, b) => b.score - a.score || a.depth - b.depth || a.path.length - b.path.length).slice(0, limit).map((item) => item.path);
+}
+function normalizeExplicitPath(input) {
+  const cleaned = input.replace(/[。！!？?]+$/g, "").replace(/\s+/g, " ").trim();
+  if (!cleaned) {
+    return null;
+  }
+  if (/^[a-zA-Z]:/.test(cleaned)) {
+    return cleaned.replace(/\//g, "\\");
+  }
+  const driveChineseMatch = cleaned.match(/^([a-zA-Z])盘[:：]?[\\/]*(.*)$/i);
+  if (driveChineseMatch) {
+    const rest = driveChineseMatch[2].trim().replace(/[\\/]+/g, "\\");
+    return rest ? `${driveChineseMatch[1].toUpperCase()}:\\${rest}` : `${driveChineseMatch[1].toUpperCase()}:\\`;
+  }
+  if (cleaned.startsWith("~") || cleaned.startsWith("/") || cleaned.startsWith("\\")) {
+    return cleaned;
+  }
+  return null;
+}
+function extractDriveHint(input) {
+  const directMatch = input.match(/([a-zA-Z]):/);
+  if (directMatch) {
+    return `${directMatch[1].toUpperCase()}:\\`;
+  }
+  const chineseMatch = input.match(/([a-zA-Z])盘/i);
+  if (chineseMatch) {
+    return `${chineseMatch[1].toUpperCase()}:\\`;
+  }
+  return null;
+}
+function extractProjectTokens(input) {
+  const sanitized = input.replace(/[。！!？?]+$/g, " ").replace(/([a-zA-Z])盘/gi, " ").replace(/[\\/]+/g, " ").replace(/[:：]/g, " ").replace(/\b(cd|chdir|set-location|open|goto)\b/gi, " ").replace(/切换到|切到|进入|打开项目|打开|前往|去到|跳到|项目|目录|文件夹|路径|下面|下的|里的|里边的|中的|的/gi, " ");
+  const rawTokens = sanitized.match(/[A-Za-z0-9._-]+|[\u4e00-\u9fa5]{2,}/g) ?? [];
+  const stopwords = /* @__PURE__ */ new Set(["盘", "项目", "目录", "文件夹", "路径"]);
+  return rawTokens.map((token) => token.trim()).filter((token) => token && !stopwords.has(token)).filter((token, index, all) => all.findIndex((item) => item.toLowerCase() === token.toLowerCase()) === index);
+}
+function getSearchRoots(driveHint) {
+  if (driveHint) {
+    return safeExists(driveHint) ? [driveHint] : [];
+  }
+  const roots = [];
+  for (const letter of "CDEFGHIJKLMNOPQRSTUVWXYZ") {
+    const candidate = `${letter}:\\`;
+    if (safeExists(candidate)) {
+      roots.push(candidate);
+    }
+  }
+  return roots;
+}
+function resolveFromRoot(root, tokens, limit) {
+  let candidates = [{ path: root, score: 0, depth: 0 }];
+  for (const token of tokens) {
+    const next = /* @__PURE__ */ new Map();
+    for (const candidate of candidates) {
+      for (const match of findMatchingDirectories(candidate.path, token, 3, limit)) {
+        const score = candidate.score + match.score;
+        const existing = next.get(match.path);
+        if (!existing || score > existing.score || match.depth < existing.depth) {
+          next.set(match.path, {
+            path: match.path,
+            score,
+            depth: candidate.depth + match.depth
+          });
+        }
+      }
+    }
+    if (next.size === 0) {
+      return [];
+    }
+    candidates = [...next.values()].sort((a, b) => b.score - a.score || a.depth - b.depth || a.path.length - b.path.length).slice(0, Math.max(limit, 6));
+  }
+  return candidates;
+}
+function findMatchingDirectories(baseDir, token, maxDepth, limit) {
+  const results = [];
+  const normalizedToken = token.toLowerCase();
+  const walk = (currentDir, depth) => {
+    if (depth > maxDepth || results.length >= 50) {
+      return;
+    }
+    let entries;
+    try {
+      entries = fs__namespace.readdirSync(currentDir, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    const directories = entries.filter((entry) => entry.isDirectory());
+    const ranked = directories.map((entry) => ({ entry, score: matchDirectoryName(entry.name, normalizedToken) })).filter((item) => item.score > 0).sort((a, b) => b.score - a.score || a.entry.name.length - b.entry.name.length);
+    for (const item of ranked.slice(0, Math.max(limit, 5))) {
+      results.push({
+        path: path__namespace.join(currentDir, item.entry.name),
+        depth,
+        score: item.score
+      });
+    }
+    for (const directory of directories) {
+      walk(path__namespace.join(currentDir, directory.name), depth + 1);
+    }
+  };
+  walk(baseDir, 1);
+  return results;
+}
+function matchDirectoryName(name, token) {
+  const normalizedName = name.toLowerCase();
+  if (normalizedName === token) {
+    return 100;
+  }
+  if (normalizedName.startsWith(token)) {
+    return 80;
+  }
+  if (normalizedName.includes(token)) {
+    return 60;
+  }
+  return 0;
+}
+function safeExists(targetPath) {
+  try {
+    return fs__namespace.existsSync(targetPath);
+  } catch {
+    return false;
+  }
 }
 const instances = /* @__PURE__ */ new Map();
 function resolveCwd(cwd) {
@@ -1080,6 +1317,7 @@ function findExistingPath(candidates) {
 }
 let mainWindow = null;
 function createWindow() {
+  const isMac = process.platform === "darwin";
   mainWindow = new electron.BrowserWindow({
     width: 1200,
     height: 800,
@@ -1087,6 +1325,9 @@ function createWindow() {
     minHeight: 600,
     backgroundColor: "#0e0f11",
     icon: path__namespace.join(__dirname, "../../logo.png"),
+    frame: isMac,
+    titleBarStyle: isMac ? "hiddenInset" : "default",
+    trafficLightPosition: isMac ? { x: 14, y: 14 } : void 0,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -1094,7 +1335,7 @@ function createWindow() {
       preload: path__namespace.join(__dirname, "../preload/index.js")
     },
     show: false,
-    frame: false
+    vibrancy: isMac ? "under-window" : void 0
   });
   mainWindow.once("ready-to-show", () => {
     mainWindow?.show();

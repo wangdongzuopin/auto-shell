@@ -1,5 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { shellNames, shellOptions, useTabsStore } from '../../store/tabs';
+import React from 'react';
+import { detectPlatform } from '../../platform';
+import { shellNames, useTabsStore } from '../../store/tabs';
 
 interface TabBarProps {
   onOpenChat: () => void;
@@ -7,58 +8,25 @@ interface TabBarProps {
 }
 
 export function TabBar({ onOpenChat, onOpenSettings }: TabBarProps) {
+  const platform = detectPlatform();
   const { tabs, activeTabId, addTab, closeTab, setActiveTab, toggleSidebar } = useTabsStore();
   const sidebarOpen = useTabsStore((state) => state.sidebarOpen);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const addButtonRef = useRef<HTMLButtonElement>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!menuOpen) {
-      return;
-    }
-
-    const handlePointerDown = (event: MouseEvent) => {
-      const target = event.target as Node;
-      if (menuRef.current?.contains(target) || addButtonRef.current?.contains(target)) {
-        return;
-      }
-      setMenuOpen(false);
-    };
-
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setMenuOpen(false);
-      }
-    };
-
-    window.addEventListener('mousedown', handlePointerDown);
-    window.addEventListener('keydown', handleEscape);
-    return () => {
-      window.removeEventListener('mousedown', handlePointerDown);
-      window.removeEventListener('keydown', handleEscape);
-    };
-  }, [menuOpen]);
 
   const handleCloseTab = (event: React.MouseEvent, id: string) => {
     event.stopPropagation();
     closeTab(id);
   };
 
-  const handleCreateTab = (shell: (typeof shellOptions)[number]['id']) => {
-    addTab(shell);
-    setMenuOpen(false);
-  };
-
   return (
     <div id="tabbar">
       <div className="tabs">
+        {platform === 'macos' && <div className="mac-traffic-gap" aria-hidden="true" />}
         {tabs.map((tab) => (
           <button
             key={tab.id}
             className={`tab ${tab.id === activeTabId ? 'active' : ''}`}
             onClick={() => setActiveTab(tab.id)}
-            title={`${tab.name} · ${shellNames[tab.shell]}`}
+            title={`${tab.name} / ${shellNames[tab.shell]}`}
           >
             <span className="tab-dot" />
             <span className="tab-name">{tab.name}</span>
@@ -70,30 +38,13 @@ export function TabBar({ onOpenChat, onOpenSettings }: TabBarProps) {
         ))}
         <div className="tab-add-wrap">
           <button
-            ref={addButtonRef}
-            className={`tab-add ${menuOpen ? 'active' : ''}`}
-            onClick={() => setMenuOpen((current) => !current)}
+            className="tab-add"
+            onClick={() => addTab()}
             title="新建终端"
-            aria-expanded={menuOpen}
-            aria-haspopup="menu"
+            aria-label="新建终端"
           >
             +
           </button>
-          {menuOpen && (
-            <div className="shell-menu" ref={menuRef} role="menu">
-              {shellOptions.map((option) => (
-                <button
-                  key={option.id}
-                  className="shell-menu-item"
-                  onClick={() => handleCreateTab(option.id)}
-                  role="menuitem"
-                >
-                  <span className="shell-menu-title">{option.label}</span>
-                  <span className="shell-menu-desc">{option.description}</span>
-                </button>
-              ))}
-            </div>
-          )}
         </div>
       </div>
       <div className="toolbar">
@@ -108,13 +59,13 @@ export function TabBar({ onOpenChat, onOpenSettings }: TabBarProps) {
             <rect x="2" y="11" width="7" height="1.5" rx=".75" fill="currentColor" />
           </svg>
         </button>
-        <button className="icon-btn" onClick={onOpenChat} title="AI 对话">
+        <button className="icon-btn" onClick={onOpenChat} title="Assistant 对话">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
             <path d="M3 4.25C3 3.56 3.56 3 4.25 3h7.5C12.44 3 13 3.56 13 4.25v5.5c0 .69-.56 1.25-1.25 1.25H7l-2.75 2v-2H4.25C3.56 11 3 10.44 3 9.75v-5.5Z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" />
             <path d="M5.5 6.25h5M5.5 8.25h3.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
           </svg>
         </button>
-        <button className="icon-btn" onClick={onOpenSettings} title="模型配置">
+        <button className="icon-btn" onClick={onOpenSettings} title="设置">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
             <path d="M8 2.5 9.35 3l1.38-.5 1 1.73-.88 1.2.38 1.43 1.42.56v2.16l-1.42.56-.38 1.43.88 1.2-1 1.73-1.38-.5L8 13.5l-1.35.5-1.38.5-1-1.73.88-1.2-.38-1.43-1.42-.56V7.42l1.42-.56.38-1.43-.88-1.2 1-1.73 1.38.5L8 2.5Z" stroke="currentColor" strokeWidth="1.05" strokeLinejoin="round" />
             <circle cx="8" cy="8" r="2.1" stroke="currentColor" strokeWidth="1.2" />
@@ -125,23 +76,28 @@ export function TabBar({ onOpenChat, onOpenSettings }: TabBarProps) {
         #tabbar {
           display: flex;
           align-items: center;
-          gap: 8px;
-          padding: 0 10px 0 12px;
-          background: linear-gradient(180deg, color-mix(in srgb, var(--bg2) 88%, white 12%), var(--bg));
+          gap: 10px;
+          padding: 0 12px;
+          background:
+            linear-gradient(180deg, color-mix(in srgb, var(--bg2) 82%, white 18%), color-mix(in srgb, var(--bg) 92%, white 8%));
           border-bottom: 1px solid var(--border);
           user-select: none;
+          backdrop-filter: blur(16px) saturate(1.08);
         }
         .tabs {
           display: flex;
           align-items: center;
-          gap: 4px;
+          gap: 6px;
           flex: 1;
-          overflow: hidden;
+          min-width: 0;
+        }
+        .mac-traffic-gap {
+          width: 72px;
+          flex-shrink: 0;
         }
         .tab,
         .tab-add,
-        .icon-btn,
-        .shell-menu-item {
+        .icon-btn {
           border: 1px solid transparent;
           background: transparent;
         }
@@ -149,31 +105,31 @@ export function TabBar({ onOpenChat, onOpenSettings }: TabBarProps) {
           display: flex;
           align-items: center;
           gap: 8px;
-          height: 30px;
-          padding: 0 12px;
-          border-radius: 8px 8px 0 0;
+          height: 34px;
+          padding: 0 14px;
+          border-radius: 12px;
           font-size: 12px;
           font-family: var(--sans);
           color: var(--text2);
           cursor: pointer;
           white-space: nowrap;
           min-width: 0;
+          transition: background .16s ease, border-color .16s ease, color .16s ease, transform .16s ease;
         }
         .tab:hover {
           background: color-mix(in srgb, var(--bg3) 90%, white 10%);
           color: var(--text);
         }
         .tab.active {
-          background: var(--bg);
+          background: color-mix(in srgb, var(--bg) 86%, white 14%);
           color: var(--text);
           border-color: var(--border);
-          border-bottom-color: var(--bg);
-          box-shadow: inset 0 1px 0 var(--border);
+          box-shadow: 0 8px 22px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.08);
         }
         .tab-dot {
           width: 7px;
           height: 7px;
-          border-radius: 2px;
+          border-radius: 3px;
           background: rgba(76,141,255,0.8);
           flex-shrink: 0;
         }
@@ -210,68 +166,31 @@ export function TabBar({ onOpenChat, onOpenSettings }: TabBarProps) {
           color: var(--text);
         }
         .tab-add-wrap {
-          position: relative;
           flex-shrink: 0;
         }
         .tab-add,
         .icon-btn {
-          width: 30px;
-          height: 30px;
+          width: 34px;
+          height: 34px;
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          border-radius: 8px;
+          border-radius: 12px;
           color: var(--text2);
           cursor: pointer;
+          transition: background .16s ease, border-color .16s ease, color .16s ease, transform .16s ease;
         }
         .tab-add:hover,
-        .tab-add.active,
         .icon-btn:hover {
           background: color-mix(in srgb, var(--bg3) 90%, white 10%);
           border-color: var(--border);
           color: var(--text);
-        }
-        .shell-menu {
-          position: absolute;
-          top: calc(100% + 8px);
-          left: 0;
-          width: 240px;
-          padding: 8px;
-          background: color-mix(in srgb, var(--bg2) 94%, white 6%);
-          border: 1px solid var(--border2);
-          border-radius: 12px;
-          box-shadow: var(--shadow-soft);
-          z-index: 20;
-        }
-        .shell-menu-item {
-          width: 100%;
-          display: flex;
-          flex-direction: column;
-          align-items: flex-start;
-          gap: 3px;
-          padding: 10px 12px;
-          border-radius: 10px;
-          color: var(--text);
-          cursor: pointer;
-          text-align: left;
-        }
-        .shell-menu-item:hover {
-          background: rgba(76,141,255,0.08);
-          border-color: rgba(76,141,255,0.18);
-        }
-        .shell-menu-title {
-          font-size: 12px;
-          font-weight: 600;
-        }
-        .shell-menu-desc {
-          font-size: 11px;
-          color: var(--text3);
-          line-height: 1.45;
+          transform: translateY(-1px);
         }
         .toolbar {
           display: flex;
           align-items: center;
-          gap: 4px;
+          gap: 6px;
         }
         .icon-btn.active {
           color: var(--accent);

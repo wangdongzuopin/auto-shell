@@ -7,6 +7,8 @@ import { IPC } from '@shared/ipc-channels';
 let mainWindow: BrowserWindow | null = null;
 
 function createWindow() {
+  const isMac = process.platform === 'darwin';
+
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
@@ -14,6 +16,9 @@ function createWindow() {
     minHeight: 600,
     backgroundColor: '#0e0f11',
     icon: path.join(__dirname, '../../logo.png'),
+    frame: isMac,
+    titleBarStyle: isMac ? 'hiddenInset' : 'default',
+    trafficLightPosition: isMac ? { x: 14, y: 14 } : undefined,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -21,7 +26,7 @@ function createWindow() {
       preload: path.join(__dirname, '../preload/index.js')
     },
     show: false,
-    frame: false
+    vibrancy: isMac ? 'under-window' : undefined
   });
 
   // Show when ready

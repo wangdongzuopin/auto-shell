@@ -10,6 +10,11 @@ interface AIChatPanelProps {
   onClose: () => void;
 }
 
+interface PendingDirectorySelection {
+  request: string;
+  candidates: string[];
+}
+
 type AppPlatform = 'windows' | 'macos' | 'linux';
 
 export function AIChatPanel({ open, onClose }: AIChatPanelProps) {
@@ -28,6 +33,7 @@ export function AIChatPanel({ open, onClose }: AIChatPanelProps) {
     }
   ]);
   const [loading, setLoading] = useState(false);
+  const [pendingSelection, setPendingSelection] = useState<PendingDirectorySelection | null>(null);
 
   const platform = useMemo(() => detectPlatform(), []);
   const modelLabel = useMemo(() => `${provider} / ${configs[provider].model}`, [configs, provider]);
@@ -40,43 +46,80 @@ export function AIChatPanel({ open, onClose }: AIChatPanelProps) {
   }, [activeTab]);
 
   const placeholder = useMemo(() => {
-    return platform === 'windows'
-      ? '例如：帮我写一个 PowerShell 脚本，或输入“切换到 D:\\Agent\\auto-shell”'
-      : '例如：帮我写一个 zsh 脚本，或输入“切换到 ~/projects/auto-shell”';
-  }, [platform]);
+    if (pendingSelection) {
+      return '输入 1 / 2 / 第一个 来确认候选目录';
+    }
 
-  if (!open) return null;
+    return platform === 'windows'
+      ? '例如：切换到 D 盘的 Center 目录下 moa 项目'
+      : '例如：切换到 projects 目录里的 auto-shell 项目';
+  }, [pendingSelection, platform]);
+
+  if (!open) {
+    return null;
+  }
 
   const handleSend = async () => {
     const trimmed = input.trim();
-    if (!trimmed || loading) return;
+    if (!trimmed || loading) {
+      return;
+    }
 
     if (!activeTabId || !activeTab) {
       toast('当前没有可用的终端窗口');
       return;
     }
 
-    const switchTarget = parseProjectSwitchInput(trimmed);
-    if (switchTarget) {
-      const exists = await window.api.pathExists(switchTarget);
-      if (!exists) {
-        setMessages((current) => [
-          ...current,
-          { role: 'user', content: trimmed },
-          { role: 'assistant', content: `找不到该目录：${switchTarget}` }
-        ]);
+    if (pendingSelection) {
+      const selectionIndex = parseCandidateSelection(trimmed, pendingSelection.candidates.length);
+      if (selectionIndex !== null) {
+        const chosenPath = pendingSelection.candidates[selectionIndex];
+        executeDirectorySwitch(activeTab.shell, activeTabId, chosenPath, trimmed);
+        setPendingSelection(null);
         setInput('');
-        toast(`目录不存在：${switchTarget}`);
         return;
       }
 
-      const command = buildChangeDirectoryCommand(activeTab.shell, switchTarget);
-      window.api.writePty(activeTabId, `${command}\r`);
-      setTabCwd(activeTabId, switchTarget);
       setMessages((current) => [
         ...current,
         { role: 'user', content: trimmed },
-        { role: 'assistant', content: `已在当前终端执行目录切换：${switchTarget}` }
+        {
+          role: 'assistant',
+          content: `请直接回复候选序号，例如 1、2，或者“第一个”。\n${formatCandidates(pendingSelection.candidates)}`
+        }
+      ]);
+      setInput('');
+      return;
+    }
+
+    const switchRequest = parseProjectSwitchInput(trimmed);
+    if (switchRequest) {
+      const candidates = await window.api.findProjectCandidates(switchRequest);
+      if (candidates.length === 0) {
+        setMessages((current) => [
+          ...current,
+          { role: 'user', content: trimmed },
+          { role: 'assistant', content: `没有找到匹配的项目目录：${switchRequest}` }
+        ]);
+        setInput('');
+        toast(`没有找到匹配目录：${switchRequest}`);
+        return;
+      }
+
+      if (candidates.length === 1) {
+        executeDirectorySwitch(activeTab.shell, activeTabId, candidates[0], trimmed);
+        setInput('');
+        return;
+      }
+
+      setPendingSelection({ request: switchRequest, candidates });
+      setMessages((current) => [
+        ...current,
+        { role: 'user', content: trimmed },
+        {
+          role: 'assistant',
+          content: `找到了多个可能的目录，请回复序号确认要切换到哪一个：\n${formatCandidates(candidates)}`
+        }
       ]);
       setInput('');
       return;
@@ -92,7 +135,7 @@ export function AIChatPanel({ open, onClose }: AIChatPanelProps) {
         {
           role: 'system',
           content: [
-            `你是一个中文终端助手，当前服务的平台是 ${platformLabel(platform)}。`,
+            `你是一个中文终端助手，当前平台是 ${platformLabel(platform)}。`,
             '回答要直接、可执行、准确，优先给出当前平台和当前 shell 可直接执行的命令。',
             `当前 shell: ${shellNames[activeTab.shell]}`,
             `当前工作目录: ${activeTab.cwd}`,
@@ -163,6 +206,17 @@ export function AIChatPanel({ open, onClose }: AIChatPanelProps) {
     }
   };
 
+  const executeDirectorySwitch = (shell: string, tabId: string, targetPath: string, userContent: string) => {
+    const command = buildChangeDirectoryCommand(shell, targetPath);
+    window.api.writePty(tabId, `${command}\r`);
+    setTabCwd(tabId, targetPath);
+    setMessages((current) => [
+      ...current,
+      { role: 'user', content: userContent },
+      { role: 'assistant', content: `已切换到：${targetPath}` }
+    ]);
+  };
+
   return (
     <div className="chat-panel">
       <div className="chat-header">
@@ -171,7 +225,9 @@ export function AIChatPanel({ open, onClose }: AIChatPanelProps) {
           <div className="chat-meta">{modelLabel}</div>
           <div className="chat-context">{tabLabel}</div>
         </div>
-        <button className="chat-close" onClick={onClose}>×</button>
+        <button className="chat-close" onClick={onClose} aria-label="关闭助手">
+          ×
+        </button>
       </div>
       <div className="chat-messages">
         {messages.map((message, index) => {
@@ -438,18 +494,39 @@ export function AIChatPanel({ open, onClose }: AIChatPanelProps) {
 function parseProjectSwitchInput(input: string): string | null {
   const trimmed = input.trim();
   const patterns = [
-    /^(?:切换到|进入|打开项目|切换项目到)\s*(.+)$/i,
+    /^(?:切换到|切到|进入|打开项目|打开|前往|去到|跳到|切换项目到)\s*(.+)$/i,
     /^cd\s+(.+)$/i
   ];
 
   for (const pattern of patterns) {
     const match = trimmed.match(pattern);
     if (match?.[1]) {
-      return normalizeProjectPath(stripWrappingQuotes(match[1].trim()));
+      return normalizeProjectQuery(stripWrappingQuotes(match[1].trim()));
     }
   }
 
   return null;
+}
+
+function parseCandidateSelection(input: string, count: number): number | null {
+  const trimmed = input.trim();
+  const directNumber = Number.parseInt(trimmed, 10);
+  if (Number.isInteger(directNumber) && directNumber >= 1 && directNumber <= count) {
+    return directNumber - 1;
+  }
+
+  const aliases = ['一', '二', '三', '四', '五'];
+  for (let index = 0; index < Math.min(count, aliases.length); index += 1) {
+    if (trimmed === `第${aliases[index]}个` || trimmed === `${aliases[index]}`) {
+      return index;
+    }
+  }
+
+  return null;
+}
+
+function formatCandidates(candidates: string[]): string {
+  return candidates.map((candidate, index) => `${index + 1}. ${candidate}`).join('\n');
 }
 
 function buildChangeDirectoryCommand(shell: string, targetPath: string): string {
@@ -460,11 +537,6 @@ function buildChangeDirectoryCommand(shell: string, targetPath: string): string 
       return `Set-Location -LiteralPath ${quotedPath}`;
     case 'cmd':
       return `cd /d ${quotedPath}`;
-    case 'wsl':
-    case 'git-bash':
-    case 'zsh':
-    case 'bash':
-      return `cd ${quotedPath}`;
     default:
       return `cd ${quotedPath}`;
   }
@@ -474,13 +546,14 @@ function stripWrappingQuotes(value: string): string {
   if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
     return value.slice(1, -1);
   }
+
   return value;
 }
 
-function normalizeProjectPath(value: string): string {
+function normalizeProjectQuery(value: string): string {
   return value
-    .replace(/[。！!，,\s]+$/g, '')
-    .replace(/(?:目录|文件夹|项目目录|这个目录|该目录)$/i, '')
+    .replace(/[。！!？?]+$/g, '')
+    .replace(/(?:这个|那个|该)?(?:目录|文件夹|项目目录|项目)$/g, '')
     .trim();
 }
 

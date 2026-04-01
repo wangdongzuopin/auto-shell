@@ -7,29 +7,71 @@
   <meta name="description" content="Auto Shell 是一款为 Windows 开发者打造的 AI 终端，支持 MiniMax、GLM、Claude、OpenAI、Ollama 等模型，兼顾终端效率与自然语言协作。">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --bg: #08101d;
-      --bg-soft: #0e1726;
-      --panel: rgba(13, 24, 40, 0.88);
-      --panel-strong: rgba(18, 31, 51, 0.96);
-      --line: rgba(146, 180, 255, 0.18);
-      --line-strong: rgba(146, 180, 255, 0.32);
-      --text: #eef6ff;
-      --muted: #9cb1cf;
-      --subtle: #6881a5;
-      --sky: #38bdf8;
-      --blue: #0ea5e9;
-      --orange: #f97316;
-      --green: #47d16c;
-      --shadow: 0 32px 80px rgba(0, 0, 0, 0.34);
-      --radius-xl: 28px;
-      --radius-lg: 18px;
-      --radius-md: 14px;
-      --radius-sm: 10px;
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            bg: {
+              deep: '#030712',
+              base: '#0a0f1a',
+              soft: '#111827',
+            },
+            surface: {
+              DEFAULT: 'rgba(17, 24, 39, 0.7)',
+              hover: 'rgba(31, 41, 55, 0.8)',
+              active: 'rgba(55, 65, 81, 0.9)',
+            },
+            border: {
+              subtle: 'rgba(148, 163, 184, 0.15)',
+              DEFAULT: 'rgba(148, 163, 184, 0.25)',
+              strong: 'rgba(148, 163, 184, 0.4)',
+            },
+            text: {
+              primary: '#f9fafb',
+              secondary: '#9ca3af',
+              muted: '#6b7280',
+            },
+            accent: {
+              cyan: '#22d3ee',
+              orange: '#f97316',
+              emerald: '#10b981',
+              sky: '#0ea5e9',
+            },
+          },
+          backdropBlur: {
+            xs: '2px',
+          },
+          animation: {
+            'fade-in': 'fadeIn 0.5s ease-out',
+            'slide-up': 'slideUp 0.6s ease-out',
+            'glow-pulse': 'glowPulse 2s ease-in-out infinite',
+          },
+          keyframes: {
+            fadeIn: {
+              '0%': { opacity: '0' },
+              '100%': { opacity: '1' },
+            },
+            slideUp: {
+              '0%': { opacity: '0', transform: 'translateY(20px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' },
+            },
+            glowPulse: {
+              '0%, 100%': { opacity: '0.4' },
+              '50%': { opacity: '1' },
+            },
+          },
+        },
+      },
     }
-
+  </script>
+  <style>
     * {
       box-sizing: border-box;
     }
@@ -39,14 +81,11 @@
     }
 
     body {
-      margin: 0;
-      min-width: 320px;
-      font-family: "IBM Plex Sans", "Segoe UI", "Microsoft YaHei UI", sans-serif;
-      background:
-        radial-gradient(circle at top left, rgba(56, 189, 248, 0.14), transparent 28%),
-        radial-gradient(circle at top right, rgba(14, 165, 233, 0.12), transparent 32%),
-        linear-gradient(180deg, #09111e 0%, #060c16 100%);
-      color: var(--text);
+      font-family: 'Inter', system-ui, sans-serif;
+      background: #030712;
+      color: #f9fafb;
+      min-height: 100vh;
+      overflow-x: hidden;
     }
 
     a {
@@ -54,882 +93,583 @@
       text-decoration: none;
     }
 
-    img {
-      max-width: 100%;
-      display: block;
+    /* Background Effects */
+    .bg-grid {
+      background-image:
+        linear-gradient(rgba(148, 163, 184, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(148, 163, 184, 0.03) 1px, transparent 1px);
+      background-size: 64px 64px;
     }
 
-    button,
-    .btn {
-      cursor: pointer;
-      transition: transform 0.22s ease, border-color 0.22s ease, background 0.22s ease, box-shadow 0.22s ease;
+    .bg-gradient-radial {
+      background: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(34, 211, 238, 0.15), transparent);
     }
 
-    .page-shell {
-      position: relative;
-      overflow: hidden;
+    /* Glass Card */
+    .glass {
+      background: rgba(17, 24, 39, 0.6);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(148, 163, 184, 0.1);
     }
 
-    .page-shell::before,
-    .page-shell::after {
-      content: "";
-      position: absolute;
-      inset: auto;
-      pointer-events: none;
-      z-index: 0;
+    .glass-hover {
+      transition: all 0.3s ease;
     }
 
-    .page-shell::before {
-      width: 540px;
-      height: 540px;
-      top: -140px;
-      right: -90px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(56, 189, 248, 0.18), transparent 62%);
-      filter: blur(18px);
-    }
-
-    .page-shell::after {
-      width: 420px;
-      height: 420px;
-      left: -100px;
-      top: 480px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(249, 115, 22, 0.12), transparent 65%);
-      filter: blur(10px);
-    }
-
-    .content {
-      position: relative;
-      z-index: 1;
-      width: min(1180px, calc(100vw - 40px));
-      margin: 0 auto;
-    }
-
-    .topbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      padding: 28px 0 10px;
-    }
-
-    .brand {
-      display: inline-flex;
-      align-items: center;
-      gap: 14px;
-    }
-
-    .brand-mark {
-      width: 48px;
-      height: 48px;
-      border-radius: 14px;
-      border: 1px solid var(--line);
-      background: linear-gradient(180deg, rgba(56, 189, 248, 0.2), rgba(14, 165, 233, 0.08));
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.1);
-      padding: 8px;
-    }
-
-    .brand-meta strong {
-      display: block;
-      font-size: 18px;
-      letter-spacing: 0.01em;
-    }
-
-    .brand-meta span {
-      display: block;
-      margin-top: 4px;
-      color: var(--muted);
-      font-size: 12px;
-    }
-
-    .nav {
-      display: flex;
-      align-items: center;
-      gap: 18px;
-      color: var(--muted);
-      font-size: 14px;
-    }
-
-    .nav a:hover {
-      color: var(--text);
-    }
-
-    .hero {
-      display: grid;
-      grid-template-columns: minmax(0, 1.05fr) minmax(420px, 0.95fr);
-      gap: 42px;
-      align-items: center;
-      padding: 54px 0 40px;
-    }
-
-    .eyebrow {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      padding: 8px 14px;
-      border-radius: 999px;
-      border: 1px solid rgba(56, 189, 248, 0.22);
-      background: rgba(56, 189, 248, 0.08);
-      font-size: 12px;
-      color: #c3ecff;
-    }
-
-    .eyebrow::before {
-      content: "";
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--green);
-      box-shadow: 0 0 0 5px rgba(71, 209, 108, 0.12);
-    }
-
-    h1 {
-      margin: 20px 0 18px;
-      font-size: clamp(40px, 6vw, 78px);
-      line-height: 0.98;
-      letter-spacing: -0.04em;
-    }
-
-    .hero-copy {
-      max-width: 640px;
-      color: var(--muted);
-      font-size: 18px;
-      line-height: 1.72;
-    }
-
-    .hero-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 14px;
-      margin-top: 28px;
-    }
-
-    .btn {
-      min-height: 52px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      padding: 0 22px;
-      border-radius: 14px;
-      border: 1px solid transparent;
-      font-weight: 600;
-      font-size: 15px;
-    }
-
-    .btn-primary {
-      background: linear-gradient(180deg, var(--orange), #dd5f12);
-      color: #fff;
-      box-shadow: 0 14px 28px rgba(249, 115, 22, 0.24);
-    }
-
-    .btn-secondary {
-      background: rgba(255,255,255,0.04);
-      border-color: var(--line);
-      color: var(--text);
-    }
-
-    .btn:hover {
+    .glass-hover:hover {
+      background: rgba(31, 41, 55, 0.8);
+      border-color: rgba(148, 163, 184, 0.2);
       transform: translateY(-2px);
     }
 
-    .hero-metrics {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 12px;
-      margin-top: 28px;
+    /* Gradient Text */
+    .gradient-text {
+      background: linear-gradient(135deg, #22d3ee 0%, #0ea5e9 50%, #f97316 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
 
-    .metric {
-      padding: 16px 18px;
-      border-radius: 16px;
-      border: 1px solid var(--line);
-      background: rgba(255,255,255,0.03);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+    /* Glow Effects */
+    .glow-cyan {
+      box-shadow: 0 0 40px rgba(34, 211, 238, 0.2), 0 0 80px rgba(34, 211, 238, 0.1);
     }
 
-    .metric strong {
-      display: block;
-      font-size: 24px;
-      color: #dff4ff;
+    .glow-orange {
+      box-shadow: 0 0 40px rgba(249, 115, 22, 0.3), 0 0 80px rgba(249, 115, 22, 0.15);
     }
 
-    .metric span {
-      display: block;
-      margin-top: 6px;
-      color: var(--muted);
-      font-size: 12px;
-      line-height: 1.5;
+    /* Terminal Window */
+    .terminal-window {
+      background: linear-gradient(180deg, rgba(10, 15, 26, 0.95), rgba(3, 7, 18, 0.98));
+      border: 1px solid rgba(148, 163, 184, 0.15);
+      box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.05),
+        0 20px 50px rgba(0, 0, 0, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
     }
 
-    .hero-visual {
-      position: relative;
-    }
-
-    .window {
-      position: relative;
-      border-radius: var(--radius-xl);
-      border: 1px solid var(--line);
-      background: linear-gradient(180deg, rgba(10, 18, 31, 0.96), rgba(8, 14, 24, 0.96));
-      box-shadow: var(--shadow);
-      overflow: hidden;
-    }
-
-    .window-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 14px 18px;
-      border-bottom: 1px solid rgba(255,255,255,0.06);
-      background: rgba(255,255,255,0.03);
-    }
-
-    .window-chip-row {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-    }
-
-    .window-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      height: 34px;
-      padding: 0 14px;
-      border-radius: 12px 12px 0 0;
-      border: 1px solid rgba(255,255,255,0.08);
-      background: rgba(255,255,255,0.03);
-      color: #cfe5ff;
-      font-size: 13px;
-    }
-
-    .window-chip::before {
-      content: "";
-      width: 8px;
-      height: 8px;
-      border-radius: 2px;
-      background: var(--sky);
-    }
-
-    .window-actions {
-      display: inline-flex;
-      gap: 8px;
-    }
-
-    .window-actions span {
-      width: 28px;
-      height: 28px;
-      border-radius: 9px;
-      border: 1px solid rgba(255,255,255,0.08);
-      background: rgba(255,255,255,0.03);
-    }
-
-    .window-body {
-      display: grid;
-      grid-template-columns: 1.12fr 0.88fr;
-      min-height: 520px;
-    }
-
-    .terminal-column {
-      padding: 22px 22px 18px;
-      border-right: 1px solid rgba(255,255,255,0.06);
-    }
-
-    .shell-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      height: 34px;
-      padding: 0 14px;
-      border-radius: 999px;
-      border: 1px solid rgba(56, 189, 248, 0.24);
-      background: rgba(56, 189, 248, 0.08);
-      color: #dcf6ff;
-      font-family: "JetBrains Mono", monospace;
-      font-size: 12px;
-    }
-
-    .shell-pill::before {
-      content: "";
-      width: 8px;
-      height: 8px;
+    .terminal-dot {
+      width: 12px;
+      height: 12px;
       border-radius: 50%;
-      background: var(--green);
     }
 
-    .terminal-screen {
-      margin-top: 18px;
-      padding: 18px;
-      border-radius: 20px;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,0.015), transparent 20%),
-        #070c14;
-      border: 1px solid rgba(255,255,255,0.05);
-      min-height: 360px;
-      font-family: "JetBrains Mono", monospace;
-      font-size: 13px;
-      color: #c0d8ff;
-      line-height: 1.72;
-    }
-
-    .terminal-line {
-      display: block;
-      color: #8fb3ea;
-    }
-
-    .terminal-line strong {
-      color: #f3f8ff;
-      font-weight: 500;
-    }
-
-    .terminal-highlight {
-      color: #ffe0bf;
-    }
-
-    .input-preview {
-      margin-top: 20px;
-      padding: 14px 16px;
-      border-radius: 14px;
-      border: 1px solid rgba(255,255,255,0.06);
-      background: rgba(255,255,255,0.03);
-      font-family: "JetBrains Mono", monospace;
-      color: #d7e5fb;
-    }
-
-    .input-preview span {
-      color: var(--orange);
-      margin-right: 10px;
-    }
-
-    .assistant-column {
-      padding: 22px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.015));
-    }
-
-    .assistant-card {
-      padding: 16px;
-      border-radius: 18px;
-      border: 1px solid rgba(255,255,255,0.08);
-      background: rgba(8, 16, 27, 0.82);
-    }
-
-    .assistant-card h3 {
-      margin: 0 0 10px;
-      font-size: 13px;
-      color: #cfe8ff;
-      letter-spacing: 0.02em;
-    }
-
-    .assistant-card p,
-    .assistant-card li {
-      margin: 0;
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.7;
-    }
-
-    .assistant-card ul {
-      margin: 0;
-      padding-left: 18px;
-    }
-
-    .provider-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-
-    .provider-item {
-      padding: 14px;
-      border-radius: 14px;
-      border: 1px solid rgba(255,255,255,0.08);
-      background: rgba(255,255,255,0.03);
-    }
-
-    .provider-item strong {
-      display: block;
-      font-size: 13px;
-    }
-
-    .provider-item span {
-      display: block;
-      margin-top: 6px;
-      color: var(--muted);
-      font-size: 12px;
-      line-height: 1.55;
-    }
-
-    .section {
-      padding: 42px 0;
-    }
-
-    .section-head {
-      max-width: 760px;
-      margin-bottom: 22px;
-    }
-
-    .section-eyebrow {
-      color: var(--sky);
-      font-size: 12px;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      font-family: "JetBrains Mono", monospace;
-    }
-
-    .section h2 {
-      margin: 12px 0 0;
-      font-size: clamp(30px, 3.5vw, 48px);
-      line-height: 1.05;
-      letter-spacing: -0.04em;
-    }
-
-    .section-desc {
-      margin-top: 14px;
-      color: var(--muted);
-      font-size: 17px;
-      line-height: 1.76;
-    }
-
-    .feature-grid {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 16px;
-    }
-
-    .feature-card,
-    .story-card,
-    .download-card {
-      padding: 22px;
-      border-radius: 20px;
-      border: 1px solid var(--line);
-      background: var(--panel);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
-    }
-
-    .feature-card strong,
-    .story-card strong,
-    .download-card strong {
-      display: block;
-      font-size: 18px;
-    }
-
-    .feature-card p,
-    .story-card p,
-    .download-card p {
-      margin: 12px 0 0;
-      color: var(--muted);
-      font-size: 14px;
-      line-height: 1.74;
-    }
-
-    .feature-icon {
-      width: 44px;
-      height: 44px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 14px;
-      border: 1px solid rgba(56, 189, 248, 0.18);
-      background: rgba(56, 189, 248, 0.08);
-      margin-bottom: 18px;
-    }
-
-    .story-grid {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 16px;
-    }
-
-    .story-step {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 36px;
-      height: 36px;
+    /* Button Styles */
+    .btn-primary {
+      background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+      color: white;
+      font-weight: 600;
+      padding: 0.875rem 1.75rem;
       border-radius: 12px;
-      background: rgba(249, 115, 22, 0.14);
-      border: 1px solid rgba(249, 115, 22, 0.22);
-      color: #ffc692;
-      font-family: "JetBrains Mono", monospace;
-      margin-bottom: 16px;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 20px rgba(249, 115, 22, 0.3);
     }
 
-    .testimonial-row {
-      display: grid;
-      grid-template-columns: 1.2fr 0.8fr;
-      gap: 16px;
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(249, 115, 22, 0.4);
     }
 
-    .quote {
-      font-size: clamp(22px, 3vw, 34px);
-      line-height: 1.36;
-      letter-spacing: -0.03em;
-      color: #f3f8ff;
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(8px);
+      color: #f9fafb;
+      font-weight: 500;
+      padding: 0.875rem 1.75rem;
+      border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      transition: all 0.2s ease;
     }
 
-    .quote-meta {
-      margin-top: 22px;
-      color: var(--muted);
-      font-size: 14px;
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(148, 163, 184, 0.3);
+      transform: translateY(-1px);
     }
 
-    .quote-badges {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 18px;
-    }
-
-    .quote-badges span {
-      display: inline-flex;
-      align-items: center;
-      min-height: 38px;
-      padding: 0 14px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.08);
-      background: rgba(255,255,255,0.03);
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    .download-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-    }
-
-    .download-card code {
-      display: inline-block;
-      margin-top: 12px;
-      padding: 8px 10px;
-      border-radius: 10px;
-      background: rgba(255,255,255,0.04);
-      color: #cae8ff;
-      font-family: "JetBrains Mono", monospace;
-      font-size: 12px;
-      word-break: break-all;
-    }
-
-    .download-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-top: 18px;
-    }
-
-    .footer {
-      padding: 20px 0 48px;
-      color: var(--subtle);
-      font-size: 13px;
-      text-align: center;
-    }
-
+    /* Focus States */
     :focus-visible {
-      outline: 2px solid var(--sky);
-      outline-offset: 3px;
+      outline: 2px solid #22d3ee;
+      outline-offset: 2px;
     }
 
-    @media (max-width: 1100px) {
-      .hero,
-      .window-body,
-      .feature-grid,
-      .story-grid,
-      .testimonial-row,
-      .download-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .hero {
-        gap: 26px;
-      }
-
-      .hero-metrics {
-        grid-template-columns: 1fr;
-      }
-
-      .provider-grid {
-        grid-template-columns: 1fr;
-      }
+    /* Feature Card Icon */
+    .feature-icon {
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(34, 211, 238, 0.15), rgba(14, 165, 233, 0.1));
+      border: 1px solid rgba(34, 211, 238, 0.2);
     }
 
-    @media (max-width: 720px) {
-      .content {
-        width: min(100vw - 28px, 1180px);
-      }
-
-      .topbar {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      .nav {
-        flex-wrap: wrap;
-        gap: 12px;
-      }
-
-      h1 {
-        font-size: 42px;
-      }
-
-      .hero-copy,
-      .section-desc {
-        font-size: 16px;
-      }
-
-      .window-bar,
-      .terminal-column,
-      .assistant-column {
-        padding-left: 16px;
-        padding-right: 16px;
-      }
-
-      .feature-card,
-      .story-card,
-      .download-card {
-        padding: 18px;
-      }
+    /* Provider Badge */
+    .provider-badge {
+      padding: 0.5rem 0.875rem;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(148, 163, 184, 0.1);
+      font-size: 0.8125rem;
+      color: #9ca3af;
+      transition: all 0.2s ease;
     }
 
+    .provider-badge:hover {
+      background: rgba(34, 211, 238, 0.1);
+      border-color: rgba(34, 211, 238, 0.3);
+      color: #22d3ee;
+    }
+
+    /* Step Number */
+    .step-number {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(249, 115, 22, 0.2), rgba(249, 115, 22, 0.1));
+      border: 1px solid rgba(249, 115, 22, 0.3);
+      color: #fb923c;
+      font-weight: 600;
+      font-size: 0.875rem;
+    }
+
+    /* Code Block */
+    .code-block {
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(148, 163, 184, 0.1);
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8125rem;
+      color: #22d3ee;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: rgba(17, 24, 39, 0.5);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.2);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(148, 163, 184, 0.3);
+    }
+
+    /* Reduced Motion */
     @media (prefers-reduced-motion: reduce) {
       *,
       *::before,
       *::after {
-        scroll-behavior: auto !important;
-        transition-duration: 0.01ms !important;
         animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
       }
     }
   </style>
 </head>
-<body>
-  <div class="page-shell">
-    <div class="content">
-      <header class="topbar">
-        <a class="brand" href="#top">
-          <img class="brand-mark" src="./logo.png" alt="Auto Shell Logo">
-          <div class="brand-meta">
-            <strong>Auto Shell</strong>
-            <span>Windows AI Terminal for Builders</span>
+<body class="bg-grid bg-gradient-radial">
+  <!-- Ambient Glow Effects -->
+  <div class="fixed inset-0 pointer-events-none overflow-hidden">
+    <div class="absolute top-0 left-1/4 w-96 h-96 bg-accent-cyan/10 rounded-full blur-3xl animate-glow-pulse"></div>
+    <div class="absolute bottom-1/4 right-1/4 w-80 h-80 bg-accent-orange/10 rounded-full blur-3xl animate-glow-pulse" style="animation-delay: 1s;"></div>
+  </div>
+
+  <div class="relative z-10">
+    <div class="max-w-6xl mx-auto px-6 lg:px-8">
+      <!-- Header -->
+      <header class="flex items-center justify-between py-8">
+        <a href="#" class="flex items-center gap-4 group">
+          <div class="relative">
+            <img src="./logo.png" alt="Auto Shell Logo" class="w-12 h-12 rounded-xl border border-border-subtle bg-surface">
+            <div class="absolute inset-0 rounded-xl bg-accent-cyan/20 blur-lg opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          </div>
+          <div>
+            <div class="font-semibold text-lg">Auto Shell</div>
+            <div class="text-text-muted text-sm">Windows AI Terminal</div>
           </div>
         </a>
-        <nav class="nav" aria-label="站点导航">
-          <a href="#features">能力</a>
-          <a href="#workflow">流程</a>
-          <a href="#download">下载</a>
+        <nav class="flex items-center gap-8">
+          <a href="#features" class="text-text-secondary hover:text-text-primary transition-colors text-sm font-medium">能力</a>
+          <a href="#workflow" class="text-text-secondary hover:text-text-primary transition-colors text-sm font-medium">流程</a>
+          <a href="#download" class="text-text-secondary hover:text-text-primary transition-colors text-sm font-medium">下载</a>
         </nav>
       </header>
 
-      <main id="top">
-        <section class="hero">
-          <div>
-            <div class="eyebrow">为 Windows 开发者重做的 AI 终端</div>
-            <h1>把终端、模型配置和自然语言协作放进同一个工作台。</h1>
-            <p class="hero-copy">
+      <!-- Hero Section -->
+      <section class="pt-16 pb-24">
+        <div class="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+          <!-- Left: Copy -->
+          <div class="animate-slide-up">
+            <!-- Badge -->
+            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-accent-cyan/20 bg-accent-cyan/10 text-sm text-accent-cyan mb-6">
+              <span class="w-2 h-2 rounded-full bg-accent-emerald animate-pulse"></span>
+              为 Windows 开发者重做的 AI 终端
+            </div>
+
+            <!-- Heading -->
+            <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-[1.1] tracking-tight mb-6">
+              <span class="gradient-text">把终端、模型配置</span><br>
+              <span class="text-text-primary">和自然语言协作</span><br>
+              <span class="text-text-secondary">放进同一个工作台</span>
+            </h1>
+
+            <!-- Description -->
+            <p class="text-text-secondary text-lg leading-relaxed mb-8 max-w-xl">
               Auto Shell 不是把聊天框贴在终端旁边，而是把真正可落地的开发流程重组成一体：
               多标签终端、模型切换、自然语言转命令、命令解释、AI 对话，以及适合 Windows 桌面环境的交互风格。
             </p>
-            <div class="hero-actions">
-              <a class="btn btn-primary" href="./autoShell.exe" download>下载 Windows 安装包</a>
-              <a class="btn btn-secondary" href="#download">查看部署地址</a>
+
+            <!-- CTA Buttons -->
+            <div class="flex flex-wrap gap-4 mb-10">
+              <a href="./autoShell.exe" download class="btn-primary inline-flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                </svg>
+                下载 Windows 安装包
+              </a>
+              <a href="#download" class="btn-secondary inline-flex items-center gap-2">
+                查看部署地址
+              </a>
             </div>
-            <div class="hero-metrics" aria-label="关键指标">
-              <div class="metric">
-                <strong>6+</strong>
-                <span>内置模型入口，覆盖 MiniMax、GLM、Claude、OpenAI、Ollama 与兼容网关</span>
+
+            <!-- Metrics -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div class="glass rounded-xl p-4">
+                <div class="text-2xl font-bold text-accent-cyan mb-1">6+</div>
+                <div class="text-text-muted text-sm">内置模型入口</div>
               </div>
-              <div class="metric">
-                <strong>即时</strong>
-                <span>切换 Provider、Base URL 与 Model 后，下次请求立即生效</span>
+              <div class="glass rounded-xl p-4">
+                <div class="text-2xl font-bold text-accent-emerald mb-1">即时</div>
+                <div class="text-text-muted text-sm">切换立即生效</div>
               </div>
-              <div class="metric">
-                <strong>Windows</strong>
-                <span>标题栏、标签栏和桌面语义重新校准，不再走 mac 式视觉</span>
+              <div class="glass rounded-xl p-4">
+                <div class="text-2xl font-bold text-accent-orange mb-1">原生</div>
+                <div class="text-text-muted text-sm">Windows 桌面风格</div>
               </div>
             </div>
           </div>
 
-          <div class="hero-visual" aria-label="Auto Shell 产品界面示意">
-            <div class="window">
-              <div class="window-bar">
-                <div class="window-chip-row">
-                  <div class="window-chip">PowerShell</div>
-                  <div class="window-chip">Deploy</div>
+          <!-- Right: Terminal Visual -->
+          <div class="animate-fade-in" style="animation-delay: 0.2s;">
+            <div class="terminal-window rounded-2xl overflow-hidden">
+              <!-- Title Bar -->
+              <div class="flex items-center justify-between px-4 py-3 border-b border-white/5 bg-white/[0.02]">
+                <div class="flex items-center gap-3">
+                  <div class="flex gap-2">
+                    <div class="terminal-dot bg-red-500/80"></div>
+                    <div class="terminal-dot bg-yellow-500/80"></div>
+                    <div class="terminal-dot bg-green-500/80"></div>
+                  </div>
+                  <div class="flex gap-2 ml-4">
+                    <span class="px-3 py-1 rounded-lg text-xs text-text-secondary bg-white/5 border border-white/10">PowerShell</span>
+                    <span class="px-3 py-1 rounded-lg text-xs text-accent-cyan bg-accent-cyan/10 border border-accent-cyan/20">Deploy</span>
+                  </div>
                 </div>
-                <div class="window-actions">
-                  <span></span>
-                  <span></span>
-                  <span></span>
+                <div class="flex gap-2">
+                  <div class="w-8 h-8 rounded-lg bg-white/5 border border-white/10"></div>
+                  <div class="w-8 h-8 rounded-lg bg-white/5 border border-white/10"></div>
+                  <div class="w-8 h-8 rounded-lg bg-white/5 border border-white/10"></div>
                 </div>
               </div>
-              <div class="window-body">
-                <div class="terminal-column">
-                  <div class="shell-pill">PowerShell · Active</div>
-                  <div class="terminal-screen">
-                    <span class="terminal-line"><strong>PS D:\workspace\auto-shell&gt;</strong> # 帮我生成上传安装包到服务器的命令</span>
-                    <span class="terminal-line terminal-highlight">AI 命令建议已生成，按 Enter 应用</span>
-                    <span class="terminal-line"><strong>PS D:\workspace\auto-shell&gt;</strong> npm run package:win</span>
-                    <span class="terminal-line">Packaging Windows NSIS installer...</span>
-                    <span class="terminal-line">Output: release\Auto Shell Setup 0.2.0.exe</span>
-                    <span class="terminal-line"><strong>PS D:\workspace\auto-shell&gt;</strong> upload ./autoShell.exe root@192.144.130.162</span>
-                    <span class="terminal-line">Remote path: /autoShell/autoShell.exe</span>
+
+              <!-- Terminal Body -->
+              <div class="grid md:grid-cols-5 divide-x divide-white/5">
+                <!-- Terminal -->
+                <div class="md:col-span-3 p-5">
+                  <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-accent-cyan/20 bg-accent-cyan/10 text-xs text-accent-cyan mb-4 font-mono">
+                    <span class="w-2 h-2 rounded-full bg-accent-emerald"></span>
+                    PowerShell · Active
                   </div>
-                  <div class="input-preview"><span>&gt;</span> 输入命令，或以 # 开头让 AI 帮你生成命令</div>
+
+                  <div class="font-mono text-sm space-y-2 bg-black/30 rounded-xl p-4 border border-white/5">
+                    <div class="text-text-secondary"><span class="text-accent-cyan">PS</span> D:\workspace\auto-shell&gt; <span class="text-accent-orange">#</span> 帮我生成上传安装包到服务器的命令</div>
+                    <div class="text-accent-emerald/80 text-xs">✓ AI 命令建议已生成，按 Enter 应用</div>
+                    <div class="text-text-secondary"><span class="text-accent-cyan">PS</span> D:\workspace\auto-shell&gt; npm run package:win</div>
+                    <div class="text-text-muted text-xs">Packaging Windows NSIS installer...</div>
+                    <div class="text-text-secondary"><span class="text-accent-cyan">PS</span> D:\workspace\auto-shell&gt; upload ./autoShell.exe root@192.144.130.162</div>
+                    <div class="text-text-muted text-xs">Remote path: /autoShell/autoShell.exe</div>
+                  </div>
+
+                  <div class="mt-4 p-3 rounded-xl bg-white/5 border border-white/10 font-mono text-sm">
+                    <span class="text-accent-orange mr-2">›</span>
+                    <span class="text-text-muted">输入命令，或以 # 开头让 AI 帮你生成</span>
+                  </div>
                 </div>
-                <div class="assistant-column">
-                  <div class="assistant-card">
-                    <h3>AI 对话面板</h3>
-                    <p>直接问命令、报错原因、脚本写法，或者让模型整理部署步骤。</p>
+
+                <!-- AI Panel -->
+                <div class="md:col-span-2 p-5 bg-white/[0.02] space-y-3">
+                  <div class="glass rounded-xl p-4">
+                    <div class="text-xs font-semibold text-accent-cyan mb-2 flex items-center gap-2">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
+                      </svg>
+                      AI 对话面板
+                    </div>
+                    <p class="text-text-muted text-xs leading-relaxed">直接问命令、报错原因、脚本写法，或者让模型整理部署步骤。</p>
                   </div>
-                  <div class="assistant-card">
-                    <h3>模型配置中心</h3>
-                    <p>支持选择当前模型、修改 Base URL、填写 API Key、切换默认 Model，并即时应用。</p>
+
+                  <div class="glass rounded-xl p-4">
+                    <div class="text-xs font-semibold text-accent-cyan mb-2 flex items-center gap-2">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                      </svg>
+                      模型配置中心
+                    </div>
+                    <p class="text-text-muted text-xs leading-relaxed">支持选择当前模型、修改 Base URL、填写 API Key、切换默认 Model。</p>
                   </div>
-                  <div class="assistant-card">
-                    <h3>支持的模型入口</h3>
-                    <div class="provider-grid">
-                      <div class="provider-item">
-                        <strong>MiniMax</strong>
-                        <span>国内云端模型</span>
-                      </div>
-                      <div class="provider-item">
-                        <strong>GLM</strong>
-                        <span>智谱开放平台</span>
-                      </div>
-                      <div class="provider-item">
-                        <strong>Claude</strong>
-                        <span>Anthropic</span>
-                      </div>
-                      <div class="provider-item">
-                        <strong>OpenAI</strong>
-                        <span>官方与兼容接口</span>
-                      </div>
+
+                  <div class="glass rounded-xl p-4">
+                    <div class="text-xs font-semibold text-accent-cyan mb-3">支持的模型入口</div>
+                    <div class="grid grid-cols-2 gap-2">
+                      <div class="provider-badge text-center">MiniMax</div>
+                      <div class="provider-badge text-center">GLM</div>
+                      <div class="provider-badge text-center">Claude</div>
+                      <div class="provider-badge text-center">OpenAI</div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        <section class="section" id="features">
-          <div class="section-head">
-            <div class="section-eyebrow">Why Auto Shell</div>
-            <h2>不是加一个 AI 图标，而是把终端工作流真正串起来。</h2>
-            <p class="section-desc">
-              从命令输入到模型切换，再到自然语言协作和下载交付，Auto Shell 更像一张给开发者准备的“工作台桌面”，而不是又一个浏览器式壳子。
+      <!-- Features Section -->
+      <section id="features" class="py-24">
+        <div class="text-center mb-16">
+          <div class="inline-block px-4 py-1.5 rounded-full border border-accent-cyan/20 bg-accent-cyan/10 text-xs text-accent-cyan font-medium mb-4">
+            Why Auto Shell
+          </div>
+          <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight mb-4">
+            不是加一个 AI 图标，而是把终端工作流<span class="gradient-text">真正串起来</span>
+          </h2>
+          <p class="text-text-secondary text-lg max-w-2xl mx-auto">
+            从命令输入到模型切换，再到自然语言协作和下载交付，Auto Shell 更像一张给开发者准备的"工作台桌面"。
+          </p>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-6">
+          <!-- Feature 1 -->
+          <article class="glass glass-hover rounded-2xl p-6 group">
+            <div class="feature-icon mb-5">
+              <svg class="w-6 h-6 text-accent-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+              </svg>
+            </div>
+            <h3 class="text-lg font-semibold mb-3 group-hover:text-accent-cyan transition-colors">自然语言直达命令</h3>
+            <p class="text-text-muted text-sm leading-relaxed">
+              通过 <code class="px-1.5 py-0.5 rounded bg-white/10 text-accent-cyan text-xs">#</code> 描述目标，直接获得可执行命令建议，适合频繁切换上下文的开发和运维场景。
             </p>
-          </div>
-          <div class="feature-grid">
-            <article class="feature-card">
-              <div class="feature-icon">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                  <path d="M4 5.5 8 9.5 4 13.5M10 14h6" stroke="#67E8F9" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path>
-                </svg>
-              </div>
-              <strong>自然语言直达命令</strong>
-              <p>通过 `#` 描述目标，直接获得可执行命令建议，适合频繁切换上下文的开发和运维场景。</p>
-            </article>
-            <article class="feature-card">
-              <div class="feature-icon">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                  <path d="M10 3 16 6.2v7.6L10 17 4 13.8V6.2L10 3Z" stroke="#67E8F9" stroke-width="1.6"></path>
-                  <path d="M10 7.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5Z" stroke="#67E8F9" stroke-width="1.6"></path>
-                </svg>
-              </div>
-              <strong>模型配置即时生效</strong>
-              <p>Provider、Base URL、Model 和 API Key 分离管理，切换后下一次请求立即使用新配置。</p>
-            </article>
-            <article class="feature-card">
-              <div class="feature-icon">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                  <rect x="3.5" y="4" width="13" height="12" rx="2.5" stroke="#67E8F9" stroke-width="1.6"></rect>
-                  <path d="M6.5 8.5h7M6.5 11.5h4.5" stroke="#67E8F9" stroke-width="1.6" stroke-linecap="round"></path>
-                </svg>
-              </div>
-              <strong>终端与对话并排工作</strong>
-              <p>一边跑命令，一边向 AI 追问报错原因、脚本实现或部署步骤，不需要在多个软件之间反复切换。</p>
-            </article>
-          </div>
-        </section>
+          </article>
 
-        <section class="section" id="workflow">
-          <div class="section-head">
-            <div class="section-eyebrow">Workflow Story</div>
-            <h2>从“我想做什么”，到“命令已经跑起来”。</h2>
-          </div>
-          <div class="story-grid">
-            <article class="story-card">
-              <div class="story-step">01</div>
-              <strong>先说目标</strong>
-              <p>直接对 AI 描述你的需求，例如“列出最近修改的文件”“生成部署命令”或“解释这段 PowerShell”。</p>
-            </article>
-            <article class="story-card">
-              <div class="story-step">02</div>
-              <strong>再选模型</strong>
-              <p>根据任务随时切换到 Claude、GLM、MiniMax、OpenAI、Ollama，或者接入你自己的 OpenAI 兼容网关。</p>
-            </article>
-            <article class="story-card">
-              <div class="story-step">03</div>
-              <strong>最后落地执行</strong>
-              <p>拿到命令建议、报错解释或完整回复后，直接回到终端执行，不打断原本的开发节奏。</p>
-            </article>
-          </div>
-        </section>
-
-        <section class="section">
-          <div class="testimonial-row">
-            <article class="download-card">
-              <div class="section-eyebrow">Built For Windows</div>
-              <div class="quote">“如果你每天都在 PowerShell、部署脚本、模型 API 和下载交付之间切换，Auto Shell 会让这套流程终于像一个完整产品。”</div>
-              <div class="quote-meta">多标签终端、AI 对话、命令解释、模型设置、Windows 风格桌面语义，全部放在同一工作区。</div>
-              <div class="quote-badges">
-                <span>PowerShell First</span>
-                <span>AI Providers Ready</span>
-                <span>Desktop Native Feel</span>
-              </div>
-            </article>
-            <article class="download-card">
-              <div class="section-eyebrow">Release</div>
-              <strong>当前版本可直接下载 Windows 安装包</strong>
-              <p>宣传页与安装包部署在同一目录下，点击按钮即可获取可安装的 `.exe` 文件。</p>
-              <div class="download-actions">
-                <a class="btn btn-primary" href="./autoShell.exe" download>立即下载</a>
-                <a class="btn btn-secondary" href="https://dmfighting.top/autoShell/autoShell.exe">直接访问链接</a>
-              </div>
-            </article>
-          </div>
-        </section>
-
-        <section class="section" id="download">
-          <div class="section-head">
-            <div class="section-eyebrow">Deployment</div>
-            <h2>一个目录，既能展示，也能下载。</h2>
-            <p class="section-desc">
-              线上页面与安装包统一部署到同一目录，便于传播、更新与版本替换。
+          <!-- Feature 2 -->
+          <article class="glass glass-hover rounded-2xl p-6 group">
+            <div class="feature-icon mb-5">
+              <svg class="w-6 h-6 text-accent-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+              </svg>
+            </div>
+            <h3 class="text-lg font-semibold mb-3 group-hover:text-accent-cyan transition-colors">模型配置即时生效</h3>
+            <p class="text-text-muted text-sm leading-relaxed">
+              Provider、Base URL、Model 和 API Key 分离管理，切换后下一次请求立即使用新配置，无需重启。
             </p>
-          </div>
-          <div class="download-grid">
-            <article class="download-card">
-              <strong>官网入口</strong>
-              <p>访问公开地址即可看到产品介绍、核心能力和下载入口。</p>
-              <code>https://dmfighting.top/autoShell</code>
-            </article>
-            <article class="download-card">
-              <strong>安装包地址</strong>
-              <p>Windows 用户点击后即可直接下载当前可安装版本。</p>
-              <code>https://dmfighting.top/autoShell/autoShell.exe</code>
-            </article>
-          </div>
-        </section>
-      </main>
+          </article>
 
-      <footer class="footer">
-        Auto Shell · Windows AI Terminal · Ready for multi-model workflows
+          <!-- Feature 3 -->
+          <article class="glass glass-hover rounded-2xl p-6 group">
+            <div class="feature-icon mb-5">
+              <svg class="w-6 h-6 text-accent-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/>
+              </svg>
+            </div>
+            <h3 class="text-lg font-semibold mb-3 group-hover:text-accent-cyan transition-colors">终端与对话并排工作</h3>
+            <p class="text-text-muted text-sm leading-relaxed">
+              一边跑命令，一边向 AI 追问报错原因、脚本实现或部署步骤，不需要在多个软件之间反复切换。
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <!-- Workflow Section -->
+      <section id="workflow" class="py-24">
+        <div class="text-center mb-16">
+          <div class="inline-block px-4 py-1.5 rounded-full border border-accent-orange/20 bg-accent-orange/10 text-xs text-accent-orange font-medium mb-4">
+            Workflow Story
+          </div>
+          <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight">
+            从"我想做什么"到<span class="gradient-text">"命令已经跑起来"</span>
+          </h2>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-8">
+          <!-- Step 1 -->
+          <div class="relative">
+            <div class="glass rounded-2xl p-6 h-full">
+              <div class="step-number mb-5">01</div>
+              <h3 class="text-xl font-semibold mb-3">先说目标</h3>
+              <p class="text-text-muted text-sm leading-relaxed">
+                直接对 AI 描述你的需求，例如"列出最近修改的文件""生成部署命令"或"解释这段 PowerShell"。
+              </p>
+            </div>
+            <!-- Connector Arrow -->
+            <div class="hidden md:block absolute top-1/2 -right-4 transform -translate-y-1/2">
+              <svg class="w-8 h-8 text-accent-cyan/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Step 2 -->
+          <div class="relative">
+            <div class="glass rounded-2xl p-6 h-full">
+              <div class="step-number mb-5">02</div>
+              <h3 class="text-xl font-semibold mb-3">再选模型</h3>
+              <p class="text-text-muted text-sm leading-relaxed">
+                根据任务随时切换到 Claude、GLM、MiniMax、OpenAI、Ollama，或者接入你自己的 OpenAI 兼容网关。
+              </p>
+            </div>
+            <!-- Connector Arrow -->
+            <div class="hidden md:block absolute top-1/2 -right-4 transform -translate-y-1/2">
+              <svg class="w-8 h-8 text-accent-cyan/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Step 3 -->
+          <div>
+            <div class="glass rounded-2xl p-6 h-full">
+              <div class="step-number mb-5">03</div>
+              <h3 class="text-xl font-semibold mb-3">最后落地执行</h3>
+              <p class="text-text-muted text-sm leading-relaxed">
+                拿到命令建议、报错解释或完整回复后，直接回到终端执行，不打断原本的开发节奏。
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Testimonial & Download Section -->
+      <section class="py-24">
+        <div class="grid lg:grid-cols-2 gap-8">
+          <!-- Testimonial -->
+          <div class="glass rounded-2xl p-8 relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-64 h-64 bg-accent-cyan/5 rounded-full blur-3xl"></div>
+            <div class="relative">
+              <div class="text-xs font-medium text-accent-cyan mb-4 tracking-wider uppercase">Built For Windows</div>
+              <blockquote class="text-2xl sm:text-3xl font-bold leading-snug tracking-tight mb-6">
+                "如果你每天都在 PowerShell、部署脚本、模型 API 和下载交付之间切换，Auto Shell 会让这套流程终于像一个<span class="gradient-text">完整产品</span>。"
+              </blockquote>
+              <p class="text-text-muted text-sm mb-6">
+                多标签终端、AI 对话、命令解释、模型设置、Windows 风格桌面语义，全部放在同一工作区。
+              </p>
+              <div class="flex flex-wrap gap-3">
+                <span class="provider-badge">PowerShell First</span>
+                <span class="provider-badge">AI Providers Ready</span>
+                <span class="provider-badge">Desktop Native Feel</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Download CTA -->
+          <div class="glass rounded-2xl p-8 relative overflow-hidden glow-orange">
+            <div class="absolute bottom-0 left-0 w-64 h-64 bg-accent-orange/10 rounded-full blur-3xl"></div>
+            <div class="relative">
+              <div class="text-xs font-medium text-accent-orange mb-4 tracking-wider uppercase">Release</div>
+              <h3 class="text-2xl font-bold mb-4">当前版本可直接下载 Windows 安装包</h3>
+              <p class="text-text-muted text-sm mb-6">
+                宣传页与安装包部署在同一目录下，点击按钮即可获取可安装的 <code class="px-1.5 py-0.5 rounded bg-white/10 text-accent-orange text-xs">.exe</code> 文件。
+              </p>
+              <div class="flex flex-wrap gap-4">
+                <a href="./autoShell.exe" download class="btn-primary inline-flex items-center gap-2">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                  </svg>
+                  立即下载
+                </a>
+                <a href="https://dmfighting.top/autoShell/autoShell.exe" target="_blank" rel="noopener" class="btn-secondary inline-flex items-center gap-2">
+                  直接访问链接
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                  </svg>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Deployment Section -->
+      <section id="download" class="py-24">
+        <div class="text-center mb-12">
+          <div class="inline-block px-4 py-1.5 rounded-full border border-accent-emerald/20 bg-accent-emerald/10 text-xs text-accent-emerald font-medium mb-4">
+            Deployment
+          </div>
+          <h2 class="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
+            一个目录，既能<span class="gradient-text">展示</span>，也能<span class="gradient-text">下载</span>
+          </h2>
+          <p class="text-text-secondary text-lg max-w-xl mx-auto">
+            线上页面与安装包统一部署到同一目录，便于传播、更新与版本替换。
+          </p>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-6">
+          <div class="glass rounded-2xl p-6">
+            <div class="flex items-start gap-4">
+              <div class="w-10 h-10 rounded-xl bg-accent-cyan/10 border border-accent-cyan/20 flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5 text-accent-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
+                </svg>
+              </div>
+              <div>
+                <h3 class="font-semibold mb-2">官网入口</h3>
+                <p class="text-text-muted text-sm mb-3">访问公开地址即可看到产品介绍、核心能力和下载入口。</p>
+                <div class="code-block">https://dmfighting.top/autoShell</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="glass rounded-2xl p-6">
+            <div class="flex items-start gap-4">
+              <div class="w-10 h-10 rounded-xl bg-accent-orange/10 border border-accent-orange/20 flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5 text-accent-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                </svg>
+              </div>
+              <div>
+                <h3 class="font-semibold mb-2">安装包地址</h3>
+                <p class="text-text-muted text-sm mb-3">Windows 用户点击后即可直接下载当前可安装版本。</p>
+                <div class="code-block">https://dmfighting.top/autoShell/autoShell.exe</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Footer -->
+      <footer class="py-12 border-t border-white/5">
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 text-text-muted text-sm">
+          <div>Auto Shell · Windows AI Terminal · Ready for multi-model workflows</div>
+          <div class="flex items-center gap-6">
+            <a href="#features" class="hover:text-text-primary transition-colors">能力</a>
+            <a href="#workflow" class="hover:text-text-primary transition-colors">流程</a>
+            <a href="#download" class="hover:text-text-primary transition-colors">下载</a>
+          </div>
+        </div>
       </footer>
     </div>
   </div>
