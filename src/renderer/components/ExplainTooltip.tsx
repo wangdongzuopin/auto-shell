@@ -63,7 +63,7 @@ export function ExplainTooltip({ selectedText, position, onClose }: ExplainToolt
             <div className="ai-dot" />
             命令解释
           </div>
-          <div className="ep-summary">{explainResult.summary || explainResult.reason}</div>
+          <div className="ep-summary">{explainResult.summary}</div>
           <div className="ep-parts">
             {explainResult.parts?.map((part, i) => (
               <div key={i} className="ep-part">

@@ -1,9 +1,21 @@
 import { create } from 'zustand';
 import { ErrorContext } from '../../ai/provider';
 
+/**
+ * ErrorAnalysis - 错误分析结果（explainError）
+ */
 export interface ErrorAnalysis {
   reason: string;
   fixes: { description: string; command: string }[];
+}
+
+/**
+ * CommandExplanation - 命令解释结果（explainCommand）
+ */
+export interface CommandExplanation {
+  summary: string;
+  parts: { token: string; meaning: string }[];
+  variants?: string[];
 }
 
 interface AIState {
@@ -18,9 +30,9 @@ interface AIState {
   nlSuggestion: string;
   nlLoading: boolean;
 
-  // Explain tooltip
+  // Explain tooltip (command explanation)
   explainPopup: { text: string; x: number; y: number } | null;
-  explainResult: ErrorAnalysis | null;
+  explainResult: CommandExplanation | null;
   explainLoading: boolean;
 
   // Actions
@@ -29,7 +41,7 @@ interface AIState {
   setErrorLoading: (loading: boolean) => void;
   setNLMode: (mode: boolean, suggestion?: string) => void;
   setExplainPopup: (popup: AIState['explainPopup']) => void;
-  setExplainResult: (result: ErrorAnalysis | null) => void;
+  setExplainResult: (result: CommandExplanation | null) => void;
   setExplainLoading: (loading: boolean) => void;
 }
 

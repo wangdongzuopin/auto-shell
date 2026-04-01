@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { classifyCommand, ClassifiedCommand } from '../tools/commandClassifier';
+import { classifyCommand, ClassifiedCommand } from '../../tools/commandClassifier';
 
 export interface ProgressInfo {
   command: string;
