@@ -215,8 +215,9 @@ export function AIChatPanel({ open, onClose }: AIChatPanelProps) {
   };
 
   return (
-    <div className={`chat-panel-overlay ${open ? 'visible' : ''}`} onClick={onClose} />
-    <div className={`chat-panel ${open ? 'open' : ''}`}>
+    <>
+      <div className={`chat-panel-overlay ${open ? 'visible' : ''}`} onClick={onClose} />
+      <div className={`chat-panel ${open ? 'open' : ''}`}>
       <div className="chat-header">
         <div>
           <div className="chat-title">Assistant</div>
@@ -500,6 +501,7 @@ export function AIChatPanel({ open, onClose }: AIChatPanelProps) {
         }
       `}</style>
     </div>
+    </>
   );
 }
 
