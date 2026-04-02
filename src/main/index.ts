@@ -23,7 +23,8 @@ function createWindow() {
       nodeIntegration: false,
       contextIsolation: true,
       sandbox: false,
-      preload: path.join(__dirname, '../preload/index.js')
+      preload: path.join(__dirname, '../preload/index.js'),
+      transparent: false
     },
     show: false,
     vibrancy: isMac ? 'under-window' : undefined

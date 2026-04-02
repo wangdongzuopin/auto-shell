@@ -22,6 +22,10 @@
   --sans: 'Segoe UI', 'IBM Plex Sans', 'Microsoft YaHei UI', sans-serif;
   --mono: 'Consolas', 'IBM Plex Mono', 'Cascadia Mono', monospace;
   --shadow-soft: 0 12px 30px rgba(0, 0, 0, 0.26);
+  /* Terminal transparency */
+  --terminal-bg: #0f1115;
+  --terminal-opacity: 1;
+  --terminal-blur: 0px;
 }
 
 * {
@@ -101,6 +105,11 @@ textarea:focus-visible,
 [tabindex]:focus-visible {
   outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
+}
+
+.terminal-output {
+  background: rgba(15, 17, 21, var(--terminal-opacity));
+  backdrop-filter: blur(var(--terminal-blur));
 }
 
 @media (prefers-reduced-motion: reduce) {

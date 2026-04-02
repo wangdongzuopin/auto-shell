@@ -93,6 +93,9 @@ function applyThemeToDocument(theme: Theme) {
   document.documentElement.style.setProperty('--scrollbar-thumb', light ? 'rgba(26, 37, 56, 0.18)' : 'rgba(255, 255, 255, 0.12)');
   document.documentElement.style.setProperty('--scrollbar-thumb-hover', light ? 'rgba(26, 37, 56, 0.28)' : 'rgba(255, 255, 255, 0.18)');
   document.documentElement.style.setProperty('--focus-ring', withAlpha(theme.accent, light ? 'cc' : 'e6'));
+  const ta = get().appearance;
+  document.documentElement.style.setProperty('--terminal-opacity', ta.terminalTransparency ? String(ta.terminalOpacity) : '1');
+  document.documentElement.style.setProperty('--terminal-blur', ta.terminalTransparency && ta.terminalBackdrop ? '20px' : '0px');
 }
 
 export const useSettingsStore = create<SettingsState>((set, get) => ({
@@ -126,6 +129,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       applyThemeToDocument(defaultTheme);
     }
     await get().loadAppearance();
+    applyThemeToDocument(get().theme);
   },
 
   setTheme: async (theme) => {
