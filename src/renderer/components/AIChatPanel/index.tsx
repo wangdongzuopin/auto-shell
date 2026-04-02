@@ -295,9 +295,12 @@ export function AIChatPanel({ open, onClose }: AIChatPanelProps) {
           top: 0;
           right: 0;
           bottom: 0;
+          width: min(420px, 40vw);
+          background: var(--bg);
           transform: translateX(100%);
           transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
           z-index: 30;
+          box-shadow: -4px 0 24px rgba(0,0,0,0.08);
         }
         .chat-panel.open {
           transform: translateX(0);

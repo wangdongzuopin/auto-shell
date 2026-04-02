@@ -9,17 +9,19 @@ let mainWindow: BrowserWindow | null = null;
 function createWindow() {
   const isMac = process.platform === 'darwin';
 
+  const isTransparent = process.env.NODE_ENV === 'production';
+
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
     minWidth: 800,
     minHeight: 600,
-    backgroundColor: '#0e0f11',
+    backgroundColor: '#ffffff',
     icon: path.join(__dirname, '../../logo.png'),
     frame: isMac,
     titleBarStyle: isMac ? 'hiddenInset' : 'default',
     trafficLightPosition: isMac ? { x: 14, y: 14 } : undefined,
-    transparent: false,
+    transparent: isTransparent,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -27,7 +29,7 @@ function createWindow() {
       preload: path.join(__dirname, '../preload/index.js')
     },
     show: false,
-    vibrancy: isMac ? 'under-window' : undefined
+    vibrancy: isMac && !isTransparent ? 'under-window' : undefined
   });
 
   // Show when ready
