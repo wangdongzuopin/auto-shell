@@ -104,23 +104,22 @@ export function Terminal() {
           align-items: center;
           justify-content: space-between;
           gap: 12px;
-          padding: 0 20px;
+          padding: 0 16px;
           min-height: 42px;
           border-bottom: 1px solid var(--border);
-          background:
-            linear-gradient(180deg, color-mix(in srgb, var(--bg2) 88%, white 12%), color-mix(in srgb, var(--bg) 96%, white 4%));
+          background: transparent;  /* 让终端背景透上来 */
         }
         .shell-chip {
           display: inline-flex;
           align-items: center;
           gap: 7px;
-          padding: 5px 12px;
-          border-radius: 999px;
+          padding: 5px 10px;
+          border-radius: 6px;  /* 原来是 999px */
           font-size: 11px;
           font-family: var(--mono);
-          color: var(--text);
-          border: 1px solid rgba(76,141,255,0.2);
-          background: rgba(76,141,255,0.08);
+          color: var(--text2);  /* 原来是 var(--text) */
+          border: none;          /* 去掉蓝色边框 */
+          background: transparent; /* 去掉蓝色背景 */
         }
         .shell-dot {
           width: 7px;
@@ -136,10 +135,10 @@ export function Terminal() {
         }
         .shell-kind {
           padding: 3px 8px;
-          border-radius: 999px;
-          background: rgba(76,141,255,0.08);
-          border: 1px solid rgba(76,141,255,0.18);
-          color: var(--accent);
+          border-radius: 6px;
+          background: transparent;  /* 去掉背景 */
+          border: 1px solid var(--border);
+          color: var(--text3);    /* 原来是 var(--accent) */
           font-size: 10px;
           font-family: var(--mono);
           flex-shrink: 0;
