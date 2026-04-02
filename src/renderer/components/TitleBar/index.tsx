@@ -30,17 +30,14 @@ export function TitleBar() {
           align-items: stretch;
           justify-content: space-between;
           height: 34px;
-          background:
-            linear-gradient(180deg, color-mix(in srgb, var(--bg2) 76%, white 24%), color-mix(in srgb, var(--bg) 92%, white 8%));
+          background: var(--bg2);
           border-bottom: 1px solid var(--border);
           -webkit-app-region: drag;
           user-select: none;
-          backdrop-filter: blur(18px) saturate(1.15);
         }
         .title-bar-drag {
           display: flex;
           align-items: center;
-          gap: 12px;
           padding-left: 16px;
           flex: 1;
           min-width: 0;
@@ -52,12 +49,7 @@ export function TitleBar() {
           color: var(--text);
         }
         .title-sub {
-          font-size: 11px;
-          color: var(--text3);
-          padding: 3px 8px;
-          border-radius: 999px;
-          background: color-mix(in srgb, var(--bg3) 88%, white 12%);
-          border: 1px solid var(--border);
+          display: none;
         }
         .title-bar-controls {
           display: flex;
