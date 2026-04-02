@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import type {
+  AppearanceSettings,
   AppConfig,
   FeatureToggles,
   ModelConfig,
@@ -22,6 +23,7 @@ interface PersistedConfig {
   currentModel: string;
   modelConfig: ModelConfig;
   terminalSession: TerminalSession;
+  appearance: AppearanceSettings;
 }
 
 const CONFIG_DIR = path.join(os.homedir(), '.autoshell');
@@ -81,6 +83,11 @@ const defaultConfig: PersistedConfig = {
     tabs: [],
     activeTabId: null,
     commandHistoryByCwd: {}
+  },
+  appearance: {
+    terminalTransparency: false,
+    terminalOpacity: 0.7,
+    terminalBackdrop: false
   }
 };
 
@@ -126,7 +133,11 @@ function normalizePersistedConfig(input?: Partial<PersistedConfig>): PersistedCo
     apiKeys: input?.apiKeys ?? {},
     currentModel: input?.currentModel ?? defaultConfig.currentModel,
     modelConfig: input?.modelConfig ?? defaultConfig.modelConfig,
-    terminalSession: normalizeTerminalSession(input?.terminalSession)
+    terminalSession: normalizeTerminalSession(input?.terminalSession),
+    appearance: {
+      ...defaultConfig.appearance,
+      ...(input?.appearance ?? {})
+    }
   };
 }
 
@@ -284,6 +295,17 @@ export function saveTerminalSession(session: TerminalSession) {
   updatePersistedConfig((current) => ({
     ...current,
     terminalSession: normalizeTerminalSession(session)
+  }));
+}
+
+export function getAppearance(): AppearanceSettings {
+  return readPersistedConfig().appearance;
+}
+
+export function setAppearance(appearance: AppearanceSettings) {
+  updatePersistedConfig((current) => ({
+    ...current,
+    appearance
   }));
 }
 

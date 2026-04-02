@@ -4,6 +4,7 @@ import * as path from 'path';
 import { createProvider, ProviderConfig } from '../ai';
 import { IPC } from '../shared/ipc-channels';
 import type {
+  AppearanceSettings,
   ChatMessage,
   FeatureToggles,
   ProviderSettings,
@@ -13,11 +14,13 @@ import type {
 } from '../shared/types';
 import {
   getApiKey,
+  getAppearance,
   getConfig,
   getTerminalSession,
   recordTerminalCommand,
   saveApiKey,
   saveTerminalSession,
+  setAppearance,
   setFeatures,
   setProvider,
   setProviderConfig,
@@ -112,6 +115,13 @@ export function registerIpcHandlers() {
 
   ipcMain.handle(IPC.CONFIG_SET_FEATURES, (_event, features: FeatureToggles) => {
     setFeatures(features);
+    return true;
+  });
+
+  ipcMain.handle(IPC.CONFIG_GET_APPEARANCE, () => getAppearance());
+
+  ipcMain.handle(IPC.CONFIG_SET_APPEARANCE, (_event, appearance: AppearanceSettings) => {
+    setAppearance(appearance);
     return true;
   });
 

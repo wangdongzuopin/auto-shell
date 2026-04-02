@@ -17,6 +17,8 @@ export const IPC = {
   CONFIG_SET_PROVIDER_CONFIG:  'config:set-provider-config',
   CONFIG_SET_THEME:            'config:set-theme',
   CONFIG_SET_FEATURES:         'config:set-features',
+  CONFIG_GET_APPEARANCE:       'config:get-appearance',
+  CONFIG_SET_APPEARANCE:       'config:set-appearance',
   KEY_SAVE:                    'key:save',
   KEY_GET:                     'key:get',
   PATH_EXISTS:                 'path:exists',

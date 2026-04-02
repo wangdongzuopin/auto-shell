@@ -60,3 +60,9 @@ export interface TerminalSession {
   activeTabId: string | null;
   commandHistoryByCwd: Record<string, string[]>;
 }
+
+export interface AppearanceSettings {
+  terminalTransparency: boolean;
+  terminalOpacity: number;      // 0.3–1.0
+  terminalBackdrop: boolean;
+}
