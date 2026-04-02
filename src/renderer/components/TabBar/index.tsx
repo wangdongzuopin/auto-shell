@@ -9,8 +9,7 @@ interface TabBarProps {
 
 export function TabBar({ onOpenChat, onOpenSettings }: TabBarProps) {
   const platform = detectPlatform();
-  const { tabs, activeTabId, addTab, closeTab, setActiveTab, toggleSidebar } = useTabsStore();
-  const sidebarOpen = useTabsStore((state) => state.sidebarOpen);
+  const { tabs, activeTabId, addTab, closeTab, setActiveTab } = useTabsStore();
 
   const handleCloseTab = (event: React.MouseEvent, id: string) => {
     event.stopPropagation();
@@ -48,17 +47,6 @@ export function TabBar({ onOpenChat, onOpenSettings }: TabBarProps) {
         </div>
       </div>
       <div className="toolbar">
-        <button
-          className={`icon-btn ${sidebarOpen ? 'active' : ''}`}
-          onClick={toggleSidebar}
-          title="快捷命令"
-        >
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <rect x="2" y="3" width="12" height="1.5" rx=".75" fill="currentColor" />
-            <rect x="2" y="7" width="9" height="1.5" rx=".75" fill="currentColor" />
-            <rect x="2" y="11" width="7" height="1.5" rx=".75" fill="currentColor" />
-          </svg>
-        </button>
         <button className="icon-btn" onClick={onOpenChat} title="Assistant 对话">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
             <path d="M3 4.25C3 3.56 3.56 3 4.25 3h7.5C12.44 3 13 3.56 13 4.25v5.5c0 .69-.56 1.25-1.25 1.25H7l-2.75 2v-2H4.25C3.56 11 3 10.44 3 9.75v-5.5Z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" />
@@ -76,158 +64,141 @@ export function TabBar({ onOpenChat, onOpenSettings }: TabBarProps) {
         #tabbar {
           display: flex;
           align-items: center;
-          gap: 8px;
-          padding: 0 12px;
-          background: var(--bg2);
-          border-bottom: 1px solid var(--border-subtle);
+          gap: 6px;
+          padding: 10px 12px 0;
+          background: #ffffff;
           user-select: none;
+          flex-shrink: 0;
         }
         .tabs {
           display: flex;
           align-items: center;
-          gap: 6px;
+          gap: 4px;
           flex: 1;
           min-width: 0;
         }
         .mac-traffic-gap {
-          width: 72px;
+          width: 60px;
           flex-shrink: 0;
-        }
-        .tab,
-        .tab-add,
-        .icon-btn {
-          border: 1px solid transparent;
-          background: transparent;
         }
         .tab {
           display: flex;
           align-items: center;
           gap: 8px;
-          height: 32px;
-          padding: 0 12px;
-          border-radius: 10px;
-          font-size: 12px;
+          height: 36px;
+          padding: 0 14px;
+          border-radius: 12px;
+          font-size: 13px;
           font-family: var(--sans);
-          color: var(--text3);
+          color: var(--text2);
           cursor: pointer;
           white-space: nowrap;
           min-width: 0;
           border: 1px solid transparent;
-          transition: background .15s ease, border-color .15s ease, color .15s ease, transform .12s ease;
+          background: transparent;
+          transition: background .14s ease, color .14s ease, border-color .14s ease;
         }
         .tab:hover {
-          background: rgba(255,255,255,0.04);
-          color: var(--text2);
+          background: rgba(0,0,0,0.04);
+          color: var(--text);
         }
         .tab.active {
-          background: var(--surface-raised, rgba(255,255,255,0.04));
-          color: var(--text-primary, #e8ecf0);
-          border: 1px solid var(--border-default, rgba(255,255,255,0.10));
-          border-bottom: 2px solid var(--accent);
-          box-shadow: var(--shadow-sm);
+          background: #f5f5f5;
+          color: var(--text-primary);
+          border-color: var(--border);
+          font-weight: 600;
         }
         .tab-dot {
-          width: 6px;
-          height: 6px;
+          width: 7px;
+          height: 7px;
           border-radius: 50%;
-          background: var(--accent);
+          background: var(--text3);
           flex-shrink: 0;
-          opacity: 0.7;
+          transition: background .14s ease;
         }
         .tab.active .tab-dot {
           background: var(--green);
-          opacity: 1;
-          box-shadow: 0 0 6px rgba(71, 209, 108, 0.5);
+          box-shadow: 0 0 6px rgba(34,197,94,0.5);
         }
         .tab-name {
-          max-width: 140px;
+          max-width: 120px;
           overflow: hidden;
           text-overflow: ellipsis;
         }
         .tab-shell {
-          padding: 2px 6px;
-          border-radius: 999px;
-          background: color-mix(in srgb, var(--bg3) 90%, white 10%);
-          color: var(--text3);
-          font-size: 10px;
-          font-family: var(--mono);
-        }
-        .tab.active .tab-shell {
-          background: rgba(76,141,255,0.1);
-          color: var(--accent);
+          display: none;
         }
         .tab-close {
-          width: 16px;
-          height: 16px;
+          width: 18px;
+          height: 18px;
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          border-radius: 4px;
+          border-radius: 5px;
           color: var(--text3);
           font-size: 14px;
           flex-shrink: 0;
+          opacity: 0;
+          transition: opacity .12s ease, background .12s ease;
+        }
+        .tab:hover .tab-close,
+        .tab.active .tab-close {
+          opacity: 1;
         }
         .tab-close:hover {
-          background: color-mix(in srgb, var(--bg3) 88%, white 12%);
+          background: rgba(0,0,0,0.08);
           color: var(--text);
         }
         .tab-add-wrap {
           flex-shrink: 0;
         }
-        .tab-add,
-        .icon-btn {
+        .tab-add {
           width: 32px;
           height: 32px;
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          border-radius: 8px;
-          color: var(--text2);
-          cursor: pointer;
-          transition: background .15s ease, border-color .15s ease, color .15s ease, transform .15s ease;
-        }
-        .tab-add:hover,
-        .icon-btn:hover {
-          background: rgba(255,255,255,0.05);
-          border-color: var(--border-subtle);
-          color: var(--text2);
-          transform: translateY(-1px);
-        }
-        .tab-add:hover {
-          background: rgba(255,255,255,0.05);
-          border-color: var(--border-subtle);
-          color: var(--text2);
-        }
-        .icon-btn {
-          width: 32px;
-          height: 32px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 8px;
-          border: 1px solid transparent;
+          border-radius: 10px;
+          border: none;
           background: transparent;
           color: var(--text3);
+          font-size: 18px;
           cursor: pointer;
-          transition: background .15s ease, border-color .15s ease, color .15s ease, transform .10s ease;
+          transition: background .12s ease, color .12s ease;
         }
-        .icon-btn:hover {
-          background: rgba(255,255,255,0.05);
-          border-color: var(--border-subtle);
-          color: var(--text2);
-        }
-        .icon-btn:active {
-          transform: scale(0.94);
+        .tab-add:hover {
+          background: rgba(0,0,0,0.05);
+          color: var(--text);
         }
         .toolbar {
           display: flex;
           align-items: center;
-          gap: 4px;
+          gap: 2px;
+          flex-shrink: 0;
+        }
+        .icon-btn {
+          width: 34px;
+          height: 34px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 10px;
+          border: none;
+          background: transparent;
+          color: var(--text2);
+          cursor: pointer;
+          transition: background .12s ease, color .12s ease, transform .08s ease;
+        }
+        .icon-btn:hover {
+          background: rgba(0,0,0,0.05);
+          color: var(--text);
+        }
+        .icon-btn:active {
+          transform: scale(0.94);
         }
         .icon-btn.active {
           color: var(--accent);
-          border-color: rgba(76,141,255,0.3);
-          background: rgba(76,141,255,0.08);
+          background: var(--accent-dim);
         }
       `}</style>
     </div>

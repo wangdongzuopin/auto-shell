@@ -30,7 +30,7 @@ export function TitleBar() {
           align-items: stretch;
           justify-content: space-between;
           height: 34px;
-          background: var(--bg2);
+          background: #ffffff;
           border-bottom: 1px solid var(--border);
           -webkit-app-region: drag;
           user-select: none;
@@ -46,7 +46,7 @@ export function TitleBar() {
           font-size: 12px;
           font-weight: 700;
           letter-spacing: 0.01em;
-          color: var(--text);
+          color: var(--text-primary);
         }
         .title-sub {
           display: none;
@@ -66,14 +66,14 @@ export function TitleBar() {
           background: transparent;
           color: var(--text2);
           cursor: pointer;
-          transition: background .14s ease, color .14s ease;
+          transition: background .12s ease, color .12s ease;
         }
         .title-bar-btn:hover {
-          background: color-mix(in srgb, var(--bg3) 88%, white 12%);
+          background: rgba(0,0,0,0.05);
           color: var(--text);
         }
         .title-bar-btn.close:hover {
-          background: #c42b1c;
+          background: #ef4444;
           color: white;
         }
       `}</style>

@@ -60,7 +60,6 @@ const BASE_COMMANDS: {
 
 export function QuickCommands() {
   const [filter, setFilter] = useState('');
-  const sidebarOpen = useTabsStore((state) => state.sidebarOpen);
   const activeTabId = useTabsStore((state) => state.activeTabId);
   const tabs = useTabsStore((state) => state.tabs);
   const setTabCwd = useTabsStore((state) => state.setTabCwd);
@@ -81,24 +80,11 @@ export function QuickCommands() {
     }));
 
     const historyGroup = currentDirectoryHistory.length > 0
-      ? [{
-          group: '当前目录历史',
-          commands: currentDirectoryHistory
-        }]
+      ? [{ group: '当前目录历史', commands: currentDirectoryHistory }]
       : [];
 
-    const projectGroup = [{
-      group: '项目切换',
-      commands: getProjectPaths(platform).map((project) => ({
-        name: project.name,
-        cmd: buildCdCommand(activeTab.shell, project.path),
-        preview: project.path,
-        actionLabel: '切换项目'
-      }))
-    }];
-
     const systemCommands = platform === 'windows' ? BASE_COMMANDS.windows : BASE_COMMANDS.unix;
-    return [...historyGroup, ...projectGroup, ...BASE_COMMANDS.common, systemCommands];
+    return [...historyGroup, ...BASE_COMMANDS.common, systemCommands];
   }, [activeTab, commandHistoryByCwd, platform]);
 
   const filteredCommands = useMemo(
@@ -108,8 +94,7 @@ export function QuickCommands() {
           ...group,
           commands: group.commands.filter((command) =>
             command.name.toLowerCase().includes(filter.toLowerCase()) ||
-            command.cmd.toLowerCase().includes(filter.toLowerCase()) ||
-            (command.preview ?? '').toLowerCase().includes(filter.toLowerCase())
+            command.cmd.toLowerCase().includes(filter.toLowerCase())
           )
         }))
         .filter((group) => group.commands.length > 0),
@@ -121,9 +106,7 @@ export function QuickCommands() {
       toast('当前没有可执行命令的终端');
       return;
     }
-
     window.api.writePty(activeTabId, `${cmd}\r`);
-
     const nextCwd = parseCwdCommand(cmd);
     if (nextCwd) {
       setTabCwd(activeTabId, nextCwd);
@@ -131,26 +114,27 @@ export function QuickCommands() {
   };
 
   return (
-    <div id="sidebar" className={sidebarOpen ? '' : 'collapsed'}>
-      <div className="sb-head">
-        <div>
-          <span className="sb-title">快捷命令</span>
-          <div className="sb-meta">
-            {activeTab ? `${shellNames[activeTab.shell]} / ${activeTab.name}` : '未关联终端'}
-          </div>
-        </div>
+    <div id="sidebar">
+      {/* Logo 区域 */}
+      <div className="sb-logo">
+        <span className="logo-text">Auto Shell</span>
+        <span className="logo-version">v0.2</span>
       </div>
+
+      {/* 搜索框 */}
       <div className="cmd-search">
-        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-          <circle cx="5" cy="5" r="3.5" stroke="currentColor" strokeWidth="1.2" />
-          <path d="M8.5 8.5L11 11" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+          <circle cx="5.5" cy="5.5" r="4" stroke="currentColor" strokeWidth="1.3" />
+          <path d="M9 9l2.5 2.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
         </svg>
         <input
-          placeholder="搜索命令"
+          placeholder="搜索命令..."
           value={filter}
           onChange={(event) => setFilter(event.target.value)}
         />
       </div>
+
+      {/* 命令列表 */}
       <div className="cmd-list">
         {filteredCommands.map((group) => (
           <React.Fragment key={group.group}>
@@ -160,65 +144,74 @@ export function QuickCommands() {
                 key={`${item.cmd}-${index}`}
                 className="cmd-item"
                 onClick={() => handleRun(item.cmd)}
-                title={`在当前终端执行：${item.cmd}`}
               >
-                <span className="cmd-main">
+                <div className="cmd-text">
                   <span className="cmd-name">{item.name}</span>
-                  <span className="cmd-preview">{item.preview ?? item.cmd}</span>
-                </span>
-                <span className="cmd-run">{item.actionLabel ?? '执行到当前终端'}</span>
+                  {item.preview && <span className="cmd-preview">{item.preview}</span>}
+                </div>
+                <svg className="cmd-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none">
+                  <path d="M4 2l4 4-4 4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
               </button>
             ))}
           </React.Fragment>
         ))}
-        {filteredCommands.length === 0 && <div className="cmd-empty">没有匹配的命令</div>}
+        {filteredCommands.length === 0 && (
+          <div className="cmd-empty">没有匹配的命令</div>
+        )}
       </div>
+
+      {/* 底部状态 */}
+      <div className="sb-footer">
+        <span className="sb-status">
+          <span className="status-dot" />
+          {activeTab ? `${shellNames[activeTab.shell]} · ${activeTab.name}` : '未连接'}
+        </span>
+      </div>
+
       <style>{`
         #sidebar {
           width: var(--sidebar-w);
-          background: linear-gradient(180deg, color-mix(in srgb, var(--bg2) 92%, white 8%), var(--bg));
+          background: #fafafa;
           border-right: 1px solid var(--border);
           display: flex;
           flex-direction: column;
           flex-shrink: 0;
-          transition: width .18s ease, opacity .18s ease;
           overflow: hidden;
         }
-        #sidebar.collapsed {
-          width: 0;
-          opacity: 0;
-        }
-        .sb-head {
+        .sb-logo {
           display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 16px 14px 12px;
+          align-items: baseline;
+          gap: 8px;
+          padding: 16px 16px 12px;
           border-bottom: 1px solid var(--border);
         }
-        .sb-title {
-          font-size: 11px;
+        .logo-text {
+          font-size: 15px;
           font-weight: 700;
-          letter-spacing: .08em;
-          text-transform: uppercase;
-          color: var(--text3);
+          color: var(--text-primary);
+          letter-spacing: -0.01em;
         }
-        .sb-meta {
-          margin-top: 6px;
+        .logo-version {
           font-size: 11px;
-          color: var(--text2);
+          color: var(--text3);
           font-family: var(--mono);
         }
         .cmd-search {
-          margin: 12px 10px 8px;
-          background: color-mix(in srgb, var(--bg3) 90%, white 10%);
+          margin: 12px 12px 8px;
+          background: #ffffff;
           border: 1px solid var(--border);
-          border-radius: 10px;
+          border-radius: 20px;
           display: flex;
           align-items: center;
           gap: 8px;
-          padding: 0 10px;
+          padding: 0 14px;
           height: 36px;
           color: var(--text3);
+        }
+        .cmd-search:focus-within {
+          border-color: var(--accent);
+          box-shadow: 0 0 0 3px var(--accent-glow);
         }
         .cmd-search input {
           background: none;
@@ -226,8 +219,11 @@ export function QuickCommands() {
           outline: none;
           color: var(--text);
           font-family: var(--sans);
-          font-size: 12px;
+          font-size: 13px;
           flex: 1;
+        }
+        .cmd-search input::placeholder {
+          color: var(--text3);
         }
         .cmd-list {
           flex: 1;
@@ -236,41 +232,47 @@ export function QuickCommands() {
         }
         .cmd-gl {
           font-size: 10px;
-          letter-spacing: .08em;
+          font-weight: 700;
+          letter-spacing: .06em;
           text-transform: uppercase;
           color: var(--text3);
-          padding: 12px 8px 6px;
-          font-weight: 700;
+          padding: 14px 10px 6px;
         }
         .cmd-item {
           width: 100%;
           display: flex;
           align-items: center;
-          gap: 10px;
-          padding: 10px;
+          justify-content: space-between;
+          gap: 8px;
+          padding: 9px 10px;
           border-radius: 10px;
-          border: 1px solid transparent;
+          border: none;
           background: transparent;
           cursor: pointer;
           text-align: left;
+          transition: background .12s ease;
         }
         .cmd-item:hover {
-          background: color-mix(in srgb, var(--bg3) 90%, white 10%);
-          border-color: var(--border);
+          background: rgba(0,0,0,0.04);
         }
-        .cmd-main {
+        .cmd-item:hover .cmd-arrow {
+          color: var(--accent);
+          transform: translateX(2px);
+        }
+        .cmd-text {
           min-width: 0;
           flex: 1;
           display: flex;
           flex-direction: column;
-          gap: 3px;
+          gap: 2px;
         }
         .cmd-name {
-          font-size: 12px;
+          font-size: 13px;
           color: var(--text);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
+          font-weight: 500;
         }
         .cmd-preview {
           font-size: 11px;
@@ -280,15 +282,32 @@ export function QuickCommands() {
           text-overflow: ellipsis;
           white-space: nowrap;
         }
-        .cmd-run {
+        .cmd-arrow {
+          color: var(--text3);
           flex-shrink: 0;
-          font-size: 11px;
-          color: var(--accent);
+          transition: color .12s ease, transform .12s ease;
         }
         .cmd-empty {
           padding: 14px 10px;
           color: var(--text3);
           font-size: 12px;
+        }
+        .sb-footer {
+          padding: 10px 14px;
+          border-top: 1px solid var(--border);
+        }
+        .sb-status {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 11px;
+          color: var(--text3);
+        }
+        .status-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: var(--green);
         }
       `}</style>
     </div>
@@ -299,51 +318,28 @@ function getProjectPaths(platform: AppPlatform) {
   if (platform === 'windows') {
     return [
       { name: 'auto-shell', path: 'D:\\Agent\\auto-shell' },
-      { name: 'claude-code-rev', path: 'D:\\Agent\\claude-code-rev' },
       { name: 'Center', path: 'D:\\Agent\\Center' }
     ];
   }
-
   return [
     { name: 'auto-shell', path: '~/projects/auto-shell' },
-    { name: 'workspace', path: '~/projects/workspace' },
-    { name: 'dotfiles', path: '~/dotfiles' }
+    { name: 'workspace', path: '~/projects/workspace' }
   ];
 }
 
 function buildCdCommand(shell: string, targetPath: string): string {
-  if (shell === 'powershell') {
-    return `Set-Location -LiteralPath "${targetPath}"`;
-  }
-
-  if (shell === 'cmd') {
-    return `cd /d "${targetPath}"`;
-  }
-
+  if (shell === 'powershell') return `Set-Location -LiteralPath "${targetPath}"`;
+  if (shell === 'cmd') return `cd /d "${targetPath}"`;
   return `cd "${targetPath}"`;
 }
 
 function parseCwdCommand(command: string): string | null {
   const trimmed = command.trim();
-  if (!trimmed) {
-    return null;
-  }
-
+  if (!trimmed) return null;
   const powershellMatch = trimmed.match(/^set-location(?:\s+-literalpath|\s+-path)?\s+(.+)$/i);
-  if (powershellMatch) {
-    return cleanQuotedPath(powershellMatch[1]);
-  }
-
-  const windowsCdMatch = trimmed.match(/^cd\s+\/d\s+(.+)$/i);
-  if (windowsCdMatch) {
-    return cleanQuotedPath(windowsCdMatch[1]);
-  }
-
+  if (powershellMatch) return cleanQuotedPath(powershellMatch[1]);
   const genericCdMatch = trimmed.match(/^cd\s+(.+)$/i);
-  if (genericCdMatch) {
-    return cleanQuotedPath(genericCdMatch[1]);
-  }
-
+  if (genericCdMatch) return cleanQuotedPath(genericCdMatch[1]);
   return null;
 }
 
@@ -358,14 +354,7 @@ function getHistoryCommandLabel(command: string): string {
 
 function detectPlatform(): AppPlatform {
   const value = typeof navigator === 'undefined' ? '' : navigator.userAgent.toLowerCase();
-
-  if (value.includes('mac')) {
-    return 'macos';
-  }
-
-  if (value.includes('win')) {
-    return 'windows';
-  }
-
+  if (value.includes('mac')) return 'macos';
+  if (value.includes('win')) return 'windows';
   return 'linux';
 }

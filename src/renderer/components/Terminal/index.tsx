@@ -64,7 +64,7 @@ export function Terminal() {
       <div className="shell-bar">
         <div className="shell-chip active">
           <div className="shell-dot" />
-          <span className="shell-name">{activeTab.name}</span>
+          <span>{activeTab.name}</span>
         </div>
         <div className="shell-meta">
           <span className="shell-path">{activeTab.cwd === '~' ? '~' : activeTab.cwd}</span>
@@ -91,7 +91,7 @@ export function Terminal() {
           flex: 1;
           display: flex;
           flex-direction: column;
-          background: var(--bg);
+          background: transparent;
           overflow: hidden;
           position: relative;
         }
@@ -99,11 +99,12 @@ export function Terminal() {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          gap: 16px;
-          padding: 0 20px;
-          min-height: 38px;
-          border-bottom: 1px solid var(--border-subtle);
-          background: rgba(255,255,255,0.012);
+          gap: 12px;
+          padding: 0 16px;
+          min-height: 36px;
+          background: rgba(0,0,0,0.02);
+          border-bottom: 1px solid var(--border);
+          flex-shrink: 0;
         }
         .shell-chip {
           display: inline-flex;
@@ -114,28 +115,21 @@ export function Terminal() {
           font-size: 12px;
           font-family: var(--sans);
           color: var(--text-primary);
-          background: rgba(255,255,255,0.04);
-          border: 1px solid var(--border-subtle);
+          font-weight: 600;
+          background: rgba(0,0,0,0.04);
         }
         .shell-dot {
           width: 7px;
           height: 7px;
           border-radius: 50%;
           background: var(--green);
-          box-shadow: 0 0 8px rgba(71,209,108,0.45);
+          box-shadow: 0 0 8px rgba(34,197,94,0.45);
           flex-shrink: 0;
-        }
-        .shell-name {
-          font-weight: 600;
-          max-width: 120px;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
         }
         .shell-meta {
           display: flex;
           align-items: center;
-          gap: 10px;
+          gap: 8px;
           min-width: 0;
           flex: 1;
           justify-content: flex-end;
@@ -149,17 +143,15 @@ export function Terminal() {
           text-overflow: ellipsis;
           white-space: nowrap;
         }
-        /* Hide redundant elements */
-        .shell-kind,
-        .shell-hint {
+        .shell-kind, .shell-hint {
           display: none;
         }
         .terminal-output {
           flex: 1;
-          padding: 16px 20px;
+          padding: 12px 16px;
           overflow: hidden;
           cursor: text;
-          background: var(--bg);
+          background: transparent;
         }
         .terminal-output .xterm {
           height: 100%;
@@ -169,7 +161,8 @@ export function Terminal() {
           display: flex;
           align-items: center;
           justify-content: center;
-          color: var(--text2);
+          color: var(--text3);
+          font-size: 13px;
         }
       `}</style>
     </div>
