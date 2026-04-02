@@ -12,7 +12,7 @@ import { useTabsStore } from './store/tabs';
 
 export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [chatOpen, setChatOpen] = useState(true);
+  const [chatOpen, setChatOpen] = useState(false);
   const [settingsTab, setSettingsTab] = useState<'appearance' | 'ai' | 'system'>('ai');
   const loadSettings = useSettingsStore((state) => state.load);
   const loadSession = useTabsStore((state) => state.loadSession);

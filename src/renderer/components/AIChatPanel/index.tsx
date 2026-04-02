@@ -55,9 +55,6 @@ export function AIChatPanel({ open, onClose }: AIChatPanelProps) {
       : '例如：切换到 projects 目录里的 auto-shell 项目';
   }, [pendingSelection, platform]);
 
-  if (!open) {
-    return null;
-  }
 
   const handleSend = async () => {
     const trimmed = input.trim();
@@ -218,7 +215,8 @@ export function AIChatPanel({ open, onClose }: AIChatPanelProps) {
   };
 
   return (
-    <div className="chat-panel">
+    <div className={`chat-panel-overlay ${open ? 'visible' : ''}`} onClick={onClose} />
+    <div className={`chat-panel ${open ? 'open' : ''}`}>
       <div className="chat-header">
         <div>
           <div className="chat-title">Assistant</div>
@@ -292,15 +290,29 @@ export function AIChatPanel({ open, onClose }: AIChatPanelProps) {
       </div>
       <style>{`
         .chat-panel {
-          width: min(420px, 34vw);
-          min-width: 340px;
-          max-width: 460px;
-          height: 100%;
-          border-left: 1px solid var(--border);
-          background: linear-gradient(180deg, color-mix(in srgb, var(--bg2) 90%, white 10%), var(--bg));
-          display: flex;
-          flex-direction: column;
-          box-shadow: inset 1px 0 0 var(--border);
+          position: absolute;
+          top: 0;
+          right: 0;
+          bottom: 0;
+          transform: translateX(100%);
+          transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+          z-index: 30;
+        }
+        .chat-panel.open {
+          transform: translateX(0);
+        }
+        .chat-panel-overlay {
+          position: absolute;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.4);
+          opacity: 0;
+          pointer-events: none;
+          transition: opacity 0.25s ease;
+          z-index: 25;
+        }
+        .chat-panel-overlay.visible {
+          opacity: 1;
+          pointer-events: auto;
         }
         .chat-header {
           display: flex;
