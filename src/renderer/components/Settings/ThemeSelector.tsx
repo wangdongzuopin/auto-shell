@@ -1,9 +1,13 @@
 import React from 'react';
 import { useTheme } from '../../hooks/useTheme';
+import { useSettingsStore } from '../../store/settings';
+import { ToggleRow } from './index';
 
 export function ThemeSelector() {
   const { currentTheme, applyTheme, getBuiltInThemes } = useTheme();
   const themes = getBuiltInThemes();
+  const appearance = useSettingsStore((state) => state.appearance);
+  const setAppearance = useSettingsStore((state) => state.setAppearance);
 
   return (
     <div className="theme-selector">
@@ -24,6 +28,35 @@ export function ThemeSelector() {
             </button>
           ))}
         </div>
+      </div>
+
+      <div className="settings-section">
+        <div className="section-title">终端透明度</div>
+        <ToggleRow
+          label="启用半透明背景"
+          checked={appearance.terminalTransparency}
+          onChange={(v) => setAppearance({ ...appearance, terminalTransparency: v })}
+        />
+        {appearance.terminalTransparency && (
+          <>
+            <div className="slider-row">
+              <span className="slider-label">透明度</span>
+              <input
+                type="range"
+                min="30"
+                max="100"
+                value={appearance.terminalOpacity * 100}
+                onChange={(e) => setAppearance({ ...appearance, terminalOpacity: Number(e.target.value) / 100 })}
+              />
+              <span className="slider-value">{Math.round(appearance.terminalOpacity * 100)}%</span>
+            </div>
+            <ToggleRow
+              label="毛玻璃效果"
+              checked={appearance.terminalBackdrop}
+              onChange={(v) => setAppearance({ ...appearance, terminalBackdrop: v })}
+            />
+          </>
+        )}
       </div>
 
       <style>{`
@@ -73,6 +106,28 @@ export function ThemeSelector() {
           color: var(--text2);
           padding: 8px 10px 10px;
           text-align: left;
+        }
+        .slider-row {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 8px 0;
+        }
+        .slider-label {
+          font-size: 12px;
+          color: var(--text2);
+          min-width: 56px;
+        }
+        .slider-row input[type="range"] {
+          flex: 1;
+          accent-color: var(--accent);
+        }
+        .slider-value {
+          font-size: 11px;
+          color: var(--text3);
+          font-family: var(--mono);
+          min-width: 36px;
+          text-align: right;
         }
       `}</style>
     </div>

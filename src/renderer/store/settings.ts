@@ -1,8 +1,9 @@
 import { create } from 'zustand';
-import type { AppConfig, FeatureToggles, ProviderConfigs, ProviderSettings, ProviderType, Theme } from '../../shared/types';
+import type { AppConfig, AppearanceSettings, FeatureToggles, ProviderConfigs, ProviderSettings, ProviderType, Theme } from '../../shared/types';
 
 interface SettingsState {
   theme: Theme;
+  appearance: AppearanceSettings;
   aiSettings: {
     provider: ProviderType;
     configs: ProviderConfigs;
@@ -12,6 +13,8 @@ interface SettingsState {
   settingsTab: 'appearance' | 'ai' | 'system';
   load: () => Promise<void>;
   setTheme: (theme: Theme) => Promise<void>;
+  loadAppearance: () => Promise<void>;
+  setAppearance: (appearance: AppearanceSettings) => Promise<void>;
   setProvider: (provider: ProviderType) => Promise<void>;
   setProviderConfig: (provider: ProviderType, config: ProviderSettings) => Promise<void>;
   setFeatures: (features: Partial<FeatureToggles>) => Promise<void>;
@@ -22,6 +25,12 @@ const defaultTheme: Theme = {
   background: '#0f1115',
   foreground: '#d8dee9',
   accent: '#4c8dff'
+};
+
+const defaultAppearance: AppearanceSettings = {
+  terminalTransparency: false,
+  terminalOpacity: 0.7,
+  terminalBackdrop: false
 };
 
 const defaultConfigs: ProviderConfigs = {
@@ -88,6 +97,7 @@ function applyThemeToDocument(theme: Theme) {
 
 export const useSettingsStore = create<SettingsState>((set, get) => ({
   theme: defaultTheme,
+  appearance: defaultAppearance,
   aiSettings: {
     provider: 'minimax',
     configs: defaultConfigs
@@ -115,12 +125,27 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       console.error('Failed to load settings:', error);
       applyThemeToDocument(defaultTheme);
     }
+    await get().loadAppearance();
   },
 
   setTheme: async (theme) => {
     set({ theme });
     applyThemeToDocument(theme);
     await window.api.saveTheme(theme);
+  },
+
+  loadAppearance: async () => {
+    try {
+      const appearance = await window.api.getAppearance();
+      set({ appearance });
+    } catch (error) {
+      console.error('Failed to load appearance settings:', error);
+    }
+  },
+
+  setAppearance: async (appearance) => {
+    set({ appearance });
+    await window.api.saveAppearance(appearance);
   },
 
   setProvider: async (provider) => {
@@ -201,4 +226,4 @@ function clamp(value: number): number {
   return Math.max(0, Math.min(255, value));
 }
 
-export type { Theme, FeatureToggles, ProviderType, ProviderSettings, ProviderConfigs };
+export type { Theme, AppearanceSettings, FeatureToggles, ProviderType, ProviderSettings, ProviderConfigs };

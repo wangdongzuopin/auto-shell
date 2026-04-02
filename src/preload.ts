@@ -2,6 +2,7 @@ import { contextBridge, ipcRenderer } from 'electron';
 import { IPC } from './shared/ipc-channels';
 import type {
   AppConfig,
+  AppearanceSettings,
   ChatMessage,
   FeatureToggles,
   ProviderSettings,
@@ -27,10 +28,12 @@ export interface ElectronAPI {
   explainCommand: (command: string) => Promise<any>;
 
   getConfig: () => Promise<AppConfig>;
+  getAppearance: () => Promise<AppearanceSettings>;
   setProvider: (provider: ProviderType) => Promise<boolean>;
   saveProviderConfig: (provider: ProviderType, config: ProviderSettings) => Promise<boolean>;
   saveTheme: (theme: Theme) => Promise<boolean>;
   saveFeatures: (features: FeatureToggles) => Promise<boolean>;
+  saveAppearance: (appearance: AppearanceSettings) => Promise<boolean>;
 
   getKey: (provider: ProviderType) => Promise<string | null>;
   saveKey: (provider: ProviderType, key: string) => Promise<boolean>;
@@ -90,10 +93,12 @@ const api: ElectronAPI = {
   explainCommand: (command) => ipcRenderer.invoke(IPC.AI_EXPLAIN_CMD, command),
 
   getConfig: () => ipcRenderer.invoke(IPC.CONFIG_GET),
+  getAppearance: () => ipcRenderer.invoke(IPC.CONFIG_GET_APPEARANCE),
   setProvider: (provider) => ipcRenderer.invoke(IPC.CONFIG_SET_PROVIDER, provider),
   saveProviderConfig: (provider, config) => ipcRenderer.invoke(IPC.CONFIG_SET_PROVIDER_CONFIG, provider, config),
   saveTheme: (theme) => ipcRenderer.invoke(IPC.CONFIG_SET_THEME, theme),
   saveFeatures: (features) => ipcRenderer.invoke(IPC.CONFIG_SET_FEATURES, features),
+  saveAppearance: (appearance) => ipcRenderer.invoke(IPC.CONFIG_SET_APPEARANCE, appearance),
 
   getKey: (provider) => ipcRenderer.invoke(IPC.KEY_GET, provider),
   saveKey: (provider, key) => ipcRenderer.invoke(IPC.KEY_SAVE, provider, key),
