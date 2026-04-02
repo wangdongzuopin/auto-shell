@@ -1,10 +1,13 @@
 import React from 'react';
+import { DesktopPet } from '../DesktopPet';
 
 export function TitleBar() {
   return (
     <div className="title-bar">
       <div className="title-bar-drag">
-        <span className="title-main">Auto Shell</span>
+        <div className="title-pet">
+          <DesktopPet size="small" showBubble={false} />
+        </div>
         <span className="title-sub">AI Native Terminal</span>
       </div>
       <div className="title-bar-controls">
@@ -30,17 +33,31 @@ export function TitleBar() {
           align-items: stretch;
           justify-content: space-between;
           height: 34px;
-          background: #ffffff;
+          background: rgba(var(--bg-rgb), 0.46);
           border-bottom: 1px solid var(--border);
           -webkit-app-region: drag;
           user-select: none;
+          backdrop-filter: blur(calc(10px + var(--terminal-blur) * 0.25));
+          -webkit-backdrop-filter: blur(calc(10px + var(--terminal-blur) * 0.25));
         }
         .title-bar-drag {
           display: flex;
           align-items: center;
+          gap: 8px;
           padding-left: 16px;
           flex: 1;
           min-width: 0;
+        }
+        .title-pet {
+          width: 14px;
+          height: 14px;
+          display: inline-flex;
+          align-items: flex-end;
+          justify-content: center;
+          flex-shrink: 0;
+          overflow: visible;
+          margin-left:10px;
+          margin-top:5px;
         }
         .title-main {
           font-size: 12px;

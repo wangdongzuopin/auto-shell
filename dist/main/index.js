@@ -1343,17 +1343,19 @@ function findExistingPath(candidates) {
 let mainWindow = null;
 function createWindow() {
   const isMac = process.platform === "darwin";
+  const canUseTransparentWindow = process.platform !== "linux";
   mainWindow = new electron.BrowserWindow({
     width: 1200,
     height: 800,
     minWidth: 800,
     minHeight: 600,
-    backgroundColor: "#0e0f11",
+    backgroundColor: canUseTransparentWindow ? "#00000000" : "#ffffff",
     icon: path__namespace.join(__dirname, "../../logo.png"),
     frame: isMac,
     titleBarStyle: isMac ? "hiddenInset" : "default",
     trafficLightPosition: isMac ? { x: 14, y: 14 } : void 0,
-    transparent: false,
+    transparent: canUseTransparentWindow,
+    roundedCorners: false,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,

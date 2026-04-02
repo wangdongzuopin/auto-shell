@@ -65,10 +65,14 @@ export function TabBar({ onOpenChat, onOpenSettings }: TabBarProps) {
           display: flex;
           align-items: center;
           gap: 6px;
-          padding: 10px 12px 0;
-          background: #ffffff;
+          padding: 0 12px;
+          min-height: 48px;
+          background: rgba(var(--bg-rgb), calc(var(--terminal-shell-alpha) * 0.95));
+          border-bottom: 1px solid var(--border);
           user-select: none;
           flex-shrink: 0;
+          backdrop-filter: blur(calc(8px + var(--terminal-blur) * 0.16));
+          -webkit-backdrop-filter: blur(calc(8px + var(--terminal-blur) * 0.16));
         }
         .tabs {
           display: flex;
@@ -85,9 +89,9 @@ export function TabBar({ onOpenChat, onOpenSettings }: TabBarProps) {
           display: flex;
           align-items: center;
           gap: 8px;
-          height: 36px;
+          height: 34px;
           padding: 0 14px;
-          border-radius: 12px;
+          border-radius: 0;
           font-size: 13px;
           font-family: var(--sans);
           color: var(--text2);
@@ -103,7 +107,7 @@ export function TabBar({ onOpenChat, onOpenSettings }: TabBarProps) {
           color: var(--text);
         }
         .tab.active {
-          background: #f5f5f5;
+          background: rgba(var(--bg-rgb), calc(var(--terminal-shell-alpha) * 1.4));
           color: var(--text-primary);
           border-color: var(--border);
           font-weight: 600;
@@ -187,14 +191,11 @@ export function TabBar({ onOpenChat, onOpenSettings }: TabBarProps) {
           background: transparent;
           color: var(--text2);
           cursor: pointer;
-          transition: background .12s ease, color .12s ease, transform .08s ease;
+          transition: background .12s ease, color .12s ease;
         }
         .icon-btn:hover {
           background: rgba(0,0,0,0.05);
           color: var(--text);
-        }
-        .icon-btn:active {
-          transform: scale(0.94);
         }
         .icon-btn.active {
           color: var(--accent);

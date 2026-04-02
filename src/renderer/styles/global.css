@@ -1,5 +1,6 @@
 :root {
   --bg: #ffffff;
+  --bg-rgb: 255, 255, 255;
   --bg2: #fafafa;
   --bg3: #f0f0f0;
   --bg4: #e5e5e5;
@@ -31,6 +32,8 @@
   --terminal-bg: #1e1e1e;
   --terminal-opacity: 1;
   --terminal-blur: 0px;
+  --terminal-surface-alpha: 1;
+  --terminal-shell-alpha: 1;
 }
 
 * {
@@ -41,7 +44,7 @@
 
 html, body, #root {
   height: 100%;
-  background: #ffffff;
+  background: transparent;
   color: var(--text);
   font-family: var(--sans);
   font-size: 14px;
@@ -95,8 +98,15 @@ textarea:focus-visible {
 }
 
 .terminal-output {
-  background: rgba(30,30,30, var(--terminal-opacity));
+  background: rgba(var(--bg-rgb), var(--terminal-shell-alpha));
   backdrop-filter: blur(var(--terminal-blur));
+  -webkit-backdrop-filter: blur(var(--terminal-blur));
+}
+
+.terminal-output .xterm-viewport,
+.terminal-output .xterm-screen,
+.terminal-output .xterm-screen canvas {
+  background: transparent !important;
 }
 
 @media (prefers-reduced-motion: reduce) {

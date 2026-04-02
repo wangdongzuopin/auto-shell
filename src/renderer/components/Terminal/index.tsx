@@ -7,6 +7,8 @@ import { AICard } from '../AICard';
 import { ExplainTooltip } from '../ExplainTooltip';
 import { CommandProgressBar } from '../CommandProgressBar';
 import { useCommandProgress } from '../../hooks/useCommandProgress';
+import { usePetStore } from '../../store/pet';
+import { classifyCommand } from '../../../tools/commandClassifier';
 
 export function Terminal() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -20,6 +22,8 @@ export function Terminal() {
   const activeTab = tabs.find((tab) => tab.id === activeTabId);
   const errorCardOpen = useAIStore((state) => state.errorCardOpen);
   const theme = useSettingsStore((state) => state.theme);
+  const appearance = useSettingsStore((state) => state.appearance);
+  const startPetWorking = usePetStore((state) => state.startWorking);
 
   const handleSelectionChange = useCallback((selection: string, position: { x: number; y: number }) => {
     setTooltip({ text: selection, position });
@@ -27,6 +31,8 @@ export function Terminal() {
 
   const handleCommandStart = useCallback((command: string) => {
     startTracking(command);
+    const classified = classifyCommand(command);
+    startPetWorking(command, classified?.isLongRunning ? 12000 : 2600);
 
     if (!activeTabId || !activeTab) {
       return;
@@ -38,7 +44,7 @@ export function Terminal() {
     if (nextCwd) {
       setTabCwd(activeTabId, nextCwd);
     }
-  }, [activeTab, activeTabId, recordCommand, setTabCwd, startTracking]);
+  }, [activeTab, activeTabId, recordCommand, setTabCwd, startPetWorking, startTracking]);
 
   const { focus } = useTerminal(
     containerRef,
@@ -46,6 +52,7 @@ export function Terminal() {
     activeTab?.shell,
     activeTab?.cwd,
     theme,
+    appearance,
     handleSelectionChange,
     handleCommandStart,
     complete
@@ -61,15 +68,6 @@ export function Terminal() {
 
   return (
     <div className="terminal-container">
-      <div className="shell-bar">
-        <div className="shell-chip active">
-          <div className="shell-dot" />
-          <span>{activeTab.name}</span>
-        </div>
-        <div className="shell-meta">
-          <span className="shell-path">{activeTab.cwd === '~' ? '~' : activeTab.cwd}</span>
-        </div>
-      </div>
       <div
         className="terminal-output"
         ref={containerRef}
@@ -94,57 +92,6 @@ export function Terminal() {
           background: transparent;
           overflow: hidden;
           position: relative;
-        }
-        .shell-bar {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 12px;
-          padding: 0 16px;
-          min-height: 36px;
-          background: rgba(0,0,0,0.02);
-          border-bottom: 1px solid var(--border);
-          flex-shrink: 0;
-        }
-        .shell-chip {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          padding: 4px 10px;
-          border-radius: 8px;
-          font-size: 12px;
-          font-family: var(--sans);
-          color: var(--text-primary);
-          font-weight: 600;
-          background: rgba(0,0,0,0.04);
-        }
-        .shell-dot {
-          width: 7px;
-          height: 7px;
-          border-radius: 50%;
-          background: var(--green);
-          box-shadow: 0 0 8px rgba(34,197,94,0.45);
-          flex-shrink: 0;
-        }
-        .shell-meta {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          min-width: 0;
-          flex: 1;
-          justify-content: flex-end;
-        }
-        .shell-path {
-          font-size: 11px;
-          font-family: var(--mono);
-          color: var(--text3);
-          min-width: 0;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .shell-kind, .shell-hint {
-          display: none;
         }
         .terminal-output {
           flex: 1;

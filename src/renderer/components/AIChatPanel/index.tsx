@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import type { ChatMessage } from '../../../shared/types';
 import { useAI } from '../../hooks/useAI';
 import { shellNames, useTabsStore } from '../../store/tabs';
@@ -25,6 +25,7 @@ export function AIChatPanel({ open, onClose }: AIChatPanelProps) {
   const tabs = useTabsStore((state) => state.tabs);
   const setTabCwd = useTabsStore((state) => state.setTabCwd);
   const activeTab = tabs.find((tab) => tab.id === activeTabId) ?? null;
+
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -35,7 +36,10 @@ export function AIChatPanel({ open, onClose }: AIChatPanelProps) {
   const [loading, setLoading] = useState(false);
   const [pendingSelection, setPendingSelection] = useState<PendingDirectorySelection | null>(null);
 
+  const messagesRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const platform = useMemo(() => detectPlatform(), []);
+
   const modelLabel = useMemo(() => `${provider} / ${configs[provider].model}`, [configs, provider]);
   const tabLabel = useMemo(() => {
     if (!activeTab) {
@@ -47,14 +51,32 @@ export function AIChatPanel({ open, onClose }: AIChatPanelProps) {
 
   const placeholder = useMemo(() => {
     if (pendingSelection) {
-      return '输入 1 / 2 / 第一个 来确认候选目录';
+      return '输入 1 / 2 / 第一个，确认候选目录';
     }
 
     return platform === 'windows'
-      ? '例如：切换到 D 盘的 Center 目录下 moa 项目'
+      ? '例如：切换到 D 盘的 Center 目录里的 moa 项目'
       : '例如：切换到 projects 目录里的 auto-shell 项目';
   }, [pendingSelection, platform]);
 
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    const frame = requestAnimationFrame(() => {
+      const container = messagesRef.current;
+      if (container) {
+        container.scrollTo({
+          top: container.scrollHeight,
+          behavior: loading ? 'auto' : 'smooth'
+        });
+      }
+      inputRef.current?.focus();
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [loading, messages, open]);
 
   const handleSend = async () => {
     const trimmed = input.trim();
@@ -82,7 +104,7 @@ export function AIChatPanel({ open, onClose }: AIChatPanelProps) {
         { role: 'user', content: trimmed },
         {
           role: 'assistant',
-          content: `请直接回复候选序号，例如 1、2，或者“第一个”。\n${formatCandidates(pendingSelection.candidates)}`
+          content: `请直接回复候选序号，例如 1 或“第一个”。\n${formatCandidates(pendingSelection.candidates)}`
         }
       ]);
       setInput('');
@@ -115,7 +137,7 @@ export function AIChatPanel({ open, onClose }: AIChatPanelProps) {
         { role: 'user', content: trimmed },
         {
           role: 'assistant',
-          content: `找到了多个可能的目录，请回复序号确认要切换到哪一个：\n${formatCandidates(candidates)}`
+          content: `找到多个可能的目录，请回复序号确认切换目标：\n${formatCandidates(candidates)}`
         }
       ]);
       setInput('');
@@ -218,77 +240,84 @@ export function AIChatPanel({ open, onClose }: AIChatPanelProps) {
     <>
       <div className={`chat-panel-overlay ${open ? 'visible' : ''}`} onClick={onClose} />
       <div className={`chat-panel ${open ? 'open' : ''}`}>
-      <div className="chat-header">
-        <div>
-          <div className="chat-title">Assistant</div>
-          <div className="chat-meta">{modelLabel}</div>
-          <div className="chat-context">{tabLabel}</div>
+        <div className="chat-header">
+          <div>
+            <div className="chat-title">Assistant</div>
+            <div className="chat-meta">{modelLabel}</div>
+            <div className="chat-context">{tabLabel}</div>
+          </div>
+          <button className="chat-close" onClick={onClose} aria-label="关闭助手">
+            ×
+          </button>
         </div>
-        <button className="chat-close" onClick={onClose} aria-label="关闭助手">
-          ×
-        </button>
-      </div>
-      <div className="chat-messages">
-        {messages.map((message, index) => {
-          const previous = index > 0 ? messages[index - 1] : null;
-          const showAssistantHeader = message.role === 'assistant' && previous?.role !== 'assistant';
-          const isStreamingPlaceholder =
-            loading &&
-            message.role === 'assistant' &&
-            index === messages.length - 1 &&
-            !message.content.trim();
 
-          return (
-            <div
-              key={`${message.role}-${index}`}
-              className={`chat-row ${message.role} ${showAssistantHeader ? 'with-header' : 'continued'}`}
-            >
-              {message.role === 'assistant' && showAssistantHeader ? (
-                <div className="message-avatar assistant" aria-hidden="true">
-                  <span className="avatar-core" />
-                </div>
-              ) : message.role === 'assistant' ? (
-                <div className="message-avatar-spacer" aria-hidden="true" />
-              ) : null}
-              <div className={`chat-bubble ${message.role}`}>
+        <div className="chat-messages" ref={messagesRef}>
+          {messages.map((message, index) => {
+            const previous = index > 0 ? messages[index - 1] : null;
+            const showAssistantHeader = message.role === 'assistant' && previous?.role !== 'assistant';
+            const isStreamingPlaceholder =
+              loading &&
+              message.role === 'assistant' &&
+              index === messages.length - 1 &&
+              !message.content.trim();
+
+            return (
+              <div
+                key={`${message.role}-${index}`}
+                className={`chat-row ${message.role} ${showAssistantHeader ? 'with-header' : 'continued'}`}
+              >
                 {message.role === 'assistant' && showAssistantHeader ? (
-                  <div className="bubble-meta">
-                    <span className="bubble-role">Assistant</span>
-                    <span className="bubble-model">
-                      {isStreamingPlaceholder ? 'thinking' : configs[provider].model}
-                    </span>
+                  <div className="message-avatar" aria-hidden="true">
+                    <span className="avatar-core" />
                   </div>
+                ) : message.role === 'assistant' ? (
+                  <div className="message-avatar-spacer" aria-hidden="true" />
                 ) : null}
-                {isStreamingPlaceholder ? (
-                  <div className="typing-indicator" aria-label="AI 正在回复">
-                    <span />
-                    <span />
-                    <span />
-                  </div>
-                ) : (
-                  <div className="bubble-text">{message.content}</div>
-                )}
+
+                <div className={`chat-bubble ${message.role}`}>
+                  {message.role === 'assistant' && showAssistantHeader ? (
+                    <div className="bubble-meta">
+                      <span className="bubble-role">Assistant</span>
+                      <span className="bubble-model">
+                        {isStreamingPlaceholder ? 'thinking' : configs[provider].model}
+                      </span>
+                    </div>
+                  ) : null}
+
+                  {isStreamingPlaceholder ? (
+                    <div className="typing-indicator" aria-label="AI 正在回复">
+                      <span />
+                      <span />
+                      <span />
+                    </div>
+                  ) : (
+                    <div className="bubble-text">{message.content}</div>
+                  )}
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
+
+        <div className="chat-input">
+          <textarea
+            ref={inputRef}
+            value={input}
+            onChange={(event) => setInput(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                void handleSend();
+              }
+            }}
+            placeholder={placeholder}
+          />
+          <button className="send-btn" onClick={() => void handleSend()} disabled={loading || !input.trim()}>
+            发送
+          </button>
+        </div>
       </div>
-      <div className="chat-input">
-        <textarea
-          value={input}
-          onChange={(event) => setInput(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter' && !event.shiftKey) {
-              event.preventDefault();
-              void handleSend();
-            }
-          }}
-          placeholder={placeholder}
-        />
-        <button className="send-btn" onClick={() => void handleSend()} disabled={loading || !input.trim()}>
-          发送
-        </button>
-      </div>
+
       <style>{`
         .chat-panel {
           position: absolute;
@@ -296,27 +325,29 @@ export function AIChatPanel({ open, onClose }: AIChatPanelProps) {
           right: 0;
           bottom: 0;
           width: min(420px, 40vw);
-          background: var(--bg);
-          transform: translateX(100%);
-          transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+          display: flex;
+          flex-direction: column;
+          min-height: 0;
+          background: rgba(var(--bg-rgb), 0.96);
+          transform: none;
           z-index: 30;
-          box-shadow: -4px 0 24px rgba(0,0,0,0.08);
+          box-shadow: -4px 0 24px rgba(0, 0, 0, 0.08);
+          backdrop-filter: blur(calc(16px + var(--terminal-blur) * 0.25));
+          -webkit-backdrop-filter: blur(calc(16px + var(--terminal-blur) * 0.25));
+          display: none;
         }
         .chat-panel.open {
-          transform: translateX(0);
+          display: flex;
         }
         .chat-panel-overlay {
           position: absolute;
           inset: 0;
           background: rgba(0, 0, 0, 0.4);
-          opacity: 0;
-          pointer-events: none;
-          transition: opacity 0.25s ease;
+          display: none;
           z-index: 25;
         }
         .chat-panel-overlay.visible {
-          opacity: 1;
-          pointer-events: auto;
+          display: block;
         }
         .chat-header {
           display: flex;
@@ -325,6 +356,7 @@ export function AIChatPanel({ open, onClose }: AIChatPanelProps) {
           gap: 12px;
           padding: 18px 18px 14px;
           border-bottom: 1px solid var(--border);
+          flex-shrink: 0;
         }
         .chat-title {
           font-size: 16px;
@@ -355,6 +387,7 @@ export function AIChatPanel({ open, onClose }: AIChatPanelProps) {
         }
         .chat-messages {
           flex: 1;
+          min-height: 0;
           overflow-y: auto;
           padding: 18px 18px 22px;
           display: flex;
@@ -380,7 +413,7 @@ export function AIChatPanel({ open, onClose }: AIChatPanelProps) {
           justify-content: center;
           border: 1px solid var(--border);
           background: color-mix(in srgb, var(--bg3) 92%, white 8%);
-          box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
         }
         .message-avatar-spacer {
           width: 26px;
@@ -403,7 +436,7 @@ export function AIChatPanel({ open, onClose }: AIChatPanelProps) {
           border-radius: 18px;
           background: var(--ai-bg);
           border: 1px solid var(--ai-border);
-          box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
         }
         .chat-bubble.assistant {
           padding: 0;
@@ -455,17 +488,20 @@ export function AIChatPanel({ open, onClose }: AIChatPanelProps) {
           animation: chatTyping 1.1s ease-in-out infinite;
         }
         .typing-indicator span:nth-child(2) {
-          animation-delay: .14s;
+          animation-delay: 0.14s;
         }
         .typing-indicator span:nth-child(3) {
-          animation-delay: .28s;
+          animation-delay: 0.28s;
         }
         .chat-input {
+          margin-top: auto;
           padding: 14px 16px 16px;
           border-top: 1px solid var(--border);
           display: flex;
           flex-direction: column;
           gap: 10px;
+          flex-shrink: 0;
+          background: rgba(var(--bg-rgb), 0.94);
         }
         .chat-input textarea {
           width: 100%;
@@ -492,10 +528,15 @@ export function AIChatPanel({ open, onClose }: AIChatPanelProps) {
           opacity: 0.55;
           cursor: not-allowed;
         }
+        @media (max-width: 960px) {
+          .chat-panel {
+            width: min(100vw, 420px);
+          }
+        }
         @keyframes chatTyping {
           0%, 80%, 100% {
             transform: translateY(0);
-            opacity: .35;
+            opacity: 0.35;
           }
           40% {
             transform: translateY(-3px);
@@ -503,7 +544,6 @@ export function AIChatPanel({ open, onClose }: AIChatPanelProps) {
           }
         }
       `}</style>
-    </div>
     </>
   );
 }
@@ -534,7 +574,7 @@ function parseCandidateSelection(input: string, count: number): number | null {
 
   const aliases = ['一', '二', '三', '四', '五'];
   for (let index = 0; index < Math.min(count, aliases.length); index += 1) {
-    if (trimmed === `第${aliases[index]}个` || trimmed === `${aliases[index]}`) {
+    if (trimmed === `第${aliases[index]}个` || trimmed === aliases[index]) {
       return index;
     }
   }
@@ -569,8 +609,8 @@ function stripWrappingQuotes(value: string): string {
 
 function normalizeProjectQuery(value: string): string {
   return value
-    .replace(/[。！!？?]+$/g, '')
-    .replace(/(?:这个|那个|该)?(?:目录|文件夹|项目目录|项目)$/g, '')
+    .replace(/[。！!?]+$/g, '')
+    .replace(/(?:这个|那个|这个目录|那个目录|文件夹|项目目录|项目)$/g, '')
     .trim();
 }
 

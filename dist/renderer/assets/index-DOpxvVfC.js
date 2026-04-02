@@ -7448,8 +7448,10 @@ function applyThemeToDocument(theme) {
   const light = isLightColor$1(theme.background);
   const surfaceDelta = light ? -10 : 8;
   const elevatedDelta = light ? -16 : 14;
+  const backgroundRgb = hexToRgb(theme.background);
   document.documentElement.dataset.theme = light ? "light" : "dark";
   document.documentElement.style.setProperty("--bg", theme.background);
+  document.documentElement.style.setProperty("--bg-rgb", backgroundRgb);
   document.documentElement.style.setProperty("--bg2", shiftColor(theme.background, surfaceDelta));
   document.documentElement.style.setProperty("--bg3", shiftColor(theme.background, light ? elevatedDelta : surfaceDelta * 1.75));
   document.documentElement.style.setProperty("--bg4", shiftColor(theme.background, light ? elevatedDelta * 1.22 : surfaceDelta * 2.5));
@@ -7473,6 +7475,8 @@ function applyThemeToDocument(theme) {
 function applyAppearanceToDocument(appearance) {
   document.documentElement.style.setProperty("--terminal-opacity", appearance.terminalTransparency ? String(appearance.terminalOpacity) : "1");
   document.documentElement.style.setProperty("--terminal-blur", appearance.terminalTransparency && appearance.terminalBackdrop ? "20px" : "0px");
+  document.documentElement.style.setProperty("--terminal-surface-alpha", appearance.terminalTransparency ? String(Math.max(appearance.terminalOpacity * 0.22, 0.08)) : "1");
+  document.documentElement.style.setProperty("--terminal-shell-alpha", appearance.terminalTransparency ? String(Math.max(appearance.terminalOpacity * 0.16, 0.05)) : "1");
 }
 const useSettingsStore = create((set, get) => ({
   theme: defaultTheme,
@@ -7590,6 +7594,10 @@ function parseHex(hex) {
 function rgbToHex(r2, g2, b2) {
   return `#${(r2 << 16 | g2 << 8 | b2).toString(16).padStart(6, "0")}`;
 }
+function hexToRgb(hex) {
+  const { r: r2, g: g2, b: b2 } = parseHex(hex);
+  return `${r2}, ${g2}, ${b2}`;
+}
 function clamp(value) {
   return Math.max(0, Math.min(255, value));
 }
@@ -7683,6 +7691,8 @@ function AIChatPanel({ open, onClose }) {
   ]);
   const [loading, setLoading] = reactExports.useState(false);
   const [pendingSelection, setPendingSelection] = reactExports.useState(null);
+  const messagesRef = reactExports.useRef(null);
+  const inputRef = reactExports.useRef(null);
   const platform2 = reactExports.useMemo(() => detectPlatform$1(), []);
   const modelLabel = reactExports.useMemo(() => `${provider} / ${configs[provider].model}`, [configs, provider]);
   const tabLabel = reactExports.useMemo(() => {
@@ -7693,10 +7703,26 @@ function AIChatPanel({ open, onClose }) {
   }, [activeTab]);
   const placeholder = reactExports.useMemo(() => {
     if (pendingSelection) {
-      return "输入 1 / 2 / 第一个 来确认候选目录";
+      return "输入 1 / 2 / 第一个，确认候选目录";
     }
-    return platform2 === "windows" ? "例如：切换到 D 盘的 Center 目录下 moa 项目" : "例如：切换到 projects 目录里的 auto-shell 项目";
+    return platform2 === "windows" ? "例如：切换到 D 盘的 Center 目录里的 moa 项目" : "例如：切换到 projects 目录里的 auto-shell 项目";
   }, [pendingSelection, platform2]);
+  reactExports.useEffect(() => {
+    if (!open) {
+      return;
+    }
+    const frame = requestAnimationFrame(() => {
+      const container2 = messagesRef.current;
+      if (container2) {
+        container2.scrollTo({
+          top: container2.scrollHeight,
+          behavior: loading ? "auto" : "smooth"
+        });
+      }
+      inputRef.current?.focus();
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [loading, messages, open]);
   const handleSend = async () => {
     const trimmed = input.trim();
     if (!trimmed || loading) {
@@ -7720,7 +7746,7 @@ function AIChatPanel({ open, onClose }) {
         { role: "user", content: trimmed },
         {
           role: "assistant",
-          content: `请直接回复候选序号，例如 1、2，或者“第一个”。
+          content: `请直接回复候选序号，例如 1 或“第一个”。
 ${formatCandidates(pendingSelection.candidates)}`
         }
       ]);
@@ -7751,7 +7777,7 @@ ${formatCandidates(pendingSelection.candidates)}`
         { role: "user", content: trimmed },
         {
           role: "assistant",
-          content: `找到了多个可能的目录，请回复序号确认要切换到哪一个：
+          content: `找到多个可能的目录，请回复序号确认切换目标：
 ${formatCandidates(candidates)}`
         }
       ]);
@@ -7856,7 +7882,7 @@ ${formatCandidates(candidates)}`
         ] }),
         /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "chat-close", onClick: onClose, "aria-label": "关闭助手", children: "×" })
       ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "chat-messages", children: messages.map((message, index) => {
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "chat-messages", ref: messagesRef, children: messages.map((message, index) => {
         const previous = index > 0 ? messages[index - 1] : null;
         const showAssistantHeader = message.role === "assistant" && previous?.role !== "assistant";
         const isStreamingPlaceholder = loading && message.role === "assistant" && index === messages.length - 1 && !message.content.trim();
@@ -7865,7 +7891,7 @@ ${formatCandidates(candidates)}`
           {
             className: `chat-row ${message.role} ${showAssistantHeader ? "with-header" : "continued"}`,
             children: [
-              message.role === "assistant" && showAssistantHeader ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "message-avatar assistant", "aria-hidden": "true", children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "avatar-core" }) }) : message.role === "assistant" ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "message-avatar-spacer", "aria-hidden": "true" }) : null,
+              message.role === "assistant" && showAssistantHeader ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "message-avatar", "aria-hidden": "true", children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "avatar-core" }) }) : message.role === "assistant" ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "message-avatar-spacer", "aria-hidden": "true" }) : null,
               /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: `chat-bubble ${message.role}`, children: [
                 message.role === "assistant" && showAssistantHeader ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bubble-meta", children: [
                   /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "bubble-role", children: "Assistant" }),
@@ -7886,6 +7912,7 @@ ${formatCandidates(candidates)}`
         /* @__PURE__ */ jsxRuntimeExports.jsx(
           "textarea",
           {
+            ref: inputRef,
             value: input,
             onChange: (event) => setInput(event.target.value),
             onKeyDown: (event) => {
@@ -7898,32 +7925,38 @@ ${formatCandidates(candidates)}`
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "send-btn", onClick: () => void handleSend(), disabled: loading || !input.trim(), children: "发送" })
-      ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("style", { children: `
+      ] })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("style", { children: `
         .chat-panel {
           position: absolute;
           top: 0;
           right: 0;
           bottom: 0;
-          transform: translateX(100%);
-          transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+          width: min(420px, 40vw);
+          display: flex;
+          flex-direction: column;
+          min-height: 0;
+          background: rgba(var(--bg-rgb), 0.96);
+          transform: none;
           z-index: 30;
+          box-shadow: -4px 0 24px rgba(0, 0, 0, 0.08);
+          backdrop-filter: blur(calc(16px + var(--terminal-blur) * 0.25));
+          -webkit-backdrop-filter: blur(calc(16px + var(--terminal-blur) * 0.25));
+          display: none;
         }
         .chat-panel.open {
-          transform: translateX(0);
+          display: flex;
         }
         .chat-panel-overlay {
           position: absolute;
           inset: 0;
           background: rgba(0, 0, 0, 0.4);
-          opacity: 0;
-          pointer-events: none;
-          transition: opacity 0.25s ease;
+          display: none;
           z-index: 25;
         }
         .chat-panel-overlay.visible {
-          opacity: 1;
-          pointer-events: auto;
+          display: block;
         }
         .chat-header {
           display: flex;
@@ -7932,6 +7965,7 @@ ${formatCandidates(candidates)}`
           gap: 12px;
           padding: 18px 18px 14px;
           border-bottom: 1px solid var(--border);
+          flex-shrink: 0;
         }
         .chat-title {
           font-size: 16px;
@@ -7962,6 +7996,7 @@ ${formatCandidates(candidates)}`
         }
         .chat-messages {
           flex: 1;
+          min-height: 0;
           overflow-y: auto;
           padding: 18px 18px 22px;
           display: flex;
@@ -7987,7 +8022,7 @@ ${formatCandidates(candidates)}`
           justify-content: center;
           border: 1px solid var(--border);
           background: color-mix(in srgb, var(--bg3) 92%, white 8%);
-          box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
         }
         .message-avatar-spacer {
           width: 26px;
@@ -8010,7 +8045,7 @@ ${formatCandidates(candidates)}`
           border-radius: 18px;
           background: var(--ai-bg);
           border: 1px solid var(--ai-border);
-          box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
         }
         .chat-bubble.assistant {
           padding: 0;
@@ -8062,17 +8097,20 @@ ${formatCandidates(candidates)}`
           animation: chatTyping 1.1s ease-in-out infinite;
         }
         .typing-indicator span:nth-child(2) {
-          animation-delay: .14s;
+          animation-delay: 0.14s;
         }
         .typing-indicator span:nth-child(3) {
-          animation-delay: .28s;
+          animation-delay: 0.28s;
         }
         .chat-input {
+          margin-top: auto;
           padding: 14px 16px 16px;
           border-top: 1px solid var(--border);
           display: flex;
           flex-direction: column;
           gap: 10px;
+          flex-shrink: 0;
+          background: rgba(var(--bg-rgb), 0.94);
         }
         .chat-input textarea {
           width: 100%;
@@ -8099,10 +8137,15 @@ ${formatCandidates(candidates)}`
           opacity: 0.55;
           cursor: not-allowed;
         }
+        @media (max-width: 960px) {
+          .chat-panel {
+            width: min(100vw, 420px);
+          }
+        }
         @keyframes chatTyping {
           0%, 80%, 100% {
             transform: translateY(0);
-            opacity: .35;
+            opacity: 0.35;
           }
           40% {
             transform: translateY(-3px);
@@ -8110,7 +8153,6 @@ ${formatCandidates(candidates)}`
           }
         }
       ` })
-    ] })
   ] });
 }
 function parseProjectSwitchInput(input) {
@@ -8135,7 +8177,7 @@ function parseCandidateSelection(input, count) {
   }
   const aliases = ["一", "二", "三", "四", "五"];
   for (let index = 0; index < Math.min(count, aliases.length); index += 1) {
-    if (trimmed === `第${aliases[index]}个` || trimmed === `${aliases[index]}`) {
+    if (trimmed === `第${aliases[index]}个` || trimmed === aliases[index]) {
       return index;
     }
   }
@@ -8162,7 +8204,7 @@ function stripWrappingQuotes(value) {
   return value;
 }
 function normalizeProjectQuery(value) {
-  return value.replace(/[。！!？?]+$/g, "").replace(/(?:这个|那个|该)?(?:目录|文件夹|项目目录|项目)$/g, "").trim();
+  return value.replace(/[。！!?]+$/g, "").replace(/(?:这个|那个|这个目录|那个目录|文件夹|项目目录|项目)$/g, "").trim();
 }
 function detectPlatform$1() {
   const value = typeof navigator === "undefined" ? "" : navigator.userAgent.toLowerCase();
@@ -8183,6 +8225,269 @@ function platformLabel(platform2) {
     default:
       return "Windows";
   }
+}
+let activityTimer = null;
+const usePetStore = create((set, get) => ({
+  mode: "idle",
+  currentCommand: null,
+  windowFocused: true,
+  setWindowFocused: (focused) => {
+    set((state) => ({
+      windowFocused: focused,
+      mode: focused ? state.currentCommand ? "working" : "idle" : "sleeping"
+    }));
+  },
+  startWorking: (command, durationMs = 2600) => {
+    if (activityTimer) {
+      clearTimeout(activityTimer);
+    }
+    set({
+      currentCommand: command,
+      mode: "working"
+    });
+    activityTimer = setTimeout(() => {
+      const { windowFocused } = get();
+      set({
+        currentCommand: null,
+        mode: windowFocused ? "idle" : "sleeping"
+      });
+      activityTimer = null;
+    }, durationMs);
+  }
+}));
+const TICK_MS = 420;
+const IDLE_SEQUENCE = [0, 0, 1, 0, 0, 2, 0, 1];
+const PET_COPY = {
+  idle: "躺平中",
+  working: "干活中",
+  sleeping: "睡觉中"
+};
+const SPRITES = {
+  idle: [
+    [
+      "000110000000011000",
+      "001111000000111100",
+      "011111111111111110",
+      "111111111111111111",
+      "111211111111112111",
+      "111111133311111111",
+      "111111111111111111",
+      "011111111111111110",
+      "001101001001001100",
+      "000100001001000100"
+    ],
+    [
+      "000110000000011000",
+      "001111000000111100",
+      "011111111111111110",
+      "111111111111111111",
+      "111211111111112111",
+      "111111133311111111",
+      "111111111111111111",
+      "011111111111111110",
+      "000110100100100110",
+      "000010000100000010"
+    ],
+    [
+      "000110000000011000",
+      "001111000000111100",
+      "011111111111111110",
+      "111111111111111111",
+      "111311111111113111",
+      "111111133311111111",
+      "111111111111111111",
+      "011111111111111110",
+      "001101001001001100",
+      "000100001001000100"
+    ]
+  ],
+  working: [
+    [
+      "000110000000011000",
+      "001111000000111100",
+      "011111111111111110",
+      "111111111111111111",
+      "111211111111112111",
+      "111111133311111111",
+      "111111111111111111",
+      "011111111111111110",
+      "000110100100100110",
+      "000010000100000010"
+    ],
+    [
+      "000110000000011000",
+      "001111000000111100",
+      "011111111111111110",
+      "111111111111111111",
+      "111211111111112111",
+      "111111133311111111",
+      "111111111111111111",
+      "011111111111111110",
+      "001101001001001100",
+      "000100001001000100"
+    ]
+  ],
+  sleeping: [
+    [
+      "000110000000011000",
+      "001111000000111100",
+      "011111111111111110",
+      "111111111111111111",
+      "111333333333333111",
+      "111111133311111111",
+      "111111111111111111",
+      "011111111111111110",
+      "001101001001001100",
+      "000100001001000100"
+    ]
+  ]
+};
+const PIXEL_COLORS = {
+  "0": "transparent",
+  "1": "rgb(251, 104, 54)",
+  "2": "#1f2937",
+  "3": "#f8efe8"
+};
+const SIZE_PRESET = {
+  small: {
+    dockHeight: 16,
+    bubbleTop: 0,
+    bubbleFontSize: 10,
+    bubblePadding: "4px 8px",
+    bubbleMaxWidth: 100,
+    scale: 0.42,
+    sleepOffsetRight: -2,
+    sleepOffsetBottom: 8,
+    sleepFontSize: 8
+  },
+  large: {
+    dockHeight: 200,
+    bubbleTop: 18,
+    bubbleFontSize: 11,
+    bubblePadding: "6px 10px",
+    bubbleMaxWidth: 148,
+    scale: 1.35,
+    sleepOffsetRight: 38,
+    sleepOffsetBottom: 90,
+    sleepFontSize: 16
+  }
+};
+function spriteFor(mode, tick) {
+  if (mode === "sleeping") {
+    return SPRITES.sleeping[0];
+  }
+  if (mode === "working") {
+    return SPRITES.working[tick % SPRITES.working.length];
+  }
+  return SPRITES.idle[IDLE_SEQUENCE[tick % IDLE_SEQUENCE.length] ?? 0];
+}
+function DesktopPet({ size = "large", showBubble = true }) {
+  const mode = usePetStore((state) => state.mode);
+  const currentCommand = usePetStore((state) => state.currentCommand);
+  const [tick, setTick] = reactExports.useState(0);
+  reactExports.useEffect(() => {
+    const timer = window.setInterval(() => setTick((value) => value + 1), TICK_MS);
+    return () => window.clearInterval(timer);
+  }, []);
+  const sprite = reactExports.useMemo(() => spriteFor(mode, tick), [mode, tick]);
+  const cells = reactExports.useMemo(
+    () => sprite.flatMap(
+      (row, y2) => [...row].map((value, x2) => ({
+        key: `${x2}-${y2}`,
+        color: PIXEL_COLORS[value] ?? "transparent"
+      }))
+    ),
+    [sprite]
+  );
+  const preset = SIZE_PRESET[size];
+  const bubbleText = mode === "working" && currentCommand ? `干活中
+${currentCommand}` : PET_COPY[mode];
+  const lift = mode === "working" ? -4 : mode === "sleeping" ? 8 : 2;
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: `pet-dock ${size} ${mode}`, children: [
+    showBubble ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "pet-bubble", children: bubbleText }) : null,
+    mode === "sleeping" ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "pet-sleep", children: "z" }) : null,
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "div",
+      {
+        className: "pet-grid",
+        "aria-hidden": "true",
+        style: {
+          transform: `translateY(${lift}px) scale(${preset.scale})`
+        },
+        children: cells.map((cell) => /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "pet-pixel", style: { background: cell.color } }, cell.key))
+      }
+    ),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("style", { children: `
+        .pet-dock {
+          position: relative;
+          display: flex;
+          align-items: flex-end;
+          justify-content: center;
+          width: 100%;
+          background: transparent;
+          pointer-events: none;
+        }
+        .pet-dock.small {
+          height: ${preset.dockHeight}px;
+          padding: 0;
+        }
+        .pet-dock.large {
+          height: ${preset.dockHeight}px;
+          padding: 0 0 18px;
+        }
+        .pet-bubble {
+          position: absolute;
+          top: ${preset.bubbleTop}px;
+          left: 50%;
+          z-index: 2;
+          max-width: ${preset.bubbleMaxWidth}px;
+          padding: ${preset.bubblePadding};
+          transform: translateX(-50%);
+          background: rgba(255, 255, 255, 0.92);
+          color: #374151;
+          font-size: ${preset.bubbleFontSize}px;
+          line-height: 1.35;
+          text-align: center;
+          white-space: pre-wrap;
+          word-break: break-word;
+          box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+        }
+        .pet-bubble::after {
+          content: '';
+          position: absolute;
+          left: 50%;
+          bottom: -5px;
+          width: 10px;
+          height: 10px;
+          background: rgba(255, 255, 255, 0.92);
+          transform: translateX(-50%) rotate(45deg);
+        }
+        .pet-grid {
+          display: grid;
+          grid-template-columns: repeat(18, 6px);
+          grid-template-rows: repeat(10, 6px);
+          gap: 0;
+          transform-origin: center bottom;
+          filter: drop-shadow(0 8px 12px rgba(15, 23, 42, 0.08));
+        }
+        .pet-pixel {
+          width: 6px;
+          height: 6px;
+        }
+        .pet-sleep {
+          position: absolute;
+          right: ${preset.sleepOffsetRight}px;
+          bottom: ${preset.sleepOffsetBottom}px;
+          color: rgb(251, 104, 54);
+          font-family: var(--mono);
+          font-size: ${preset.sleepFontSize}px;
+          letter-spacing: 0.04em;
+          text-transform: lowercase;
+        }
+      ` })
+  ] });
 }
 const BASE_COMMANDS = {
   common: [
@@ -8223,7 +8528,6 @@ const BASE_COMMANDS = {
 };
 function QuickCommands() {
   const [filter, setFilter] = reactExports.useState("");
-  const sidebarOpen = useTabsStore((state) => state.sidebarOpen);
   const activeTabId = useTabsStore((state) => state.activeTabId);
   const tabs = useTabsStore((state) => state.tabs);
   const setTabCwd = useTabsStore((state) => state.setTabCwd);
@@ -8240,27 +8544,15 @@ function QuickCommands() {
       preview: activeTab.cwd,
       actionLabel: "再次执行"
     }));
-    const historyGroup = currentDirectoryHistory.length > 0 ? [{
-      group: "当前目录历史",
-      commands: currentDirectoryHistory
-    }] : [];
-    const projectGroup = [{
-      group: "项目切换",
-      commands: getProjectPaths(platform2).map((project) => ({
-        name: project.name,
-        cmd: buildCdCommand(activeTab.shell, project.path),
-        preview: project.path,
-        actionLabel: "切换项目"
-      }))
-    }];
+    const historyGroup = currentDirectoryHistory.length > 0 ? [{ group: "当前目录历史", commands: currentDirectoryHistory }] : [];
     const systemCommands = platform2 === "windows" ? BASE_COMMANDS.windows : BASE_COMMANDS.unix;
-    return [...historyGroup, ...projectGroup, ...BASE_COMMANDS.common, systemCommands];
+    return [...historyGroup, ...BASE_COMMANDS.common, systemCommands];
   }, [activeTab, commandHistoryByCwd, platform2]);
   const filteredCommands = reactExports.useMemo(
     () => allCommands.map((group) => ({
       ...group,
       commands: group.commands.filter(
-        (command) => command.name.toLowerCase().includes(filter.toLowerCase()) || command.cmd.toLowerCase().includes(filter.toLowerCase()) || (command.preview ?? "").toLowerCase().includes(filter.toLowerCase())
+        (command) => command.name.toLowerCase().includes(filter.toLowerCase()) || command.cmd.toLowerCase().includes(filter.toLowerCase())
       )
     })).filter((group) => group.commands.length > 0),
     [allCommands, filter]
@@ -8276,20 +8568,17 @@ function QuickCommands() {
       setTabCwd(activeTabId, nextCwd);
     }
   };
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { id: "sidebar", className: sidebarOpen ? "" : "collapsed", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "sb-head", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sb-title", children: "快捷命令" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "sb-meta", children: activeTab ? `${shellNames[activeTab.shell]} / ${activeTab.name}` : "未关联终端" })
-    ] }) }),
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { id: "sidebar", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "sb-logo", children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "logo-text", children: "Auto Shell" }) }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "cmd-search", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "12", height: "12", viewBox: "0 0 12 12", fill: "none", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "5", cy: "5", r: "3.5", stroke: "currentColor", strokeWidth: "1.2" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M8.5 8.5L11 11", stroke: "currentColor", strokeWidth: "1.2", strokeLinecap: "round" })
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "13", height: "13", viewBox: "0 0 13 13", fill: "none", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "5.5", cy: "5.5", r: "4", stroke: "currentColor", strokeWidth: "1.3" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M9 9l2.5 2.5", stroke: "currentColor", strokeWidth: "1.3", strokeLinecap: "round" })
       ] }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(
         "input",
         {
-          placeholder: "搜索命令",
+          placeholder: "搜索命令...",
           value: filter,
           onChange: (event) => setFilter(event.target.value)
         }
@@ -8303,13 +8592,12 @@ function QuickCommands() {
           {
             className: "cmd-item",
             onClick: () => handleRun(item.cmd),
-            title: `在当前终端执行：${item.cmd}`,
             children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "cmd-main", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "cmd-text", children: [
                 /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "cmd-name", children: item.name }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "cmd-preview", children: item.preview ?? item.cmd })
+                item.preview && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "cmd-preview", children: item.preview })
               ] }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "cmd-run", children: item.actionLabel ?? "执行到当前终端" })
+              /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { className: "cmd-arrow", width: "12", height: "12", viewBox: "0 0 12 12", fill: "none", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M4 2l4 4-4 4", stroke: "currentColor", strokeWidth: "1.3", strokeLinecap: "round", strokeLinejoin: "round" }) })
             ]
           },
           `${item.cmd}-${index}`
@@ -8317,52 +8605,50 @@ function QuickCommands() {
       ] }, group.group)),
       filteredCommands.length === 0 && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "cmd-empty", children: "没有匹配的命令" })
     ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(DesktopPet, { size: "large" }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "sb-footer", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "sb-status", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "status-dot" }),
+      activeTab ? `${shellNames[activeTab.shell]} · ${activeTab.name}` : "未连接"
+    ] }) }),
     /* @__PURE__ */ jsxRuntimeExports.jsx("style", { children: `
         #sidebar {
           width: var(--sidebar-w);
-          background: linear-gradient(180deg, color-mix(in srgb, var(--bg2) 92%, white 8%), var(--bg));
+          background: rgba(var(--bg-rgb), 0.68);
           border-right: 1px solid var(--border);
           display: flex;
           flex-direction: column;
           flex-shrink: 0;
-          transition: width .18s ease, opacity .18s ease;
           overflow: hidden;
+          backdrop-filter: blur(calc(14px + var(--terminal-blur) * 0.2));
+          -webkit-backdrop-filter: blur(calc(14px + var(--terminal-blur) * 0.2));
         }
-        #sidebar.collapsed {
-          width: 0;
-          opacity: 0;
-        }
-        .sb-head {
+        .sb-logo {
           display: flex;
           align-items: center;
-          justify-content: space-between;
-          padding: 16px 14px 12px;
+          padding: 16px 16px 12px;
           border-bottom: 1px solid var(--border);
         }
-        .sb-title {
-          font-size: 11px;
+        .logo-text {
+          font-size: 15px;
           font-weight: 700;
-          letter-spacing: .08em;
-          text-transform: uppercase;
-          color: var(--text3);
-        }
-        .sb-meta {
-          margin-top: 6px;
-          font-size: 11px;
-          color: var(--text2);
-          font-family: var(--mono);
+          color: var(--text-primary);
+          letter-spacing: -0.01em;
         }
         .cmd-search {
-          margin: 12px 10px 8px;
-          background: color-mix(in srgb, var(--bg3) 90%, white 10%);
+          margin: 12px 12px 8px;
+          background: #ffffff;
           border: 1px solid var(--border);
-          border-radius: 10px;
+          border-radius: 20px;
           display: flex;
           align-items: center;
           gap: 8px;
-          padding: 0 10px;
+          padding: 0 14px;
           height: 36px;
           color: var(--text3);
+        }
+        .cmd-search:focus-within {
+          border-color: var(--accent);
+          box-shadow: 0 0 0 3px var(--accent-glow);
         }
         .cmd-search input {
           background: none;
@@ -8370,8 +8656,12 @@ function QuickCommands() {
           outline: none;
           color: var(--text);
           font-family: var(--sans);
-          font-size: 12px;
+          font-size: 13px;
           flex: 1;
+          min-height: 0;
+        }
+        .cmd-search input::placeholder {
+          color: var(--text3);
         }
         .cmd-list {
           flex: 1;
@@ -8380,41 +8670,47 @@ function QuickCommands() {
         }
         .cmd-gl {
           font-size: 10px;
-          letter-spacing: .08em;
+          font-weight: 700;
+          letter-spacing: .06em;
           text-transform: uppercase;
           color: var(--text3);
-          padding: 12px 8px 6px;
-          font-weight: 700;
+          padding: 14px 10px 6px;
         }
         .cmd-item {
           width: 100%;
           display: flex;
           align-items: center;
-          gap: 10px;
-          padding: 10px;
+          justify-content: space-between;
+          gap: 8px;
+          padding: 9px 10px;
           border-radius: 10px;
-          border: 1px solid transparent;
+          border: none;
           background: transparent;
           cursor: pointer;
           text-align: left;
+          transition: background .12s ease;
         }
         .cmd-item:hover {
-          background: color-mix(in srgb, var(--bg3) 90%, white 10%);
-          border-color: var(--border);
+          background: rgba(0,0,0,0.04);
         }
-        .cmd-main {
+        .cmd-item:hover .cmd-arrow {
+          color: var(--accent);
+          transform: translateX(2px);
+        }
+        .cmd-text {
           min-width: 0;
           flex: 1;
           display: flex;
           flex-direction: column;
-          gap: 3px;
+          gap: 2px;
         }
         .cmd-name {
-          font-size: 12px;
+          font-size: 13px;
           color: var(--text);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
+          font-weight: 500;
         }
         .cmd-preview {
           font-size: 11px;
@@ -8424,59 +8720,43 @@ function QuickCommands() {
           text-overflow: ellipsis;
           white-space: nowrap;
         }
-        .cmd-run {
+        .cmd-arrow {
+          color: var(--text3);
           flex-shrink: 0;
-          font-size: 11px;
-          color: var(--accent);
+          transition: color .12s ease, transform .12s ease;
         }
         .cmd-empty {
           padding: 14px 10px;
           color: var(--text3);
           font-size: 12px;
         }
+        .sb-footer {
+          padding: 8px 14px 10px;
+          background: transparent;
+        }
+        .sb-status {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 11px;
+          color: var(--text3);
+        }
+        .status-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: var(--green);
+        }
       ` })
   ] });
 }
-function getProjectPaths(platform2) {
-  if (platform2 === "windows") {
-    return [
-      { name: "auto-shell", path: "D:\\Agent\\auto-shell" },
-      { name: "claude-code-rev", path: "D:\\Agent\\claude-code-rev" },
-      { name: "Center", path: "D:\\Agent\\Center" }
-    ];
-  }
-  return [
-    { name: "auto-shell", path: "~/projects/auto-shell" },
-    { name: "workspace", path: "~/projects/workspace" },
-    { name: "dotfiles", path: "~/dotfiles" }
-  ];
-}
-function buildCdCommand(shell, targetPath) {
-  if (shell === "powershell") {
-    return `Set-Location -LiteralPath "${targetPath}"`;
-  }
-  if (shell === "cmd") {
-    return `cd /d "${targetPath}"`;
-  }
-  return `cd "${targetPath}"`;
-}
 function parseCwdCommand(command) {
   const trimmed = command.trim();
-  if (!trimmed) {
-    return null;
-  }
+  if (!trimmed) return null;
   const powershellMatch = trimmed.match(/^set-location(?:\s+-literalpath|\s+-path)?\s+(.+)$/i);
-  if (powershellMatch) {
-    return cleanQuotedPath(powershellMatch[1]);
-  }
-  const windowsCdMatch = trimmed.match(/^cd\s+\/d\s+(.+)$/i);
-  if (windowsCdMatch) {
-    return cleanQuotedPath(windowsCdMatch[1]);
-  }
+  if (powershellMatch) return cleanQuotedPath(powershellMatch[1]);
   const genericCdMatch = trimmed.match(/^cd\s+(.+)$/i);
-  if (genericCdMatch) {
-    return cleanQuotedPath(genericCdMatch[1]);
-  }
+  if (genericCdMatch) return cleanQuotedPath(genericCdMatch[1]);
   return null;
 }
 function cleanQuotedPath(value) {
@@ -8488,12 +8768,8 @@ function getHistoryCommandLabel(command) {
 }
 function detectPlatform() {
   const value = typeof navigator === "undefined" ? "" : navigator.userAgent.toLowerCase();
-  if (value.includes("mac")) {
-    return "macos";
-  }
-  if (value.includes("win")) {
-    return "windows";
-  }
+  if (value.includes("mac")) return "macos";
+  if (value.includes("win")) return "windows";
   return "linux";
 }
 const BUILT_IN_THEMES = [
@@ -9030,7 +9306,7 @@ function Settings({ open, defaultTab = "ai", onClose }) {
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "settings-header", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "settings-title", children: activeTab === "ai" ? "AI 与模型" : activeTab === "appearance" ? "外观主题" : "系统偏好" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "settings-subtitle", children: "统一管理主题、模型提供商和运行方式。" })
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "settings-subtitle", children: "统一管理主题、模型提供商和本地运行设置。" })
       ] }),
       /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "close-btn", onClick: onClose, "aria-label": "关闭设置", children: "×" })
     ] }),
@@ -9130,12 +9406,11 @@ function SystemSettings() {
       ] })
     ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "system-card", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "system-title", children: "跨平台界面" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "system-copy", children: "当前界面已经移除 Windows 优先描述，主题与窗口内容统一按全局设计变量渲染，便于同时兼容 Windows 和 macOS。" })
-    ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "system-card", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "system-title", children: "打包方式" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "system-copy", children: "项目已补充 Windows 和 macOS 的打包配置。Windows 可直接打包，macOS 需要在 mac 主机上执行打包命令。" })
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "system-title", children: "版本信息" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "system-copy", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "system-version-label", children: "当前版本" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { className: "system-version-value", children: "v0.2" })
+      ] })
     ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsx("style", { children: `
         .system-settings {
@@ -9164,6 +9439,15 @@ function SystemSettings() {
           font-family: var(--mono);
           color: var(--text);
         }
+        .system-version-label {
+          color: var(--text3);
+          margin-right: 8px;
+        }
+        .system-version-value {
+          font-size: 13px;
+          font-family: var(--mono);
+          color: rgb(251, 104, 54);
+        }
       ` })
   ] });
 }
@@ -9189,7 +9473,9 @@ function ToggleRow({ label, checked, onChange }) {
           padding: 12px 0;
           border-bottom: 1px solid var(--border);
         }
-        .toggle-row:last-child { border-bottom: none; }
+        .toggle-row:last-child {
+          border-bottom: none;
+        }
         .toggle-label {
           font-size: 12px;
           color: var(--text2);
@@ -9222,8 +9508,7 @@ function ToggleRow({ label, checked, onChange }) {
 }
 function TabBar({ onOpenChat, onOpenSettings }) {
   const platform2 = detectPlatform$2();
-  const { tabs, activeTabId, addTab, closeTab, setActiveTab, toggleSidebar } = useTabsStore();
-  const sidebarOpen = useTabsStore((state) => state.sidebarOpen);
+  const { tabs, activeTabId, addTab, closeTab, setActiveTab } = useTabsStore();
   const handleCloseTab = (event, id2) => {
     event.stopPropagation();
     closeTab(id2);
@@ -9258,19 +9543,6 @@ function TabBar({ onOpenChat, onOpenSettings }) {
       ) })
     ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "toolbar", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
-        "button",
-        {
-          className: `icon-btn ${sidebarOpen ? "active" : ""}`,
-          onClick: toggleSidebar,
-          title: "快捷命令",
-          children: /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "16", height: "16", viewBox: "0 0 16 16", fill: "none", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("rect", { x: "2", y: "3", width: "12", height: "1.5", rx: ".75", fill: "currentColor" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("rect", { x: "2", y: "7", width: "9", height: "1.5", rx: ".75", fill: "currentColor" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("rect", { x: "2", y: "11", width: "7", height: "1.5", rx: ".75", fill: "currentColor" })
-          ] })
-        }
-      ),
       /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "icon-btn", onClick: onOpenChat, title: "Assistant 对话", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "16", height: "16", viewBox: "0 0 16 16", fill: "none", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M3 4.25C3 3.56 3.56 3 4.25 3h7.5C12.44 3 13 3.56 13 4.25v5.5c0 .69-.56 1.25-1.25 1.25H7l-2.75 2v-2H4.25C3.56 11 3 10.44 3 9.75v-5.5Z", stroke: "currentColor", strokeWidth: "1.2", strokeLinejoin: "round" }),
         /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M5.5 6.25h5M5.5 8.25h3.5", stroke: "currentColor", strokeWidth: "1.2", strokeLinecap: "round" })
@@ -9284,158 +9556,142 @@ function TabBar({ onOpenChat, onOpenSettings }) {
         #tabbar {
           display: flex;
           align-items: center;
-          gap: 8px;
+          gap: 6px;
           padding: 0 12px;
-          background: var(--bg2);
-          border-bottom: 1px solid var(--border-subtle);
+          min-height: 48px;
+          background: rgba(var(--bg-rgb), calc(var(--terminal-shell-alpha) * 0.95));
+          border-bottom: 1px solid var(--border);
           user-select: none;
+          flex-shrink: 0;
+          backdrop-filter: blur(calc(8px + var(--terminal-blur) * 0.16));
+          -webkit-backdrop-filter: blur(calc(8px + var(--terminal-blur) * 0.16));
         }
         .tabs {
           display: flex;
           align-items: center;
-          gap: 6px;
+          gap: 4px;
           flex: 1;
           min-width: 0;
         }
         .mac-traffic-gap {
-          width: 72px;
+          width: 60px;
           flex-shrink: 0;
-        }
-        .tab,
-        .tab-add,
-        .icon-btn {
-          border: 1px solid transparent;
-          background: transparent;
         }
         .tab {
           display: flex;
           align-items: center;
           gap: 8px;
-          height: 32px;
-          padding: 0 12px;
-          border-radius: 10px;
-          font-size: 12px;
+          height: 34px;
+          padding: 0 14px;
+          border-radius: 0;
+          font-size: 13px;
           font-family: var(--sans);
-          color: var(--text3);
+          color: var(--text2);
           cursor: pointer;
           white-space: nowrap;
           min-width: 0;
           border: 1px solid transparent;
-          transition: background .15s ease, border-color .15s ease, color .15s ease, transform .12s ease;
+          background: transparent;
+          transition: background .14s ease, color .14s ease, border-color .14s ease;
         }
         .tab:hover {
-          background: rgba(255,255,255,0.04);
-          color: var(--text2);
+          background: rgba(0,0,0,0.04);
+          color: var(--text);
         }
         .tab.active {
-          background: var(--surface-raised, rgba(255,255,255,0.04));
-          color: var(--text-primary, #e8ecf0);
-          border: 1px solid var(--border-default, rgba(255,255,255,0.10));
-          border-bottom: 2px solid var(--accent);
-          box-shadow: var(--shadow-sm);
+          background: rgba(var(--bg-rgb), calc(var(--terminal-shell-alpha) * 1.4));
+          color: var(--text-primary);
+          border-color: var(--border);
+          font-weight: 600;
         }
         .tab-dot {
-          width: 6px;
-          height: 6px;
+          width: 7px;
+          height: 7px;
           border-radius: 50%;
-          background: var(--accent);
+          background: var(--text3);
           flex-shrink: 0;
-          opacity: 0.7;
+          transition: background .14s ease;
         }
         .tab.active .tab-dot {
           background: var(--green);
-          opacity: 1;
-          box-shadow: 0 0 6px rgba(71, 209, 108, 0.5);
+          box-shadow: 0 0 6px rgba(34,197,94,0.5);
         }
         .tab-name {
-          max-width: 140px;
+          max-width: 120px;
           overflow: hidden;
           text-overflow: ellipsis;
         }
         .tab-shell {
-          padding: 2px 6px;
-          border-radius: 999px;
-          background: color-mix(in srgb, var(--bg3) 90%, white 10%);
-          color: var(--text3);
-          font-size: 10px;
-          font-family: var(--mono);
-        }
-        .tab.active .tab-shell {
-          background: rgba(76,141,255,0.1);
-          color: var(--accent);
+          display: none;
         }
         .tab-close {
-          width: 16px;
-          height: 16px;
+          width: 18px;
+          height: 18px;
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          border-radius: 4px;
+          border-radius: 5px;
           color: var(--text3);
           font-size: 14px;
           flex-shrink: 0;
+          opacity: 0;
+          transition: opacity .12s ease, background .12s ease;
+        }
+        .tab:hover .tab-close,
+        .tab.active .tab-close {
+          opacity: 1;
         }
         .tab-close:hover {
-          background: color-mix(in srgb, var(--bg3) 88%, white 12%);
+          background: rgba(0,0,0,0.08);
           color: var(--text);
         }
         .tab-add-wrap {
           flex-shrink: 0;
         }
-        .tab-add,
-        .icon-btn {
+        .tab-add {
           width: 32px;
           height: 32px;
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          border-radius: 8px;
-          color: var(--text2);
-          cursor: pointer;
-          transition: background .15s ease, border-color .15s ease, color .15s ease, transform .15s ease;
-        }
-        .tab-add:hover,
-        .icon-btn:hover {
-          background: rgba(255,255,255,0.05);
-          border-color: var(--border-subtle);
-          color: var(--text2);
-          transform: translateY(-1px);
-        }
-        .tab-add:hover {
-          background: rgba(255,255,255,0.05);
-          border-color: var(--border-subtle);
-          color: var(--text2);
-        }
-        .icon-btn {
-          width: 32px;
-          height: 32px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 8px;
-          border: 1px solid transparent;
+          border-radius: 10px;
+          border: none;
           background: transparent;
           color: var(--text3);
+          font-size: 18px;
           cursor: pointer;
-          transition: background .15s ease, border-color .15s ease, color .15s ease, transform .10s ease;
+          transition: background .12s ease, color .12s ease;
         }
-        .icon-btn:hover {
-          background: rgba(255,255,255,0.05);
-          border-color: var(--border-subtle);
-          color: var(--text2);
-        }
-        .icon-btn:active {
-          transform: scale(0.94);
+        .tab-add:hover {
+          background: rgba(0,0,0,0.05);
+          color: var(--text);
         }
         .toolbar {
           display: flex;
           align-items: center;
-          gap: 4px;
+          gap: 2px;
+          flex-shrink: 0;
+        }
+        .icon-btn {
+          width: 34px;
+          height: 34px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 10px;
+          border: none;
+          background: transparent;
+          color: var(--text2);
+          cursor: pointer;
+          transition: background .12s ease, color .12s ease;
+        }
+        .icon-btn:hover {
+          background: rgba(0,0,0,0.05);
+          color: var(--text);
         }
         .icon-btn.active {
           color: var(--accent);
-          border-color: rgba(76,141,255,0.3);
-          background: rgba(76,141,255,0.08);
+          background: var(--accent-dim);
         }
       ` })
   ] });
@@ -18007,7 +18263,7 @@ var Ic = ["cols", "rows"], Ue = 0, Dl = class extends D {
     for (Ue of t2) if (Ue && (Ue === 1 / 0 || isNaN(Ue) || Ue % 1 !== 0 || Ue < 0)) throw new Error("This API only accepts positive integers");
   }
 };
-function useTerminal(containerRef, tabId, shell = "powershell", cwd = "", theme, onSelectionChange, onCommandStart, onCommandComplete) {
+function useTerminal(containerRef, tabId, shell = "powershell", cwd = "", theme, appearance, onSelectionChange, onCommandStart, onCommandComplete) {
   const terminalRef = reactExports.useRef(null);
   const fitAddonRef = reactExports.useRef(null);
   const resizeFrameRef = reactExports.useRef(null);
@@ -18040,7 +18296,7 @@ function useTerminal(containerRef, tabId, shell = "powershell", cwd = "", theme,
       cursorBlink: true,
       cursorStyle: "block",
       allowProposedApi: true,
-      theme: createTerminalTheme(theme)
+      theme: createTerminalTheme(theme, appearance)
     });
     const fitAddon = new o();
     terminal.loadAddon(fitAddon);
@@ -18131,8 +18387,8 @@ function useTerminal(containerRef, tabId, shell = "powershell", cwd = "", theme,
     if (!terminalRef.current) {
       return;
     }
-    terminalRef.current.options.theme = createTerminalTheme(theme);
-  }, [theme]);
+    terminalRef.current.options.theme = createTerminalTheme(theme, appearance);
+  }, [appearance, theme]);
   const focus = reactExports.useCallback(() => {
     terminalRef.current?.focus();
   }, []);
@@ -18140,13 +18396,14 @@ function useTerminal(containerRef, tabId, shell = "powershell", cwd = "", theme,
     focus
   };
 }
-function createTerminalTheme(theme) {
+function createTerminalTheme(theme, appearance) {
   const background = theme?.background ?? "#0f1115";
   const accent = theme?.accent ?? "#4c8dff";
   const foreground = theme?.foreground ?? "#d8dee9";
   const light = isLightColor(background);
+  const terminalBackground = appearance?.terminalTransparency ? hexToRgba(background, Math.max(appearance.terminalOpacity * 0.14, 0.04)) : background;
   return {
-    background,
+    background: terminalBackground,
     foreground,
     cursor: accent,
     cursorAccent: getCursorAccent(background),
@@ -18174,6 +18431,14 @@ function getCursorAccent(background) {
 }
 function withAlpha(hex, alpha) {
   return `${hex}${alpha}`;
+}
+function hexToRgba(hex, alpha) {
+  const normalized = hex.replace("#", "");
+  const value = parseInt(normalized, 16);
+  const r2 = value >> 16 & 255;
+  const g2 = value >> 8 & 255;
+  const b2 = value & 255;
+  return `rgba(${r2}, ${g2}, ${b2}, ${alpha})`;
 }
 function isLightColor(hex) {
   const normalized = hex.replace("#", "");
@@ -18761,11 +19026,15 @@ function Terminal() {
   const activeTab = tabs.find((tab) => tab.id === activeTabId);
   const errorCardOpen = useAIStore((state) => state.errorCardOpen);
   const theme = useSettingsStore((state) => state.theme);
+  const appearance = useSettingsStore((state) => state.appearance);
+  const startPetWorking = usePetStore((state) => state.startWorking);
   const handleSelectionChange = reactExports.useCallback((selection, position) => {
     setTooltip({ text: selection, position });
   }, []);
   const handleCommandStart = reactExports.useCallback((command) => {
     startTracking(command);
+    const classified = classifyCommand(command);
+    startPetWorking(command, classified?.isLongRunning ? 12e3 : 2600);
     if (!activeTabId || !activeTab) {
       return;
     }
@@ -18774,13 +19043,14 @@ function Terminal() {
     if (nextCwd) {
       setTabCwd(activeTabId, nextCwd);
     }
-  }, [activeTab, activeTabId, recordCommand, setTabCwd, startTracking]);
+  }, [activeTab, activeTabId, recordCommand, setTabCwd, startPetWorking, startTracking]);
   const { focus } = useTerminal(
     containerRef,
     activeTabId || "1",
     activeTab?.shell,
     activeTab?.cwd,
     theme,
+    appearance,
     handleSelectionChange,
     handleCommandStart,
     complete
@@ -18792,13 +19062,6 @@ function Terminal() {
     return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "terminal-empty", children: "没有活动终端" });
   }
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "terminal-container", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "shell-bar", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "shell-chip active", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "shell-dot" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "shell-name", children: activeTab.name })
-      ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "shell-meta", children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "shell-path", children: activeTab.cwd === "~" ? "~" : activeTab.cwd }) })
-    ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsx(
       "div",
       {
@@ -18824,75 +19087,16 @@ function Terminal() {
           flex: 1;
           display: flex;
           flex-direction: column;
-          background: var(--bg);
+          background: transparent;
           overflow: hidden;
           position: relative;
         }
-        .shell-bar {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 16px;
-          padding: 0 20px;
-          min-height: 38px;
-          border-bottom: 1px solid var(--border-subtle);
-          background: rgba(255,255,255,0.012);
-        }
-        .shell-chip {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          padding: 4px 10px;
-          border-radius: 8px;
-          font-size: 12px;
-          font-family: var(--sans);
-          color: var(--text-primary);
-          background: rgba(255,255,255,0.04);
-          border: 1px solid var(--border-subtle);
-        }
-        .shell-dot {
-          width: 7px;
-          height: 7px;
-          border-radius: 50%;
-          background: var(--green);
-          box-shadow: 0 0 8px rgba(71,209,108,0.45);
-          flex-shrink: 0;
-        }
-        .shell-name {
-          font-weight: 600;
-          max-width: 120px;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .shell-meta {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          min-width: 0;
-          flex: 1;
-          justify-content: flex-end;
-        }
-        .shell-path {
-          font-size: 11px;
-          font-family: var(--mono);
-          color: var(--text3);
-          min-width: 0;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        /* Hide redundant elements */
-        .shell-kind,
-        .shell-hint {
-          display: none;
-        }
         .terminal-output {
           flex: 1;
-          padding: 16px 20px;
+          padding: 12px 16px;
           overflow: hidden;
           cursor: text;
-          background: var(--bg);
+          background: transparent;
         }
         .terminal-output .xterm {
           height: 100%;
@@ -18902,7 +19106,8 @@ function Terminal() {
           display: flex;
           align-items: center;
           justify-content: center;
-          color: var(--text2);
+          color: var(--text3);
+          font-size: 13px;
         }
       ` })
   ] });
@@ -18991,6 +19196,7 @@ function normalizeSegments(value, windowsStyle) {
 function TitleBar() {
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "title-bar", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "title-bar-drag", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "title-pet", children: /* @__PURE__ */ jsxRuntimeExports.jsx(DesktopPet, { size: "small", showBubble: false }) }),
       /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "title-main", children: "Auto Shell" }),
       /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "title-sub", children: "AI Native Terminal" })
     ] }),
@@ -19005,23 +19211,35 @@ function TitleBar() {
           align-items: stretch;
           justify-content: space-between;
           height: 34px;
-          background: var(--bg2);
+          background: rgba(var(--bg-rgb), 0.46);
           border-bottom: 1px solid var(--border);
           -webkit-app-region: drag;
           user-select: none;
+          backdrop-filter: blur(calc(10px + var(--terminal-blur) * 0.25));
+          -webkit-backdrop-filter: blur(calc(10px + var(--terminal-blur) * 0.25));
         }
         .title-bar-drag {
           display: flex;
           align-items: center;
+          gap: 8px;
           padding-left: 16px;
           flex: 1;
           min-width: 0;
+        }
+        .title-pet {
+          width: 14px;
+          height: 14px;
+          display: inline-flex;
+          align-items: flex-end;
+          justify-content: center;
+          flex-shrink: 0;
+          overflow: visible;
         }
         .title-main {
           font-size: 12px;
           font-weight: 700;
           letter-spacing: 0.01em;
-          color: var(--text);
+          color: var(--text-primary);
         }
         .title-sub {
           display: none;
@@ -19041,14 +19259,14 @@ function TitleBar() {
           background: transparent;
           color: var(--text2);
           cursor: pointer;
-          transition: background .14s ease, color .14s ease;
+          transition: background .12s ease, color .12s ease;
         }
         .title-bar-btn:hover {
-          background: color-mix(in srgb, var(--bg3) 88%, white 12%);
+          background: rgba(0,0,0,0.05);
           color: var(--text);
         }
         .title-bar-btn.close:hover {
-          background: #c42b1c;
+          background: #ef4444;
           color: white;
         }
       ` })
@@ -19057,29 +19275,43 @@ function TitleBar() {
 function App() {
   const [settingsOpen, setSettingsOpen] = reactExports.useState(false);
   const [chatOpen, setChatOpen] = reactExports.useState(false);
-  const [settingsTab, setSettingsTab] = reactExports.useState("ai");
+  const [settingsTab, setSettingsTab] = reactExports.useState("appearance");
   const loadSettings = useSettingsStore((state) => state.load);
   const loadSession = useTabsStore((state) => state.loadSession);
+  const setWindowFocused = usePetStore((state) => state.setWindowFocused);
   const platform2 = detectPlatform$2();
   reactExports.useEffect(() => {
     void loadSettings();
     void loadSession();
   }, [loadSession, loadSettings]);
+  reactExports.useEffect(() => {
+    const handleFocus = () => setWindowFocused(true);
+    const handleBlur = () => setWindowFocused(false);
+    window.addEventListener("focus", handleFocus);
+    window.addEventListener("blur", handleBlur);
+    handleFocus();
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+      window.removeEventListener("blur", handleBlur);
+    };
+  }, [setWindowFocused]);
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "app", "data-platform": platform2, children: [
     platform2 !== "macos" && /* @__PURE__ */ jsxRuntimeExports.jsx(TitleBar, {}),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
-      TabBar,
-      {
-        onOpenChat: () => setChatOpen((current) => !current),
-        onOpenSettings: () => {
-          setSettingsTab("ai");
-          setSettingsOpen(true);
-        }
-      }
-    ),
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "main", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx(QuickCommands, {}),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(Terminal, {}),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "workspace", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "workspace-inner", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          TabBar,
+          {
+            onOpenChat: () => setChatOpen((current) => !current),
+            onOpenSettings: () => {
+              setSettingsTab("appearance");
+              setSettingsOpen(true);
+            }
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "terminal-wrapper", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Terminal, {}) })
+      ] }) }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(AIChatPanel, { open: chatOpen, onClose: () => setChatOpen(false) })
     ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsx(Settings, { open: settingsOpen, defaultTab: settingsTab, onClose: () => setSettingsOpen(false) }),
@@ -19087,14 +19319,47 @@ function App() {
     /* @__PURE__ */ jsxRuntimeExports.jsx("style", { children: `
         .app {
           display: grid;
-          grid-template-rows: ${platform2 === "macos" ? "var(--tab-h) 1fr" : "34px var(--tab-h) 1fr"};
+          grid-template-rows: ${platform2 === "macos" ? "0 1fr" : "34px 1fr"};
           height: 100vh;
+          background:
+            radial-gradient(circle at top, rgba(var(--bg-rgb), 0.12), transparent 36%),
+            linear-gradient(180deg, rgba(var(--bg-rgb), 0.58), rgba(var(--bg-rgb), 0.42));
         }
+        .app > .title-bar { grid-row: 1; }
         .main {
           display: flex;
           overflow: hidden;
           position: relative;
           min-height: 0;
+          background: transparent;
+        }
+        .workspace {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          min-width: 0;
+          padding: 0;
+        }
+        .workspace-inner {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          min-width: 0;
+          background: rgba(var(--bg-rgb), var(--terminal-shell-alpha));
+          border-left: 1px solid var(--border);
+          overflow: hidden;
+          box-shadow: none;
+          backdrop-filter: blur(calc(8px + var(--terminal-blur) * 0.2));
+          -webkit-backdrop-filter: blur(calc(8px + var(--terminal-blur) * 0.2));
+        }
+        .terminal-wrapper {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+          min-height: 0;
+          border-top: 1px solid var(--border);
+          background: rgba(var(--bg-rgb), calc(var(--terminal-shell-alpha) * 0.7));
         }
       ` })
   ] });

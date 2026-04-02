@@ -3,6 +3,7 @@ import { FitAddon } from '@xterm/addon-fit';
 import { WebLinksAddon } from '@xterm/addon-web-links';
 import { Terminal } from '@xterm/xterm';
 import type { Theme } from '../store/settings';
+import type { AppearanceSettings } from '../../shared/types';
 
 export function useTerminal(
   containerRef: React.RefObject<HTMLDivElement | null>,
@@ -10,6 +11,7 @@ export function useTerminal(
   shell: string = 'powershell',
   cwd: string = '',
   theme?: Theme,
+  appearance?: AppearanceSettings,
   onSelectionChange?: (selection: string, position: { x: number; y: number }) => void,
   onCommandStart?: (command: string) => void,
   onCommandComplete?: () => void
@@ -51,7 +53,7 @@ export function useTerminal(
       cursorBlink: true,
       cursorStyle: 'block',
       allowProposedApi: true,
-      theme: createTerminalTheme(theme)
+      theme: createTerminalTheme(theme, appearance)
     });
 
     const fitAddon = new FitAddon();
@@ -158,8 +160,8 @@ export function useTerminal(
       return;
     }
 
-    terminalRef.current.options.theme = createTerminalTheme(theme);
-  }, [theme]);
+    terminalRef.current.options.theme = createTerminalTheme(theme, appearance);
+  }, [appearance, theme]);
 
   const focus = useCallback(() => {
     terminalRef.current?.focus();
@@ -170,14 +172,17 @@ export function useTerminal(
   };
 }
 
-function createTerminalTheme(theme?: Theme) {
+function createTerminalTheme(theme?: Theme, appearance?: AppearanceSettings) {
   const background = theme?.background ?? '#0f1115';
   const accent = theme?.accent ?? '#4c8dff';
   const foreground = theme?.foreground ?? '#d8dee9';
   const light = isLightColor(background);
+  const terminalBackground = appearance?.terminalTransparency
+    ? hexToRgba(background, Math.max(appearance.terminalOpacity * 0.14, 0.04))
+    : background;
 
   return {
-    background,
+    background: terminalBackground,
     foreground,
     cursor: accent,
     cursorAccent: getCursorAccent(background),
@@ -207,6 +212,15 @@ function getCursorAccent(background: string): string {
 
 function withAlpha(hex: string, alpha: string): string {
   return `${hex}${alpha}`;
+}
+
+function hexToRgba(hex: string, alpha: number): string {
+  const normalized = hex.replace('#', '');
+  const value = parseInt(normalized, 16);
+  const r = (value >> 16) & 0xff;
+  const g = (value >> 8) & 0xff;
+  const b = value & 0xff;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
 function isLightColor(hex: string): boolean {

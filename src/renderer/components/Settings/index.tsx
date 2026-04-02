@@ -26,9 +26,11 @@ export function Settings({ open, defaultTab = 'ai', onClose }: SettingsProps) {
           <div className="settings-title">
             {activeTab === 'ai' ? 'AI 与模型' : activeTab === 'appearance' ? '外观主题' : '系统偏好'}
           </div>
-          <div className="settings-subtitle">统一管理主题、模型提供商和运行方式。</div>
+          <div className="settings-subtitle">统一管理主题、模型提供商和本地运行设置。</div>
         </div>
-        <button className="close-btn" onClick={onClose} aria-label="关闭设置">×</button>
+        <button className="close-btn" onClick={onClose} aria-label="关闭设置">
+          ×
+        </button>
       </div>
       <div className="settings-tabs">
         <button className={`settings-tab ${activeTab === 'appearance' ? 'active' : ''}`} onClick={() => setActiveTab('appearance')}>
@@ -135,15 +137,10 @@ function SystemSettings() {
         </div>
       </div>
       <div className="system-card">
-        <div className="system-title">跨平台界面</div>
+        <div className="system-title">版本信息</div>
         <div className="system-copy">
-          当前界面已经移除 Windows 优先描述，主题与窗口内容统一按全局设计变量渲染，便于同时兼容 Windows 和 macOS。
-        </div>
-      </div>
-      <div className="system-card">
-        <div className="system-title">打包方式</div>
-        <div className="system-copy">
-          项目已补充 Windows 和 macOS 的打包配置。Windows 可直接打包，macOS 需要在 mac 主机上执行打包命令。
+          <span className="system-version-label">当前版本</span>
+          <strong className="system-version-value">v0.2</strong>
         </div>
       </div>
       <style>{`
@@ -173,6 +170,15 @@ function SystemSettings() {
           font-family: var(--mono);
           color: var(--text);
         }
+        .system-version-label {
+          color: var(--text3);
+          margin-right: 8px;
+        }
+        .system-version-value {
+          font-size: 13px;
+          font-family: var(--mono);
+          color: rgb(251, 104, 54);
+        }
       `}</style>
     </div>
   );
@@ -199,7 +205,9 @@ export function ToggleRow({ label, checked, onChange }: { label: string; checked
           padding: 12px 0;
           border-bottom: 1px solid var(--border);
         }
-        .toggle-row:last-child { border-bottom: none; }
+        .toggle-row:last-child {
+          border-bottom: none;
+        }
         .toggle-label {
           font-size: 12px;
           color: var(--text2);

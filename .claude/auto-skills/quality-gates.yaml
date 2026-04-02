@@ -1,0 +1,49 @@
+gates:
+  complexity:
+    weights:
+      steps: 15
+      tools: 12
+      branches: 10
+    threshold: 45
+  uniqueness:
+    weights:
+      overlap: 0.45
+      sequence: 0.25
+      clarity: 0.30
+    threshold: 55
+    hard_block_overlap: 0.85
+  verifiability:
+    weights:
+      output: 0.40
+      criteria: 0.60
+    threshold: 50
+health_score:
+  cold_start_days: 14
+  thresholds:
+    warning: 60
+    archive: 40
+  decay:
+    with_usage: 0.005
+    without_usage: 0.020
+    seasonal_multiplier: 0.2
+  bonuses:
+    use_log_multiplier: 4.0
+    max_use_bonus: 20.0
+    per_dependent: 6.0
+    max_dependency_bonus: 30.0
+composite:
+  weights:
+    complexity: 0.40
+    uniqueness: 0.35
+    verifiability: 0.25
+analysis:
+  redundancy_threshold: 0.80
+  trigger_warning_threshold: 0.35
+  trigger_critical_threshold: 0.60
+  logic_conflict_verbs:
+    use: [avoid, forbid, never]
+    prefer: [avoid, forbid, never]
+    enable: [disable]
+    allow: [forbid, block]
+    always: [never]
+  dependency_patterns: ["(?:read|load|open|import)\\s+[`\"]?([^`\"\\s]+\\.(?:md|py|json|yaml|yml|txt))[`\"]?"]

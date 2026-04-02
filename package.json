@@ -7,15 +7,12 @@
   "scripts": {
     "dev": "electron-vite dev",
     "build": "electron-vite build",
-    "preview": "electron-vite preview",
-    "package": "electron-builder",
-    "package:win": "electron-builder --win",
-    "package:mac": "electron-builder --mac"
+    "preview": "electron-vite preview"
   },
   "dependencies": {
-    "@xterm/xterm": "^6.0.0",
     "@xterm/addon-fit": "^0.11.0",
     "@xterm/addon-web-links": "^0.12.0",
+    "@xterm/xterm": "^6.0.0",
     "node-pty": "^1.0.0",
     "zustand": "^4.5.0"
   },
@@ -24,33 +21,10 @@
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "electron": "^28.0.0",
-    "electron-builder": "^24.9.0",
     "electron-vite": "^2.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "typescript": "^5.3.0",
     "vite": "^5.0.0"
-  },
-  "build": {
-    "appId": "com.autoshell.app",
-    "productName": "Auto Shell",
-    "icon": "logo.png",
-    "directories": {
-      "output": "release"
-    },
-    "win": {
-      "target": "nsis"
-    },
-    "mac": {
-      "target": [
-        "dmg",
-        "zip"
-      ],
-      "category": "public.app-category.developer-tools"
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true
-    }
   }
 }

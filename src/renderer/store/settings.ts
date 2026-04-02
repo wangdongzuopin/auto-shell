@@ -71,9 +71,11 @@ function applyThemeToDocument(theme: Theme) {
   const light = isLightColor(theme.background);
   const surfaceDelta = light ? -10 : 8;
   const elevatedDelta = light ? -16 : 14;
+  const backgroundRgb = hexToRgb(theme.background);
 
   document.documentElement.dataset.theme = light ? 'light' : 'dark';
   document.documentElement.style.setProperty('--bg', theme.background);
+  document.documentElement.style.setProperty('--bg-rgb', backgroundRgb);
   document.documentElement.style.setProperty('--bg2', shiftColor(theme.background, surfaceDelta));
   document.documentElement.style.setProperty('--bg3', shiftColor(theme.background, light ? elevatedDelta : surfaceDelta * 1.75));
   document.documentElement.style.setProperty('--bg4', shiftColor(theme.background, light ? elevatedDelta * 1.22 : surfaceDelta * 2.5));
@@ -98,6 +100,8 @@ function applyThemeToDocument(theme: Theme) {
 export function applyAppearanceToDocument(appearance: AppearanceSettings) {
   document.documentElement.style.setProperty('--terminal-opacity', appearance.terminalTransparency ? String(appearance.terminalOpacity) : '1');
   document.documentElement.style.setProperty('--terminal-blur', appearance.terminalTransparency && appearance.terminalBackdrop ? '20px' : '0px');
+  document.documentElement.style.setProperty('--terminal-surface-alpha', appearance.terminalTransparency ? String(Math.max(appearance.terminalOpacity * 0.22, 0.08)) : '1');
+  document.documentElement.style.setProperty('--terminal-shell-alpha', appearance.terminalTransparency ? String(Math.max(appearance.terminalOpacity * 0.16, 0.05)) : '1');
 }
 
 export const useSettingsStore = create<SettingsState>((set, get) => ({
@@ -228,6 +232,11 @@ function parseHex(hex: string) {
 
 function rgbToHex(r: number, g: number, b: number): string {
   return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
+}
+
+function hexToRgb(hex: string): string {
+  const { r, g, b } = parseHex(hex);
+  return `${r}, ${g}, ${b}`;
 }
 
 function clamp(value: number): number {

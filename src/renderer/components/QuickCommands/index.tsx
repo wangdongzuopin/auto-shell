@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { DesktopPet } from '../DesktopPet';
 import { shellNames, useTabsStore } from '../../store/tabs';
 import { toast } from '../Toast';
 
@@ -116,11 +117,6 @@ export function QuickCommands() {
   return (
     <div id="sidebar">
       {/* Logo 区域 */}
-      <div className="sb-logo">
-        <span className="logo-text">Auto Shell</span>
-        <span className="logo-version">v0.2</span>
-      </div>
-
       {/* 搜索框 */}
       <div className="cmd-search">
         <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
@@ -162,6 +158,8 @@ export function QuickCommands() {
       </div>
 
       {/* 底部状态 */}
+      <DesktopPet size="large" />
+
       <div className="sb-footer">
         <span className="sb-status">
           <span className="status-dot" />
@@ -172,17 +170,18 @@ export function QuickCommands() {
       <style>{`
         #sidebar {
           width: var(--sidebar-w);
-          background: #fafafa;
+          background: rgba(var(--bg-rgb), 0.68);
           border-right: 1px solid var(--border);
           display: flex;
           flex-direction: column;
           flex-shrink: 0;
           overflow: hidden;
+          backdrop-filter: blur(calc(14px + var(--terminal-blur) * 0.2));
+          -webkit-backdrop-filter: blur(calc(14px + var(--terminal-blur) * 0.2));
         }
         .sb-logo {
           display: flex;
-          align-items: baseline;
-          gap: 8px;
+          align-items: center;
           padding: 16px 16px 12px;
           border-bottom: 1px solid var(--border);
         }
@@ -191,11 +190,6 @@ export function QuickCommands() {
           font-weight: 700;
           color: var(--text-primary);
           letter-spacing: -0.01em;
-        }
-        .logo-version {
-          font-size: 11px;
-          color: var(--text3);
-          font-family: var(--mono);
         }
         .cmd-search {
           margin: 12px 12px 8px;
@@ -221,6 +215,7 @@ export function QuickCommands() {
           font-family: var(--sans);
           font-size: 13px;
           flex: 1;
+          min-height: 0;
         }
         .cmd-search input::placeholder {
           color: var(--text3);
@@ -293,8 +288,8 @@ export function QuickCommands() {
           font-size: 12px;
         }
         .sb-footer {
-          padding: 10px 14px;
-          border-top: 1px solid var(--border);
+          padding: 8px 14px 10px;
+          background: transparent;
         }
         .sb-status {
           display: flex;
