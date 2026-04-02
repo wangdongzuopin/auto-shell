@@ -19,12 +19,12 @@ function createWindow() {
     frame: isMac,
     titleBarStyle: isMac ? 'hiddenInset' : 'default',
     trafficLightPosition: isMac ? { x: 14, y: 14 } : undefined,
+    transparent: false,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
       sandbox: false,
-      preload: path.join(__dirname, '../preload/index.js'),
-      transparent: false
+      preload: path.join(__dirname, '../preload/index.js')
     },
     show: false,
     vibrancy: isMac ? 'under-window' : undefined
