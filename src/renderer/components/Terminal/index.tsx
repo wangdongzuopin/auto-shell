@@ -1,16 +1,14 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useAIStore } from '../../store/ai';
 import { useSettingsStore } from '../../store/settings';
-import { shellNames, useTabsStore } from '../../store/tabs';
+import { useTabsStore } from '../../store/tabs';
 import { useTerminal } from '../../hooks/useTerminal';
 import { AICard } from '../AICard';
 import { ExplainTooltip } from '../ExplainTooltip';
 import { CommandProgressBar } from '../CommandProgressBar';
 import { useCommandProgress } from '../../hooks/useCommandProgress';
-import { detectPlatform } from '../../platform';
 
 export function Terminal() {
-  const platform = detectPlatform();
   const containerRef = useRef<HTMLDivElement>(null);
   const [tooltip, setTooltip] = useState<{ text: string; position: { x: number; y: number } } | null>(null);
   const { progress, isVisible, startTracking, complete } = useCommandProgress();
@@ -66,12 +64,10 @@ export function Terminal() {
       <div className="shell-bar">
         <div className="shell-chip active">
           <div className="shell-dot" />
-          {activeTab.name}
+          <span className="shell-name">{activeTab.name}</span>
         </div>
         <div className="shell-meta">
-          <span className="shell-kind">{shellNames[activeTab.shell]}</span>
-          <span className="shell-hint">{platform === 'macos' ? '在终端内直接输入命令' : '直接在终端中输入命令'}</span>
-          <span className="shell-path">{activeTab.cwd === '~' ? '默认目录' : activeTab.cwd}</span>
+          <span className="shell-path">{activeTab.cwd === '~' ? '~' : activeTab.cwd}</span>
         </div>
       </div>
       <div
@@ -103,59 +99,60 @@ export function Terminal() {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          gap: 12px;
-          padding: 0 16px;
-          min-height: 42px;
-          border-bottom: 1px solid var(--border);
-          background: transparent;  /* 让终端背景透上来 */
+          gap: 16px;
+          padding: 0 20px;
+          min-height: 38px;
+          border-bottom: 1px solid var(--border-subtle);
+          background: rgba(255,255,255,0.012);
         }
         .shell-chip {
           display: inline-flex;
           align-items: center;
-          gap: 7px;
-          padding: 5px 10px;
-          border-radius: 6px;  /* 原来是 999px */
-          font-size: 11px;
-          font-family: var(--mono);
-          color: var(--text2);  /* 原来是 var(--text) */
-          border: none;          /* 去掉蓝色边框 */
-          background: transparent; /* 去掉蓝色背景 */
+          gap: 8px;
+          padding: 4px 10px;
+          border-radius: 8px;
+          font-size: 12px;
+          font-family: var(--sans);
+          color: var(--text-primary);
+          background: rgba(255,255,255,0.04);
+          border: 1px solid var(--border-subtle);
         }
         .shell-dot {
           width: 7px;
           height: 7px;
           border-radius: 50%;
           background: var(--green);
+          box-shadow: 0 0 8px rgba(71,209,108,0.45);
+          flex-shrink: 0;
+        }
+        .shell-name {
+          font-weight: 600;
+          max-width: 120px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
         }
         .shell-meta {
           display: flex;
           align-items: center;
-          gap: 14px;
+          gap: 10px;
           min-width: 0;
-        }
-        .shell-kind {
-          padding: 3px 8px;
-          border-radius: 6px;
-          background: transparent;  /* 去掉背景 */
-          border: 1px solid var(--border);
-          color: var(--text3);    /* 原来是 var(--accent) */
-          font-size: 10px;
-          font-family: var(--mono);
-          flex-shrink: 0;
-        }
-        .shell-hint {
-          font-size: 11px;
-          color: var(--text3);
-          white-space: nowrap;
+          flex: 1;
+          justify-content: flex-end;
         }
         .shell-path {
           font-size: 11px;
-          color: var(--text3);
           font-family: var(--mono);
+          color: var(--text3);
           min-width: 0;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
+        }
+        /* Hide redundant elements */
+        .shell-kind,
+        .shell-hint {
+          display: none;
         }
         .terminal-output {
           flex: 1;

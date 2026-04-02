@@ -7407,6 +7407,11 @@ const defaultTheme = {
   foreground: "#d8dee9",
   accent: "#4c8dff"
 };
+const defaultAppearance = {
+  terminalTransparency: false,
+  terminalOpacity: 0.7,
+  terminalBackdrop: false
+};
 const defaultConfigs = {
   minimax: {
     baseUrl: "https://api.minimaxi.com/anthropic",
@@ -7465,8 +7470,13 @@ function applyThemeToDocument(theme) {
   document.documentElement.style.setProperty("--scrollbar-thumb-hover", light ? "rgba(26, 37, 56, 0.28)" : "rgba(255, 255, 255, 0.18)");
   document.documentElement.style.setProperty("--focus-ring", withAlpha$1(theme.accent, light ? "cc" : "e6"));
 }
+function applyAppearanceToDocument(appearance) {
+  document.documentElement.style.setProperty("--terminal-opacity", appearance.terminalTransparency ? String(appearance.terminalOpacity) : "1");
+  document.documentElement.style.setProperty("--terminal-blur", appearance.terminalTransparency && appearance.terminalBackdrop ? "20px" : "0px");
+}
 const useSettingsStore = create((set, get) => ({
   theme: defaultTheme,
+  appearance: defaultAppearance,
   aiSettings: {
     provider: "minimax",
     configs: defaultConfigs
@@ -7493,11 +7503,27 @@ const useSettingsStore = create((set, get) => ({
       console.error("Failed to load settings:", error);
       applyThemeToDocument(defaultTheme);
     }
+    await get().loadAppearance();
+    applyThemeToDocument(get().theme);
   },
   setTheme: async (theme) => {
     set({ theme });
     applyThemeToDocument(theme);
     await window.api.saveTheme(theme);
+  },
+  loadAppearance: async () => {
+    try {
+      const appearance = await window.api.getAppearance();
+      set({ appearance });
+      applyAppearanceToDocument(appearance);
+    } catch (error) {
+      console.error("Failed to load appearance settings:", error);
+    }
+  },
+  setAppearance: async (appearance) => {
+    set({ appearance });
+    await window.api.saveAppearance(appearance);
+    applyAppearanceToDocument(appearance);
   },
   setProvider: async (provider) => {
     set((state) => ({
@@ -7671,9 +7697,6 @@ function AIChatPanel({ open, onClose }) {
     }
     return platform2 === "windows" ? "例如：切换到 D 盘的 Center 目录下 moa 项目" : "例如：切换到 projects 目录里的 auto-shell 项目";
   }, [pendingSelection, platform2]);
-  if (!open) {
-    return null;
-  }
   const handleSend = async () => {
     const trimmed = input.trim();
     if (!trimmed || loading) {
@@ -7822,69 +7845,85 @@ ${formatCandidates(candidates)}`
       { role: "assistant", content: `已切换到：${targetPath}` }
     ]);
   };
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-panel", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-header", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "chat-title", children: "Assistant" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "chat-meta", children: modelLabel }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "chat-context", children: tabLabel })
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: `chat-panel-overlay ${open ? "visible" : ""}`, onClick: onClose }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: `chat-panel ${open ? "open" : ""}`, children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-header", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "chat-title", children: "Assistant" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "chat-meta", children: modelLabel }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "chat-context", children: tabLabel })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "chat-close", onClick: onClose, "aria-label": "关闭助手", children: "×" })
       ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "chat-close", onClick: onClose, "aria-label": "关闭助手", children: "×" })
-    ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "chat-messages", children: messages.map((message, index) => {
-      const previous = index > 0 ? messages[index - 1] : null;
-      const showAssistantHeader = message.role === "assistant" && previous?.role !== "assistant";
-      const isStreamingPlaceholder = loading && message.role === "assistant" && index === messages.length - 1 && !message.content.trim();
-      return /* @__PURE__ */ jsxRuntimeExports.jsxs(
-        "div",
-        {
-          className: `chat-row ${message.role} ${showAssistantHeader ? "with-header" : "continued"}`,
-          children: [
-            message.role === "assistant" && showAssistantHeader ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "message-avatar assistant", "aria-hidden": "true", children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "avatar-core" }) }) : message.role === "assistant" ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "message-avatar-spacer", "aria-hidden": "true" }) : null,
-            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: `chat-bubble ${message.role}`, children: [
-              message.role === "assistant" && showAssistantHeader ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bubble-meta", children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "bubble-role", children: "Assistant" }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "bubble-model", children: isStreamingPlaceholder ? "thinking" : configs[provider].model })
-              ] }) : null,
-              isStreamingPlaceholder ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "typing-indicator", "aria-label": "AI 正在回复", children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx("span", {}),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("span", {}),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("span", {})
-              ] }) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "bubble-text", children: message.content })
-            ] })
-          ]
-        },
-        `${message.role}-${index}`
-      );
-    }) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-input", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
-        "textarea",
-        {
-          value: input,
-          onChange: (event) => setInput(event.target.value),
-          onKeyDown: (event) => {
-            if (event.key === "Enter" && !event.shiftKey) {
-              event.preventDefault();
-              void handleSend();
-            }
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "chat-messages", children: messages.map((message, index) => {
+        const previous = index > 0 ? messages[index - 1] : null;
+        const showAssistantHeader = message.role === "assistant" && previous?.role !== "assistant";
+        const isStreamingPlaceholder = loading && message.role === "assistant" && index === messages.length - 1 && !message.content.trim();
+        return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          "div",
+          {
+            className: `chat-row ${message.role} ${showAssistantHeader ? "with-header" : "continued"}`,
+            children: [
+              message.role === "assistant" && showAssistantHeader ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "message-avatar assistant", "aria-hidden": "true", children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "avatar-core" }) }) : message.role === "assistant" ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "message-avatar-spacer", "aria-hidden": "true" }) : null,
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: `chat-bubble ${message.role}`, children: [
+                message.role === "assistant" && showAssistantHeader ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bubble-meta", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "bubble-role", children: "Assistant" }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "bubble-model", children: isStreamingPlaceholder ? "thinking" : configs[provider].model })
+                ] }) : null,
+                isStreamingPlaceholder ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "typing-indicator", "aria-label": "AI 正在回复", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", {}),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", {}),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", {})
+                ] }) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "bubble-text", children: message.content })
+              ] })
+            ]
           },
-          placeholder
-        }
-      ),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "send-btn", onClick: () => void handleSend(), disabled: loading || !input.trim(), children: "发送" })
-    ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("style", { children: `
+          `${message.role}-${index}`
+        );
+      }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-input", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "textarea",
+          {
+            value: input,
+            onChange: (event) => setInput(event.target.value),
+            onKeyDown: (event) => {
+              if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
+                void handleSend();
+              }
+            },
+            placeholder
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "send-btn", onClick: () => void handleSend(), disabled: loading || !input.trim(), children: "发送" })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("style", { children: `
         .chat-panel {
-          width: min(420px, 34vw);
-          min-width: 340px;
-          max-width: 460px;
-          height: 100%;
-          border-left: 1px solid var(--border);
-          background: linear-gradient(180deg, color-mix(in srgb, var(--bg2) 90%, white 10%), var(--bg));
-          display: flex;
-          flex-direction: column;
-          box-shadow: inset 1px 0 0 var(--border);
+          position: absolute;
+          top: 0;
+          right: 0;
+          bottom: 0;
+          transform: translateX(100%);
+          transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+          z-index: 30;
+        }
+        .chat-panel.open {
+          transform: translateX(0);
+        }
+        .chat-panel-overlay {
+          position: absolute;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.4);
+          opacity: 0;
+          pointer-events: none;
+          transition: opacity 0.25s ease;
+          z-index: 25;
+        }
+        .chat-panel-overlay.visible {
+          opacity: 1;
+          pointer-events: auto;
         }
         .chat-header {
           display: flex;
@@ -8071,6 +8110,7 @@ ${formatCandidates(candidates)}`
           }
         }
       ` })
+    ] })
   ] });
 }
 function parseProjectSwitchInput(input) {
@@ -8515,6 +8555,8 @@ function useTheme() {
 function ThemeSelector() {
   const { currentTheme, applyTheme, getBuiltInThemes } = useTheme();
   const themes = getBuiltInThemes();
+  const appearance = useSettingsStore((state) => state.appearance);
+  const setAppearance = useSettingsStore((state) => state.setAppearance);
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "theme-selector", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "settings-section", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "section-title", children: "主题" }),
@@ -8533,6 +8575,44 @@ function ThemeSelector() {
         },
         theme.name
       )) })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "settings-section", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "section-title", children: "终端透明度" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        ToggleRow,
+        {
+          label: "启用半透明背景",
+          checked: appearance.terminalTransparency,
+          onChange: (v3) => setAppearance({ ...appearance, terminalTransparency: v3 })
+        }
+      ),
+      appearance.terminalTransparency && /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "slider-row", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "slider-label", children: "透明度" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "input",
+            {
+              type: "range",
+              min: "30",
+              max: "100",
+              value: appearance.terminalOpacity * 100,
+              onChange: (e) => setAppearance({ ...appearance, terminalOpacity: Number(e.target.value) / 100 })
+            }
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "slider-value", children: [
+            Math.round(appearance.terminalOpacity * 100),
+            "%"
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          ToggleRow,
+          {
+            label: "毛玻璃效果",
+            checked: appearance.terminalBackdrop,
+            onChange: (v3) => setAppearance({ ...appearance, terminalBackdrop: v3 })
+          }
+        )
+      ] })
     ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsx("style", { children: `
         .theme-selector { display: flex; flex-direction: column; gap: 16px; }
@@ -8581,6 +8661,28 @@ function ThemeSelector() {
           color: var(--text2);
           padding: 8px 10px 10px;
           text-align: left;
+        }
+        .slider-row {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 8px 0;
+        }
+        .slider-label {
+          font-size: 12px;
+          color: var(--text2);
+          min-width: 56px;
+        }
+        .slider-row input[type="range"] {
+          flex: 1;
+          accent-color: var(--accent);
+        }
+        .slider-value {
+          font-size: 11px;
+          color: var(--text3);
+          font-family: var(--mono);
+          min-width: 36px;
+          text-align: right;
         }
       ` })
   ] });
@@ -9065,6 +9167,59 @@ function SystemSettings() {
       ` })
   ] });
 }
+function ToggleRow({ label, checked, onChange }) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "toggle-row", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "toggle-label", children: label }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "button",
+      {
+        className: `toggle ${checked ? "on" : ""}`,
+        onClick: () => onChange(!checked),
+        role: "switch",
+        "aria-checked": checked,
+        children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "toggle-knob" })
+      }
+    ),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("style", { children: `
+        .toggle-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          padding: 12px 0;
+          border-bottom: 1px solid var(--border);
+        }
+        .toggle-row:last-child { border-bottom: none; }
+        .toggle-label {
+          font-size: 12px;
+          color: var(--text2);
+        }
+        .toggle {
+          width: 42px;
+          height: 24px;
+          border-radius: 999px;
+          border: 1px solid var(--border2);
+          background: var(--bg4);
+          padding: 2px;
+          cursor: pointer;
+        }
+        .toggle.on {
+          background: var(--ai-bg);
+          border-color: var(--ai-border);
+        }
+        .toggle-knob {
+          width: 18px;
+          height: 18px;
+          border-radius: 50%;
+          background: white;
+          transition: transform .18s ease;
+        }
+        .toggle.on .toggle-knob {
+          transform: translateX(18px);
+        }
+      ` })
+  ] });
+}
 function TabBar({ onOpenChat, onOpenSettings }) {
   const platform2 = detectPlatform$2();
   const { tabs, activeTabId, addTab, closeTab, setActiveTab, toggleSidebar } = useTabsStore();
@@ -9129,13 +9284,11 @@ function TabBar({ onOpenChat, onOpenSettings }) {
         #tabbar {
           display: flex;
           align-items: center;
-          gap: 10px;
+          gap: 8px;
           padding: 0 12px;
-          background:
-            linear-gradient(180deg, color-mix(in srgb, var(--bg2) 82%, white 18%), color-mix(in srgb, var(--bg) 92%, white 8%));
-          border-bottom: 1px solid var(--border);
+          background: var(--bg2);
+          border-bottom: 1px solid var(--border-subtle);
           user-select: none;
-          backdrop-filter: blur(16px) saturate(1.08);
         }
         .tabs {
           display: flex;
@@ -9158,33 +9311,41 @@ function TabBar({ onOpenChat, onOpenSettings }) {
           display: flex;
           align-items: center;
           gap: 8px;
-          height: 34px;
-          padding: 0 14px;
-          border-radius: 12px;
+          height: 32px;
+          padding: 0 12px;
+          border-radius: 10px;
           font-size: 12px;
           font-family: var(--sans);
-          color: var(--text2);
+          color: var(--text3);
           cursor: pointer;
           white-space: nowrap;
           min-width: 0;
-          transition: background .16s ease, border-color .16s ease, color .16s ease, transform .16s ease;
+          border: 1px solid transparent;
+          transition: background .15s ease, border-color .15s ease, color .15s ease, transform .12s ease;
         }
         .tab:hover {
-          background: color-mix(in srgb, var(--bg3) 90%, white 10%);
-          color: var(--text);
+          background: rgba(255,255,255,0.04);
+          color: var(--text2);
         }
         .tab.active {
-          background: color-mix(in srgb, var(--bg) 86%, white 14%);
-          color: var(--text);
-          border-color: var(--border);
-          box-shadow: 0 8px 22px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.08);
+          background: var(--surface-raised, rgba(255,255,255,0.04));
+          color: var(--text-primary, #e8ecf0);
+          border: 1px solid var(--border-default, rgba(255,255,255,0.10));
+          border-bottom: 2px solid var(--accent);
+          box-shadow: var(--shadow-sm);
         }
         .tab-dot {
-          width: 7px;
-          height: 7px;
-          border-radius: 3px;
-          background: rgba(76,141,255,0.8);
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: var(--accent);
           flex-shrink: 0;
+          opacity: 0.7;
+        }
+        .tab.active .tab-dot {
+          background: var(--green);
+          opacity: 1;
+          box-shadow: 0 0 6px rgba(71, 209, 108, 0.5);
         }
         .tab-name {
           max-width: 140px;
@@ -9223,27 +9384,53 @@ function TabBar({ onOpenChat, onOpenSettings }) {
         }
         .tab-add,
         .icon-btn {
-          width: 34px;
-          height: 34px;
+          width: 32px;
+          height: 32px;
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          border-radius: 12px;
+          border-radius: 8px;
           color: var(--text2);
           cursor: pointer;
-          transition: background .16s ease, border-color .16s ease, color .16s ease, transform .16s ease;
+          transition: background .15s ease, border-color .15s ease, color .15s ease, transform .15s ease;
         }
         .tab-add:hover,
         .icon-btn:hover {
-          background: color-mix(in srgb, var(--bg3) 90%, white 10%);
-          border-color: var(--border);
-          color: var(--text);
+          background: rgba(255,255,255,0.05);
+          border-color: var(--border-subtle);
+          color: var(--text2);
           transform: translateY(-1px);
+        }
+        .tab-add:hover {
+          background: rgba(255,255,255,0.05);
+          border-color: var(--border-subtle);
+          color: var(--text2);
+        }
+        .icon-btn {
+          width: 32px;
+          height: 32px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 8px;
+          border: 1px solid transparent;
+          background: transparent;
+          color: var(--text3);
+          cursor: pointer;
+          transition: background .15s ease, border-color .15s ease, color .15s ease, transform .10s ease;
+        }
+        .icon-btn:hover {
+          background: rgba(255,255,255,0.05);
+          border-color: var(--border-subtle);
+          color: var(--text2);
+        }
+        .icon-btn:active {
+          transform: scale(0.94);
         }
         .toolbar {
           display: flex;
           align-items: center;
-          gap: 6px;
+          gap: 4px;
         }
         .icon-btn.active {
           color: var(--accent);
@@ -18564,7 +18751,6 @@ function useCommandProgress(options = {}) {
   };
 }
 function Terminal() {
-  const platform2 = detectPlatform$2();
   const containerRef = reactExports.useRef(null);
   const [tooltip, setTooltip] = reactExports.useState(null);
   const { progress, isVisible, startTracking, complete } = useCommandProgress();
@@ -18609,13 +18795,9 @@ function Terminal() {
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "shell-bar", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "shell-chip active", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "shell-dot" }),
-        activeTab.name
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "shell-name", children: activeTab.name })
       ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "shell-meta", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "shell-kind", children: shellNames[activeTab.shell] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "shell-hint", children: platform2 === "macos" ? "在终端内直接输入命令" : "直接在终端中输入命令" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "shell-path", children: activeTab.cwd === "~" ? "默认目录" : activeTab.cwd })
-      ] })
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "shell-meta", children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "shell-path", children: activeTab.cwd === "~" ? "~" : activeTab.cwd }) })
     ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsx(
       "div",
@@ -18650,60 +18832,60 @@ function Terminal() {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          gap: 12px;
+          gap: 16px;
           padding: 0 20px;
-          min-height: 42px;
-          border-bottom: 1px solid var(--border);
-          background:
-            linear-gradient(180deg, color-mix(in srgb, var(--bg2) 88%, white 12%), color-mix(in srgb, var(--bg) 96%, white 4%));
+          min-height: 38px;
+          border-bottom: 1px solid var(--border-subtle);
+          background: rgba(255,255,255,0.012);
         }
         .shell-chip {
           display: inline-flex;
           align-items: center;
-          gap: 7px;
-          padding: 5px 12px;
-          border-radius: 999px;
-          font-size: 11px;
-          font-family: var(--mono);
-          color: var(--text);
-          border: 1px solid rgba(76,141,255,0.2);
-          background: rgba(76,141,255,0.08);
+          gap: 8px;
+          padding: 4px 10px;
+          border-radius: 8px;
+          font-size: 12px;
+          font-family: var(--sans);
+          color: var(--text-primary);
+          background: rgba(255,255,255,0.04);
+          border: 1px solid var(--border-subtle);
         }
         .shell-dot {
           width: 7px;
           height: 7px;
           border-radius: 50%;
           background: var(--green);
+          box-shadow: 0 0 8px rgba(71,209,108,0.45);
+          flex-shrink: 0;
+        }
+        .shell-name {
+          font-weight: 600;
+          max-width: 120px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
         }
         .shell-meta {
           display: flex;
           align-items: center;
-          gap: 14px;
+          gap: 10px;
           min-width: 0;
-        }
-        .shell-kind {
-          padding: 3px 8px;
-          border-radius: 999px;
-          background: rgba(76,141,255,0.08);
-          border: 1px solid rgba(76,141,255,0.18);
-          color: var(--accent);
-          font-size: 10px;
-          font-family: var(--mono);
-          flex-shrink: 0;
-        }
-        .shell-hint {
-          font-size: 11px;
-          color: var(--text3);
-          white-space: nowrap;
+          flex: 1;
+          justify-content: flex-end;
         }
         .shell-path {
           font-size: 11px;
-          color: var(--text3);
           font-family: var(--mono);
+          color: var(--text3);
           min-width: 0;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
+        }
+        /* Hide redundant elements */
+        .shell-kind,
+        .shell-hint {
+          display: none;
         }
         .terminal-output {
           flex: 1;
@@ -18823,17 +19005,14 @@ function TitleBar() {
           align-items: stretch;
           justify-content: space-between;
           height: 34px;
-          background:
-            linear-gradient(180deg, color-mix(in srgb, var(--bg2) 76%, white 24%), color-mix(in srgb, var(--bg) 92%, white 8%));
+          background: var(--bg2);
           border-bottom: 1px solid var(--border);
           -webkit-app-region: drag;
           user-select: none;
-          backdrop-filter: blur(18px) saturate(1.15);
         }
         .title-bar-drag {
           display: flex;
           align-items: center;
-          gap: 12px;
           padding-left: 16px;
           flex: 1;
           min-width: 0;
@@ -18845,12 +19024,7 @@ function TitleBar() {
           color: var(--text);
         }
         .title-sub {
-          font-size: 11px;
-          color: var(--text3);
-          padding: 3px 8px;
-          border-radius: 999px;
-          background: color-mix(in srgb, var(--bg3) 88%, white 12%);
-          border: 1px solid var(--border);
+          display: none;
         }
         .title-bar-controls {
           display: flex;
@@ -18882,7 +19056,7 @@ function TitleBar() {
 }
 function App() {
   const [settingsOpen, setSettingsOpen] = reactExports.useState(false);
-  const [chatOpen, setChatOpen] = reactExports.useState(true);
+  const [chatOpen, setChatOpen] = reactExports.useState(false);
   const [settingsTab, setSettingsTab] = reactExports.useState("ai");
   const loadSettings = useSettingsStore((state) => state.load);
   const loadSession = useTabsStore((state) => state.loadSession);

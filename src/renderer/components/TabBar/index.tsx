@@ -76,13 +76,11 @@ export function TabBar({ onOpenChat, onOpenSettings }: TabBarProps) {
         #tabbar {
           display: flex;
           align-items: center;
-          gap: 10px;
+          gap: 8px;
           padding: 0 12px;
-          background:
-            linear-gradient(180deg, color-mix(in srgb, var(--bg2) 82%, white 18%), color-mix(in srgb, var(--bg) 92%, white 8%));
-          border-bottom: 1px solid var(--border);
+          background: var(--bg2);
+          border-bottom: 1px solid var(--border-subtle);
           user-select: none;
-          backdrop-filter: blur(16px) saturate(1.08);
         }
         .tabs {
           display: flex;
@@ -105,33 +103,41 @@ export function TabBar({ onOpenChat, onOpenSettings }: TabBarProps) {
           display: flex;
           align-items: center;
           gap: 8px;
-          height: 34px;
-          padding: 0 14px;
-          border-radius: 12px;
+          height: 32px;
+          padding: 0 12px;
+          border-radius: 10px;
           font-size: 12px;
           font-family: var(--sans);
-          color: var(--text2);
+          color: var(--text3);
           cursor: pointer;
           white-space: nowrap;
           min-width: 0;
-          transition: background .16s ease, border-color .16s ease, color .16s ease, transform .16s ease;
+          border: 1px solid transparent;
+          transition: background .15s ease, border-color .15s ease, color .15s ease, transform .12s ease;
         }
         .tab:hover {
-          background: color-mix(in srgb, var(--bg3) 90%, white 10%);
-          color: var(--text);
+          background: rgba(255,255,255,0.04);
+          color: var(--text2);
         }
         .tab.active {
-          background: color-mix(in srgb, var(--bg) 86%, white 14%);
-          color: var(--text);
-          border-color: var(--border);
-          box-shadow: 0 8px 22px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.08);
+          background: var(--surface-raised, rgba(255,255,255,0.04));
+          color: var(--text-primary, #e8ecf0);
+          border: 1px solid var(--border-default, rgba(255,255,255,0.10));
+          border-bottom: 2px solid var(--accent);
+          box-shadow: var(--shadow-sm);
         }
         .tab-dot {
-          width: 7px;
-          height: 7px;
-          border-radius: 3px;
-          background: rgba(76,141,255,0.8);
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: var(--accent);
           flex-shrink: 0;
+          opacity: 0.7;
+        }
+        .tab.active .tab-dot {
+          background: var(--green);
+          opacity: 1;
+          box-shadow: 0 0 6px rgba(71, 209, 108, 0.5);
         }
         .tab-name {
           max-width: 140px;
@@ -170,27 +176,53 @@ export function TabBar({ onOpenChat, onOpenSettings }: TabBarProps) {
         }
         .tab-add,
         .icon-btn {
-          width: 34px;
-          height: 34px;
+          width: 32px;
+          height: 32px;
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          border-radius: 12px;
+          border-radius: 8px;
           color: var(--text2);
           cursor: pointer;
-          transition: background .16s ease, border-color .16s ease, color .16s ease, transform .16s ease;
+          transition: background .15s ease, border-color .15s ease, color .15s ease, transform .15s ease;
         }
         .tab-add:hover,
         .icon-btn:hover {
-          background: color-mix(in srgb, var(--bg3) 90%, white 10%);
-          border-color: var(--border);
-          color: var(--text);
+          background: rgba(255,255,255,0.05);
+          border-color: var(--border-subtle);
+          color: var(--text2);
           transform: translateY(-1px);
+        }
+        .tab-add:hover {
+          background: rgba(255,255,255,0.05);
+          border-color: var(--border-subtle);
+          color: var(--text2);
+        }
+        .icon-btn {
+          width: 32px;
+          height: 32px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 8px;
+          border: 1px solid transparent;
+          background: transparent;
+          color: var(--text3);
+          cursor: pointer;
+          transition: background .15s ease, border-color .15s ease, color .15s ease, transform .10s ease;
+        }
+        .icon-btn:hover {
+          background: rgba(255,255,255,0.05);
+          border-color: var(--border-subtle);
+          color: var(--text2);
+        }
+        .icon-btn:active {
+          transform: scale(0.94);
         }
         .toolbar {
           display: flex;
           align-items: center;
-          gap: 6px;
+          gap: 4px;
         }
         .icon-btn.active {
           color: var(--accent);

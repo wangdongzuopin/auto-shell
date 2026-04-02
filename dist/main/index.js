@@ -656,6 +656,8 @@ const IPC = {
   CONFIG_SET_PROVIDER_CONFIG: "config:set-provider-config",
   CONFIG_SET_THEME: "config:set-theme",
   CONFIG_SET_FEATURES: "config:set-features",
+  CONFIG_GET_APPEARANCE: "config:get-appearance",
+  CONFIG_SET_APPEARANCE: "config:set-appearance",
   KEY_SAVE: "key:save",
   KEY_GET: "key:get",
   PATH_EXISTS: "path:exists",
@@ -724,6 +726,11 @@ const defaultConfig = {
     tabs: [],
     activeTabId: null,
     commandHistoryByCwd: {}
+  },
+  appearance: {
+    terminalTransparency: false,
+    terminalOpacity: 0.7,
+    terminalBackdrop: false
   }
 };
 function normalizeProviderConfig(provider, config) {
@@ -763,7 +770,11 @@ function normalizePersistedConfig(input) {
     apiKeys: input?.apiKeys ?? {},
     currentModel: input?.currentModel ?? defaultConfig.currentModel,
     modelConfig: input?.modelConfig ?? defaultConfig.modelConfig,
-    terminalSession: normalizeTerminalSession(input?.terminalSession)
+    terminalSession: normalizeTerminalSession(input?.terminalSession),
+    appearance: {
+      ...defaultConfig.appearance,
+      ...input?.appearance ?? {}
+    }
   };
 }
 function normalizeTerminalSession(input) {
@@ -887,6 +898,15 @@ function saveTerminalSession(session) {
     terminalSession: normalizeTerminalSession(session)
   }));
 }
+function getAppearance() {
+  return readPersistedConfig().appearance;
+}
+function setAppearance(appearance) {
+  updatePersistedConfig((current) => ({
+    ...current,
+    appearance
+  }));
+}
 function recordTerminalCommand(cwd, command) {
   const normalizedCwd = normalizeCwdKey(cwd);
   const normalizedCommand = command.trim();
@@ -983,6 +1003,11 @@ function registerIpcHandlers() {
   });
   electron.ipcMain.handle(IPC.CONFIG_SET_FEATURES, (_event, features) => {
     setFeatures(features);
+    return true;
+  });
+  electron.ipcMain.handle(IPC.CONFIG_GET_APPEARANCE, () => getAppearance());
+  electron.ipcMain.handle(IPC.CONFIG_SET_APPEARANCE, (_event, appearance) => {
+    setAppearance(appearance);
     return true;
   });
   electron.ipcMain.handle(IPC.KEY_GET, async (_event, provider) => getApiKey(provider));
@@ -1328,6 +1353,7 @@ function createWindow() {
     frame: isMac,
     titleBarStyle: isMac ? "hiddenInset" : "default",
     trafficLightPosition: isMac ? { x: 14, y: 14 } : void 0,
+    transparent: false,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
