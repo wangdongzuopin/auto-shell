@@ -1,6 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Paperclip, Promotion, VideoCamera, Loading } from '@element-plus/icons-vue';
-import { ElSelect, ElOption } from 'element-plus';
+import { Paperclip, Send, Mic, Square } from 'lucide-react';
 import './ChatInput.css';
 
 interface ChatInputProps {
@@ -15,6 +14,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   onStop,
 }) => {
   const [input, setInput] = useState('');
+  const [selectedModel, setSelectedModel] = useState('sonnet-4');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSend = () => {
@@ -43,7 +43,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     <div className="chat-input-container">
       <div className="chat-input-wrapper">
         <button className="input-action-btn" onClick={handleAttach}>
-          <Paperclip />
+          <Paperclip size={18} />
         </button>
 
         <div className="input-area">
@@ -59,12 +59,12 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         </div>
 
         <button className="input-action-btn" onClick={handleVoice}>
-          <VideoCamera />
+          <Mic size={18} />
         </button>
 
         {isLoading ? (
           <button className="send-btn loading" onClick={onStop}>
-            <Loading className="is-loading" />
+            <Square size={18} />
           </button>
         ) : (
           <button
@@ -72,17 +72,21 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             onClick={handleSend}
             disabled={!input.trim()}
           >
-            <Promotion />
+            <Send size={18} />
           </button>
         )}
       </div>
 
       <div className="input-hint">
-        <ElSelect modelValue="sonnet-4" size="small" placeholder="选择模型">
-          <ElOption label="Sonnet 4" value="sonnet-4" />
-          <ElOption label="Sonnet 4.6" value="sonnet-4-6" />
-          <ElOption label="Opus 4" value="opus-4" />
-        </ElSelect>
+        <select
+          className="model-select"
+          value={selectedModel}
+          onChange={(e) => setSelectedModel(e.target.value)}
+        >
+          <option value="sonnet-4">Sonnet 4</option>
+          <option value="sonnet-4-6">Sonnet 4.6</option>
+          <option value="opus-4">Opus 4</option>
+        </select>
       </div>
     </div>
   );

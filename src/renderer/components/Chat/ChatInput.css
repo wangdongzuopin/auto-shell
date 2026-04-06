@@ -79,21 +79,27 @@
   background-color: var(--color-error);
 }
 
-.is-loading {
-  animation: rotate 1s linear infinite;
-}
-
-@keyframes rotate {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
 .input-hint {
   display: flex;
   justify-content: center;
   margin-top: 12px;
 }
 
-.input-hint .el-select {
-  width: 140px;
+.model-select {
+  padding: 6px 12px;
+  font-size: 13px;
+  color: var(--text-primary);
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  outline: none;
+}
+
+.model-select:hover {
+  border-color: var(--text-secondary);
+}
+
+.model-select:focus {
+  border-color: var(--text-primary);
 }

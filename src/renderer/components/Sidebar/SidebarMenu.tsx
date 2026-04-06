@@ -1,27 +1,21 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import {
-  ChatDotRound,
-  Document,
-  Tools,
-  Folder,
-  Star
-} from '@element-plus/icons-vue';
+import { MessageSquare, FileText, Wrench, Folder, Sparkles, LucideIcon } from 'lucide-react';
 import './SidebarMenu.css';
 
 interface MenuItem {
   key: string;
   label: string;
-  icon: any;
+  icon: LucideIcon;
   path: string;
 }
 
 const menuItems: MenuItem[] = [
-  { key: 'chat', label: '对话', icon: ChatDotRound, path: '/' },
-  { key: 'knowledge', label: '知识库', icon: Document, path: '/knowledge' },
-  { key: 'skills', label: '技能', icon: Tools, path: '/skills' },
+  { key: 'chat', label: '对话', icon: MessageSquare, path: '/' },
+  { key: 'knowledge', label: '知识库', icon: FileText, path: '/knowledge' },
+  { key: 'skills', label: '技能', icon: Wrench, path: '/skills' },
   { key: 'projects', label: '项目', icon: Folder, path: '/projects' },
-  { key: 'artifacts', label: '生成物', icon: Star, path: '/artifacts' },
+  { key: 'artifacts', label: '生成物', icon: Sparkles, path: '/artifacts' },
 ];
 
 export const SidebarMenu: React.FC = () => {
@@ -47,7 +41,7 @@ export const SidebarMenu: React.FC = () => {
           className={`sidebar-menu-item ${isActive(item.path) ? 'active' : ''}`}
           onClick={() => handleClick(item.path)}
         >
-          <component is={item.icon} className="menu-icon" />
+          <item.icon size={18} className="menu-icon" />
           <span className="menu-label">{item.label}</span>
         </button>
       ))}

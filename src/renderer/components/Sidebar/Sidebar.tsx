@@ -1,16 +1,18 @@
 import React from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { Plus, Search, Setting } from '@element-plus/icons-vue';
-import { ElTooltip } from 'element-plus';
+import { useNavigate } from 'react-router-dom';
+import { Plus, Search, Settings } from 'lucide-react';
 import { SidebarMenu } from './SidebarMenu';
 import { RecentThreads } from './RecentThreads';
 import { UserProfile } from './UserProfile';
 import { useChatStore } from '../../stores/chatStore';
 import './Sidebar.css';
 
-export const Sidebar: React.FC = () => {
+interface SidebarProps {
+  collapsed: boolean;
+}
+
+export const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
   const navigate = useNavigate();
-  const location = useLocation();
   const createThread = useChatStore((state) => state.createThread);
 
   const handleNewChat = () => {
@@ -18,53 +20,38 @@ export const Sidebar: React.FC = () => {
     navigate(`/chat/${thread.id}`);
   };
 
-  const handleSearch = () => {
-    console.log('Search clicked');
-  };
-
-  const handleSettings = () => {
-    navigate('/settings');
-  };
-
-  const isActive = (path: string) => location.pathname.startsWith(path);
-
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
       <div className="sidebar-header">
         <div className="sidebar-logo">
-          <span className="logo-text">AI Client</span>
+          {!collapsed && <span className="logo-text">AI Client</span>}
         </div>
       </div>
 
-      <div className="sidebar-actions">
-        <ElTooltip content="新建对话" placement="right">
-          <button className="sidebar-action-btn" onClick={handleNewChat}>
-            <Plus />
-            <span>新建对话</span>
-          </button>
-        </ElTooltip>
+      {!collapsed && (
+        <>
+          <div className="sidebar-actions">
+            <button className="sidebar-action-btn" onClick={handleNewChat} title="新建对话">
+              <Plus size={18} />
+              <span>新建对话</span>
+            </button>
 
-        <ElTooltip content="搜索" placement="right">
-          <button className="sidebar-action-btn" onClick={handleSearch}>
-            <Search />
-            <span>搜索</span>
-          </button>
-        </ElTooltip>
+            <button className="sidebar-action-btn" title="搜索">
+              <Search size={18} />
+              <span>搜索</span>
+            </button>
 
-        <ElTooltip content="设置" placement="right">
-          <button
-            className={`sidebar-action-btn ${isActive('/settings') ? 'active' : ''}`}
-            onClick={handleSettings}
-          >
-            <Setting />
-            <span>设置</span>
-          </button>
-        </ElTooltip>
-      </div>
+            <button className="sidebar-action-btn" onClick={() => navigate('/settings')} title="设置">
+              <Settings size={18} />
+              <span>设置</span>
+            </button>
+          </div>
 
-      <SidebarMenu />
-      <RecentThreads />
-      <UserProfile />
+          <SidebarMenu />
+          <RecentThreads />
+          <UserProfile />
+        </>
+      )}
     </aside>
   );
 };

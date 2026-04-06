@@ -1,34 +1,55 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, Operation } from '@element-plus/icons-vue';
+import { Menu, ArrowLeft, ArrowRight, Minus, Square, X, Ghost } from 'lucide-react';
 import './Header.css';
 
 interface HeaderProps {
-  title?: string;
-  showNav?: boolean;
+  sidebarCollapsed: boolean;
+  onToggleSidebar: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ title, showNav = true }) => {
-  const navigate = useNavigate();
+export const Header: React.FC<HeaderProps> = ({ sidebarCollapsed, onToggleSidebar }) => {
+  const handleMinimize = () => {
+    window.electronAPI?.minimizeWindow?.();
+  };
+
+  const handleMaximize = () => {
+    window.electronAPI?.maximizeWindow?.();
+  };
+
+  const handleClose = () => {
+    window.electronAPI?.closeWindow?.();
+  };
 
   return (
     <header className="app-header">
-      {showNav && (
-        <div className="header-nav">
-          <button className="nav-btn" onClick={() => navigate(-1)}>
-            <ArrowLeft />
-          </button>
-          <button className="nav-btn" onClick={() => navigate(1)}>
-            <ArrowRight />
-          </button>
-        </div>
-      )}
+      <div className="header-left">
+        <button className="header-btn" onClick={onToggleSidebar} title={sidebarCollapsed ? '展开侧边栏' : '收起侧边栏'}>
+          <Menu size={18} />
+        </button>
+        <button className="header-btn">
+          <ArrowLeft size={18} />
+        </button>
+        <button className="header-btn">
+          <ArrowRight size={18} />
+        </button>
+      </div>
 
-      {title && <h1 className="header-title">{title}</h1>}
+      <div className="header-center">
+        <span className="plan-badge">Free plan</span>
+      </div>
 
-      <div className="header-actions">
-        <button className="action-btn">
-          <Operation />
+      <div className="header-right">
+        <button className="header-btn ghost">
+          <Ghost size={18} />
+        </button>
+        <button className="header-btn" onClick={handleMinimize}>
+          <Minus size={18} />
+        </button>
+        <button className="header-btn" onClick={handleMaximize}>
+          <Square size={16} />
+        </button>
+        <button className="header-btn close" onClick={handleClose}>
+          <X size={18} />
         </button>
       </div>
     </header>
