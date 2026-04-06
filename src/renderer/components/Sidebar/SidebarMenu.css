@@ -1,0 +1,38 @@
+.sidebar-menu {
+  padding: 8px var(--sidebar-padding);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sidebar-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  height: var(--sidebar-item-height);
+  padding: 0 12px;
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.15s ease;
+}
+
+.sidebar-menu-item:hover {
+  background-color: var(--hover-bg);
+}
+
+.sidebar-menu-item.active {
+  background-color: var(--selected-bg);
+}
+
+.menu-icon {
+  font-size: 18px;
+  color: #000000;
+}
+
+.menu-label {
+  flex: 1;
+  text-align: left;
+}
