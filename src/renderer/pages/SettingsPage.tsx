@@ -3,7 +3,6 @@ import { Header } from '../components/common/Header';
 import { useAppStore } from '../stores/appStore';
 import { ElSwitch, ElSelect, ElOption } from 'element-plus';
 import type { PermissionMode } from '../../shared/types';
-import './SettingsPage.css';
 
 export const SettingsPage: React.FC = () => {
   const { permissionEnabled, permissionMode, togglePermission, setPermissionMode } = useAppStore();

@@ -1,6 +1,5 @@
 import React from 'react';
 import { Header } from '../components/common/Header';
-import './ArtifactsPage.css';
 
 export const ArtifactsPage: React.FC = () => {
   return (

@@ -1,6 +1,5 @@
 import React from 'react';
 import { Header } from '../components/common/Header';
-import './KnowledgePage.css';
 
 export const KnowledgePage: React.FC = () => {
   return (

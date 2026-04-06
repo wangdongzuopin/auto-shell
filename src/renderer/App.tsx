@@ -9,6 +9,7 @@ import { ProjectsPage } from './pages/ProjectsPage';
 import { ArtifactsPage } from './pages/ArtifactsPage';
 import { SettingsPage } from './pages/SettingsPage';
 import './styles/global.css';
+import './pages/page.css';
 import './App.css';
 
 export default function App() {
