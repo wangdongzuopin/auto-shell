@@ -85,21 +85,71 @@
   margin-top: 12px;
 }
 
-.model-select {
+.model-selector {
+  position: relative;
+}
+
+.model-selector-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   padding: 6px 12px;
-  font-size: 13px;
-  color: var(--text-primary);
   background-color: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
+  font-size: 13px;
+  color: var(--text-primary);
   cursor: pointer;
-  outline: none;
 }
 
-.model-select:hover {
-  border-color: var(--text-secondary);
+.model-selector-btn:hover {
+  background-color: var(--hover-bg);
 }
 
-.model-select:focus {
-  border-color: var(--text-primary);
+.dropdown-arrow {
+  font-size: 10px;
+  color: var(--text-secondary);
+}
+
+.model-dropdown {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 8px;
+  min-width: 160px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+  z-index: 100;
+}
+
+.model-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 13px;
+  color: var(--text-primary);
+  text-align: left;
+  transition: background-color 0.15s ease;
+}
+
+.model-option:hover {
+  background-color: var(--hover-bg);
+}
+
+.model-option.active {
+  background-color: var(--selected-bg);
+}
+
+.default-tag {
+  font-size: 10px;
+  padding: 2px 6px;
+  background-color: var(--text-primary);
+  color: var(--bg-card);
+  border-radius: 8px;
 }
