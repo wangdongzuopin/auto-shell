@@ -1,0 +1,39 @@
+:root {
+  /* 背景色 */
+  --bg-primary: #faf9f5;
+  --bg-sidebar: #f8f7f2;
+  --bg-card: #ffffff;
+
+  /* 边框 */
+  --border-color: #e8e8e8;
+
+  /* 文字 */
+  --text-primary: #1a1a1a;
+  --text-secondary: #6b6b6b;
+
+  /* 悬停/选中 */
+  --hover-bg: #e8e6dd;
+  --selected-bg: #e8e6dd;
+
+  /* 语义色 */
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  --color-info: #3b82f6;
+
+  /* 圆角 */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+
+  /* 阴影 */
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+  /* 侧边栏 */
+  --sidebar-width: 260px;
+  --sidebar-item-height: 40px;
+  --sidebar-padding: 12px;
+
+  /* 字体 */
+  --font-family: "Inter", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+}
