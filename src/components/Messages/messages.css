@@ -1,4 +1,4 @@
-/* src/components/Messages/Messages.css */
+/* src/components/Messages/Messages.css - Aligned with old Chat.css */
 
 .messages-container {
   display: flex;
@@ -8,15 +8,7 @@
   position: relative;
 }
 
-.messages-list {
-  flex: 1;
-  overflow: hidden;
-}
-
-.messages-empty {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
+.chat-empty {
   justify-content: center;
   align-items: center;
 }
@@ -36,6 +28,12 @@
 .empty-state p {
   font-size: 16px;
   color: var(--text-secondary);
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 0;
 }
 
 .messages-input-area {

@@ -10539,85 +10539,6 @@ function useAppState(selector) {
 function useSetAppState() {
   return useAppStore$1().setState;
 }
-const ITEM_HEIGHT_ESTIMATE = 80;
-const OVERSCAN = 5;
-const VirtualMessageList = ({
-  messages,
-  renderMessage,
-  onScroll
-}) => {
-  const containerRef = reactExports.useRef(null);
-  const scrollRef = reactExports.useRef(null);
-  const [scrollTop, setScrollTop] = reactExports.useState(0);
-  const [containerHeight, setContainerHeight] = reactExports.useState(0);
-  const startIndex = Math.max(0, Math.floor(scrollTop / ITEM_HEIGHT_ESTIMATE) - OVERSCAN);
-  const endIndex = Math.min(
-    messages.length - 1,
-    Math.ceil((scrollTop + containerHeight) / ITEM_HEIGHT_ESTIMATE) + OVERSCAN
-  );
-  const visibleMessages = [];
-  for (let i = startIndex; i <= endIndex; i++) {
-    if (messages[i]) {
-      visibleMessages.push({
-        msg: messages[i],
-        index: i,
-        offset: i * ITEM_HEIGHT_ESTIMATE
-      });
-    }
-  }
-  const handleScroll = reactExports.useCallback(() => {
-    if (containerRef.current) {
-      const { scrollTop: st, scrollHeight, clientHeight } = containerRef.current;
-      setScrollTop(st);
-      const isAtBottom = scrollHeight - st - clientHeight < 50;
-      onScroll?.(!isAtBottom);
-    }
-  }, [onScroll]);
-  reactExports.useEffect(() => {
-    const container2 = containerRef.current;
-    if (container2) {
-      const observer = new ResizeObserver((entries) => {
-        for (const entry of entries) {
-          setContainerHeight(entry.contentRect.height);
-        }
-      });
-      observer.observe(container2);
-      return () => observer.disconnect();
-    }
-  }, []);
-  reactExports.useEffect(() => {
-    if (containerRef.current && scrollRef.current && scrollTop + containerHeight >= scrollRef.current.scrollHeight - 100) {
-      containerRef.current.scrollTop = containerRef.current.scrollHeight;
-    }
-  }, [messages.length, scrollTop, containerHeight]);
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
-    "div",
-    {
-      ref: (el2) => {
-        containerRef.current = el2;
-        scrollRef.current = el2;
-      },
-      className: "virtual-message-list",
-      onScroll: handleScroll,
-      children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-        "div",
-        {
-          className: "virtual-message-list-inner",
-          style: { height: messages.length * ITEM_HEIGHT_ESTIMATE },
-          children: visibleMessages.map(({ msg, index: index2, offset }) => /* @__PURE__ */ jsxRuntimeExports.jsx(
-            "div",
-            {
-              className: "virtual-message-item",
-              style: { transform: `translateY(${offset}px)` },
-              children: renderMessage(msg, index2)
-            },
-            msg.uuid ?? index2
-          ))
-        }
-      )
-    }
-  );
-};
 const UserTextMessage = ({ text: text2, timestamp }) => {
   const formatTime2 = (ts) => {
     if (!ts) return "";
@@ -23350,33 +23271,39 @@ const Messages = () => {
   const messages = useAppState((s) => s.messages);
   useAppState((s) => s.isLoading);
   useAppState((s) => s)?.setState;
+  const messagesEndRef = reactExports.useRef(null);
+  const messagesContainerRef = reactExports.useRef(null);
   const [showScrollButton, setShowScrollButton] = reactExports.useState(false);
-  const handleScroll = reactExports.useCallback((isNotAtBottom) => {
-    setShowScrollButton(isNotAtBottom);
+  reactExports.useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages]);
+  const handleScroll = reactExports.useCallback(() => {
+    if (messagesContainerRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
+      const isAtBottom = scrollHeight - scrollTop - clientHeight < 50;
+      setShowScrollButton(!isAtBottom);
+    }
   }, []);
   const scrollToBottom = reactExports.useCallback(() => {
-  }, []);
-  const renderMessage = reactExports.useCallback((msg) => {
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(MessageRow, { message: msg });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    setShowScrollButton(false);
   }, []);
   if (messages.length === 0) {
-    return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "messages-empty", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "empty-state", children: [
+    return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "messages-container", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "chat-empty", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "empty-state", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { children: "你好" }),
         /* @__PURE__ */ jsxRuntimeExports.jsx("p", { children: "有什么可以帮助你的吗？" })
-      ] }),
+      ] }) }),
       /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "messages-input-area", children: /* @__PURE__ */ jsxRuntimeExports.jsx(PromptInput, {}) })
     ] });
   }
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "messages-container", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "messages-list", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-      VirtualMessageList,
-      {
-        messages,
-        renderMessage,
-        onScroll: handleScroll
-      }
-    ) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-messages", ref: messagesContainerRef, onScroll: handleScroll, children: [
+      messages.map((message, index2) => /* @__PURE__ */ jsxRuntimeExports.jsx(MessageRow, { message }, message.uuid ?? index2)),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { ref: messagesEndRef })
+    ] }),
     showScrollButton && /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "scroll-to-bottom", onClick: scrollToBottom, children: "滚动到底部" }),
     /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "messages-input-area", children: /* @__PURE__ */ jsxRuntimeExports.jsx(PromptInput, {}) })
   ] });
