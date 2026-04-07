@@ -35,4 +35,32 @@ export const IPC = {
   WINDOW_MINIMIZE: 'window:minimize',
   WINDOW_MAXIMIZE: 'window:maximize',
   WINDOW_CLOSE:    'window:close',
+
+  // Dialog
+  DIALOG_OPEN_FOLDER: 'dialog:open-folder',
+
+  // Skills
+  SKILLS_GET_ALL: 'skills:get-all',
+  SKILLS_GET_BY_PATH: 'skills:get-by-path',
+
+  // Sessions
+  SESSION_SAVE: 'session:save',
+  SESSION_LOAD: 'session:load',
+  SESSION_LIST: 'session:list',
+  SESSION_DELETE: 'session:delete',
+  SESSION_LIST_ALL: 'session:list-all',
+
+  // Tools
+  TOOL_READ: 'tool:read',
+  TOOL_WRITE: 'tool:write',
+  TOOL_GLOB: 'tool:glob',
+  TOOL_GREP: 'tool:grep',
+  TOOL_BASH: 'tool:bash',
+  TOOL_OPEN_URL: 'tool:open-url',
+
+  // MCP
+  MCP_GET_SERVERS: 'mcp:get-servers',
+  MCP_GET_TOOLS: 'mcp:get-tools',
+  MCP_CALL_TOOL: 'mcp:call-tool',
+  MCP_DISCONNECT: 'mcp:disconnect',
 } as const;

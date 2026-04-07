@@ -55,6 +55,31 @@ export interface ElectronAPI {
   minimizeWindow: () => void;
   maximizeWindow: () => void;
   closeWindow: () => void;
+
+  openFolderDialog: (title: string) => Promise<string | null>;
+
+  getSkillsFromDisk: () => Promise<any[]>;
+  getSkillByPath: (path: string) => Promise<any | null>;
+
+  saveSession: (threadId: string, data: unknown) => Promise<boolean>;
+  loadSession: (threadId: string) => Promise<any | null>;
+  listSessions: () => Promise<string[]>;
+  deleteSession: (threadId: string) => Promise<boolean>;
+  listAllSessions: () => Promise<any[]>;
+
+  // Tools
+  readFile: (filePath: string) => Promise<{ success: boolean; content?: string; error?: string }>;
+  writeFile: (filePath: string, content: string) => Promise<{ success: boolean; error?: string }>;
+  globFiles: (pattern: string, cwd?: string) => Promise<{ success: boolean; matches?: string[]; error?: string }>;
+  grepFiles: (pattern: string, cwd?: string, options?: { ext?: string[] }) => Promise<{ success: boolean; matches?: Array<{ file: string; line: number; content: string }>; error?: string }>;
+  bashCommand: (command: string, cwd?: string) => Promise<{ exitCode: number; output: string; error?: string }>;
+  openUrl: (url: string) => Promise<{ success: boolean; error?: string }>;
+
+  // MCP
+  getMCPServers: () => Promise<string[]>;
+  getMCPTools: (serverName: string) => Promise<any[]>;
+  callMCPTool: (serverName: string, toolName: string, args: Record<string, unknown>) => Promise<{ success: boolean; result?: unknown; error?: string }>;
+  disconnectMCPServer: (serverName: string) => Promise<boolean>;
 }
 
 const api: ElectronAPI = {
@@ -131,7 +156,32 @@ const api: ElectronAPI = {
 
   minimizeWindow: () => ipcRenderer.send(IPC.WINDOW_MINIMIZE),
   maximizeWindow: () => ipcRenderer.send(IPC.WINDOW_MAXIMIZE),
-  closeWindow: () => ipcRenderer.send(IPC.WINDOW_CLOSE)
+  closeWindow: () => ipcRenderer.send(IPC.WINDOW_CLOSE),
+
+  openFolderDialog: (title: string) => ipcRenderer.invoke(IPC.DIALOG_OPEN_FOLDER, title),
+
+  getSkillsFromDisk: () => ipcRenderer.invoke(IPC.SKILLS_GET_ALL),
+  getSkillByPath: (path: string) => ipcRenderer.invoke(IPC.SKILLS_GET_BY_PATH, path),
+
+  saveSession: (threadId: string, data: unknown) => ipcRenderer.invoke(IPC.SESSION_SAVE, threadId, data),
+  loadSession: (threadId: string) => ipcRenderer.invoke(IPC.SESSION_LOAD, threadId),
+  listSessions: () => ipcRenderer.invoke(IPC.SESSION_LIST),
+  deleteSession: (threadId: string) => ipcRenderer.invoke(IPC.SESSION_DELETE, threadId),
+  listAllSessions: () => ipcRenderer.invoke(IPC.SESSION_LIST_ALL),
+
+  // Tools
+  readFile: (filePath: string) => ipcRenderer.invoke(IPC.TOOL_READ, filePath),
+  writeFile: (filePath: string, content: string) => ipcRenderer.invoke(IPC.TOOL_WRITE, filePath, content),
+  globFiles: (pattern: string, cwd?: string) => ipcRenderer.invoke(IPC.TOOL_GLOB, pattern, cwd),
+  grepFiles: (pattern: string, cwd?: string, options?: { ext?: string[] }) => ipcRenderer.invoke(IPC.TOOL_GREP, pattern, cwd, options),
+  bashCommand: (command: string, cwd?: string) => ipcRenderer.invoke(IPC.TOOL_BASH, command, cwd),
+  openUrl: (url: string) => ipcRenderer.invoke(IPC.TOOL_OPEN_URL, url),
+
+  // MCP
+  getMCPServers: () => ipcRenderer.invoke(IPC.MCP_GET_SERVERS),
+  getMCPTools: (serverName: string) => ipcRenderer.invoke(IPC.MCP_GET_TOOLS, serverName),
+  callMCPTool: (serverName: string, toolName: string, args: Record<string, unknown>) => ipcRenderer.invoke(IPC.MCP_CALL_TOOL, serverName, toolName, args),
+  disconnectMCPServer: (serverName: string) => ipcRenderer.invoke(IPC.MCP_DISCONNECT, serverName),
 };
 
 contextBridge.exposeInMainWorld('api', api);

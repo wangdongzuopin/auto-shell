@@ -180,10 +180,10 @@ export function AIProviders() {
           text-align: left;
         }
         .provider-item:hover {
-          border-color: rgba(76,141,255,0.28);
+          border-border-color: rgba(76,141,255,0.28);
         }
         .provider-item.active {
-          border-color: rgba(76,141,255,0.45);
+          border-border-color: rgba(76,141,255,0.45);
           background: rgba(76,141,255,0.08);
         }
         .provider-name {
@@ -199,11 +199,11 @@ export function AIProviders() {
           align-items: flex-start;
         }
         .status-card.ok {
-          border-color: rgba(71,209,108,0.28);
+          border-border-color: rgba(71,209,108,0.28);
           background: rgba(71,209,108,0.08);
         }
         .status-card.off {
-          border-color: rgba(255,255,255,0.08);
+          border-border-color: rgba(255,255,255,0.08);
         }
         .status-dot {
           width: 10px;

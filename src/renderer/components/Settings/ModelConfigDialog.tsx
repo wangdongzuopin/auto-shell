@@ -233,7 +233,7 @@ export function ModelConfigDialog({ open, onClose }: ModelConfigDialogProps) {
           line-height: 1.5;
         }
         .provider-list-item.active {
-          border-color: var(--ai-border);
+          border-border-color: var(--ai-border);
           background: var(--ai-bg);
         }
         .provider-config {
@@ -261,7 +261,7 @@ export function ModelConfigDialog({ open, onClose }: ModelConfigDialogProps) {
           padding: 0 12px;
         }
         .config-block input:focus {
-          border-color: var(--ai-border);
+          border-border-color: var(--ai-border);
         }
         .api-key-row {
           display: grid;
@@ -288,7 +288,7 @@ export function ModelConfigDialog({ open, onClose }: ModelConfigDialogProps) {
         }
         .primary-btn {
           background: linear-gradient(180deg, var(--accent), color-mix(in srgb, var(--accent) 78%, #163a75 22%));
-          border-color: var(--ai-border);
+          border-border-color: var(--ai-border);
           color: white;
         }
         .field-hint {

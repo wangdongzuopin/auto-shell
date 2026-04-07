@@ -1,0 +1,88 @@
+.icon-picker {
+  position: relative;
+}
+
+.icon-picker-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-primary);
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.icon-picker-trigger:hover {
+  border-color: var(--text-secondary);
+}
+
+.icon-preview {
+  font-size: 18px;
+}
+
+.icon-arrow {
+  font-size: 10px;
+  color: var(--text-secondary);
+}
+
+.icon-picker-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 100;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  padding: 12px;
+  width: 240px;
+}
+
+.icon-search {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+
+.icon-search:focus {
+  outline: none;
+  border-color: var(--text-primary);
+}
+
+.icon-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 4px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.icon-option {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background-color: transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.icon-option:hover {
+  background-color: var(--hover-bg);
+}
+
+.icon-option.selected {
+  background-color: var(--hover-bg);
+  border-color: var(--text-primary);
+}

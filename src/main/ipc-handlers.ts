@@ -1,6 +1,7 @@
-import { ipcMain } from 'electron';
+import { ipcMain, dialog, shell } from 'electron';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as os from 'os';
 import { createProvider, ProviderConfig } from '../ai';
 import { IPC } from '../shared/ipc-channels';
 import type {
@@ -26,6 +27,20 @@ import {
   setProviderConfig,
   setTheme
 } from './session-store';
+import {
+  saveSession,
+  loadSession,
+  listSessions,
+  deleteSession,
+  loadAllSessions,
+} from './session-persistence';
+import {
+  getMCPConfig,
+  getConnectedServers,
+  getServerTools,
+  callMCPTool,
+  disconnectMCPServer,
+} from './mcp';
 
 let currentProvider: ReturnType<typeof createProvider> | null = null;
 
@@ -160,6 +175,312 @@ export function registerIpcHandlers() {
 
   ipcMain.handle(IPC.TERMINAL_HISTORY_RECORD, (_event, cwd: string, command: string) => {
     recordTerminalCommand(cwd, command);
+    return true;
+  });
+
+  ipcMain.handle(IPC.DIALOG_OPEN_FOLDER, async (_event, title: string) => {
+    const result = await dialog.showOpenDialog({
+      title,
+      properties: ['openDirectory'],
+    });
+    return result.canceled ? null : result.filePaths[0];
+  });
+
+  // Skill loading handlers
+  ipcMain.handle(IPC.SKILLS_GET_ALL, async () => {
+    return loadSkillsFromDisk();
+  });
+
+  ipcMain.handle(IPC.SKILLS_GET_BY_PATH, async (_event, skillPath: string) => {
+    return loadSkillByPath(skillPath);
+  });
+
+  // Session handlers
+  ipcMain.handle(IPC.SESSION_SAVE, (_event, threadId: string, data: unknown) => {
+    saveSession(threadId, data);
+    return true;
+  });
+
+  ipcMain.handle(IPC.SESSION_LOAD, (_event, threadId: string) => {
+    return loadSession(threadId);
+  });
+
+  ipcMain.handle(IPC.SESSION_LIST, () => {
+    return listSessions();
+  });
+
+  ipcMain.handle(IPC.SESSION_DELETE, (_event, threadId: string) => {
+    deleteSession(threadId);
+    return true;
+  });
+
+  ipcMain.handle(IPC.SESSION_LIST_ALL, () => {
+    return loadAllSessions();
+  });
+
+  // Tool handlers
+  ipcMain.handle(IPC.TOOL_READ, async (_event, filePath: string) => {
+    try {
+      const content = fs.readFileSync(filePath, 'utf-8');
+      return { success: true, content };
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e);
+      return { success: false, error: message };
+    }
+  });
+
+  ipcMain.handle(IPC.TOOL_WRITE, async (_event, filePath: string, content: string) => {
+    try {
+      const dir = path.dirname(filePath);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+      fs.writeFileSync(filePath, content, 'utf-8');
+      return { success: true };
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e);
+      return { success: false, error: message };
+    }
+  });
+
+  ipcMain.handle(IPC.TOOL_GLOB, async (_event, pattern: string, cwd: string) => {
+    try {
+      // Simple glob implementation
+      const results: string[] = [];
+      const normalizedCwd = cwd || process.cwd();
+
+      function matchPattern(filePath: string, pattern: string): boolean {
+        const parts = pattern.split('/');
+        const fileParts = filePath.replace(/\\/g, '/').split('/');
+        let fileIndex = 0;
+
+        for (const part of parts) {
+          if (part === '**') {
+            // Match any depth
+            if (fileIndex >= fileParts.length) return false;
+            continue;
+          }
+          if (part === '*') {
+            // Match anything except /
+            if (fileIndex >= fileParts.length || fileParts[fileIndex].includes('/')) return false;
+            fileIndex++;
+            continue;
+          }
+          if (part.includes('*')) {
+            // Simple wildcard at end
+            const regex = new RegExp('^' + part.replace(/\*/g, '.*') + '$');
+            if (fileIndex >= fileParts.length || !regex.test(fileParts[fileIndex])) return false;
+            fileIndex++;
+            continue;
+          }
+          if (fileIndex >= fileParts.length || fileParts[fileIndex] !== part) return false;
+          fileIndex++;
+        }
+        return fileIndex === fileParts.length || parts[parts.length - 1] === '**';
+      }
+
+      function walkDir(dir: string, depth: number = 0) {
+        if (depth > 10) return; // Prevent too deep recursion
+        try {
+          const entries = fs.readdirSync(dir, { withFileTypes: true });
+          for (const entry of entries) {
+            const fullPath = path.join(dir, entry.name);
+            if (entry.isDirectory()) {
+              walkDir(fullPath, depth + 1);
+            } else if (entry.isFile()) {
+              const relativePath = path.relative(normalizedCwd, fullPath).replace(/\\/g, '/');
+              if (matchPattern(relativePath, pattern) || matchPattern(entry.name, pattern)) {
+                results.push(fullPath);
+              }
+            }
+          }
+        } catch {
+          // Skip directories we can't read
+        }
+      }
+
+      walkDir(normalizedCwd);
+      return { success: true, matches: results.slice(0, 100) };
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e);
+      return { success: false, error: message };
+    }
+  });
+
+  ipcMain.handle(IPC.TOOL_GREP, async (_event, pattern: string, cwd: string, options?: { ext?: string[] }) => {
+    try {
+      const results: Array<{ file: string; line: number; content: string }> = [];
+      const normalizedCwd = cwd || process.cwd();
+      const regex = new RegExp(pattern, 'i');
+
+      function walkDir(dir: string, depth: number = 0) {
+        if (depth > 10) return;
+        try {
+          const entries = fs.readdirSync(dir, { withFileTypes: true });
+          for (const entry of entries) {
+            const fullPath = path.join(dir, entry.name);
+            if (entry.isDirectory()) {
+              // Skip node_modules and hidden directories
+              if (!entry.name.startsWith('.') && entry.name !== 'node_modules') {
+                walkDir(fullPath, depth + 1);
+              }
+            } else if (entry.isFile()) {
+              // Filter by extension if specified
+              if (options?.ext && options.ext.length > 0) {
+                const ext = path.extname(entry.name).slice(1);
+                if (!options.ext.includes(ext)) continue;
+              }
+              try {
+                const content = fs.readFileSync(fullPath, 'utf-8');
+                const lines = content.split('\n');
+                lines.forEach((line, index) => {
+                  if (regex.test(line)) {
+                    results.push({
+                      file: fullPath,
+                      line: index + 1,
+                      content: line.trim(),
+                    });
+                  }
+                });
+              } catch {
+                // Skip files we can't read
+              }
+            }
+          }
+        } catch {
+          // Skip directories we can't read
+        }
+      }
+
+      walkDir(normalizedCwd);
+      return { success: true, matches: results.slice(0, 100) };
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e);
+      return { success: false, error: message };
+    }
+  });
+
+  ipcMain.handle(IPC.TOOL_BASH, async (_event, command: string, cwd?: string) => {
+    return new Promise((resolve) => {
+      const pty = require('node-pty');
+      const shell = process.platform === 'win32' ? 'powershell.exe' : 'bash';
+      const cwdArg = cwd || os.homedir();
+
+      try {
+        const p = pty.spawn(shell, [], {
+          cwd: cwdArg,
+          env: process.env as { [key: string]: string },
+        });
+
+        let output = '';
+        let timeout: NodeJS.Timeout;
+
+        const cleanup = () => {
+          clearTimeout(timeout);
+          try { p.kill(); } catch {}
+        };
+
+        timeout = setTimeout(() => {
+          cleanup();
+          resolve({ exitCode: -1, output: 'Command timed out after 30 seconds' });
+        }, 30000);
+
+        p.onData((data: string) => {
+          output += data;
+        });
+
+        p.onExit(({ exitCode }: { exitCode: number }) => {
+          cleanup();
+          resolve({ exitCode: exitCode || 0, output });
+        });
+
+        p.write(command + '\r');
+      } catch (e: unknown) {
+        const message = e instanceof Error ? e.message : String(e);
+        resolve({ exitCode: -1, output: '', error: message });
+      }
+    });
+  });
+
+  ipcMain.handle(IPC.TOOL_OPEN_URL, async (_event, url: string) => {
+    try {
+      // Validate URL format
+      if (!url || typeof url !== 'string') {
+        return { success: false, error: 'Invalid URL' };
+      }
+
+      // Add protocol if missing
+      let targetUrl = url;
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        targetUrl = 'https://' + url;
+      }
+
+      // Validate URL format and protocol
+      let parsedUrl: URL;
+      try {
+        parsedUrl = new URL(targetUrl);
+      } catch {
+        return { success: false, error: `Invalid URL format: ${url}` };
+      }
+
+      // Validate URL protocol for security
+      if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+        return { success: false, error: `Invalid URL protocol: must use http:// or https://, got ${parsedUrl.protocol}` };
+      }
+
+      // Use cross-platform browser opening like reference project
+      const { execFile } = require('child_process');
+      const platform = process.platform;
+
+      // Helper to wrap execFile in promise
+      const execFilePromise = (file: string, args: string[]): Promise<{ code: number }> => {
+        return new Promise((resolve) => {
+          execFile(file, args, { shell: true }, (error: Error | null, _stdout: string, _stderr: string) => {
+            resolve({ code: error ? 1 : 0 });
+          });
+        });
+      };
+
+      if (platform === 'win32') {
+        // On Windows, use rundll32 to open URL
+        const { code } = await execFilePromise('rundll32', ['url,OpenURL', targetUrl]);
+        return { success: code === 0 };
+      } else if (platform === 'darwin') {
+        // On macOS, use open command
+        const { code } = await execFilePromise('open', [targetUrl]);
+        return { success: code === 0 };
+      } else {
+        // On Linux, use xdg-open
+        const { code } = await execFilePromise('xdg-open', [targetUrl]);
+        return { success: code === 0 };
+      }
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e);
+      return { success: false, error: message };
+    }
+  });
+
+  // MCP handlers
+  ipcMain.handle(IPC.MCP_GET_SERVERS, () => {
+    return getConnectedServers();
+  });
+
+  ipcMain.handle(IPC.MCP_GET_TOOLS, (_event, serverName: string) => {
+    return getServerTools(serverName);
+  });
+
+  ipcMain.handle(IPC.MCP_CALL_TOOL, async (_event, serverName: string, toolName: string, args: Record<string, unknown>) => {
+    try {
+      const result = await callMCPTool(serverName, toolName, args);
+      return { success: true, result };
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e);
+      return { success: false, error: message };
+    }
+  });
+
+  ipcMain.handle(IPC.MCP_DISCONNECT, (_event, serverName: string) => {
+    disconnectMCPServer(serverName);
     return true;
   });
 }
@@ -378,4 +699,91 @@ function safeExists(targetPath: string): boolean {
   } catch {
     return false;
   }
+}
+
+// Skill loading functions
+interface DiskSkill {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  path: string;
+  mode: string;
+  enabled: boolean;
+  createdAt: number;
+}
+
+function getSkillsBaseDir(): string {
+  return path.join(os.homedir(), '.claude', 'skills');
+}
+
+function parseFrontmatter(content: string): { frontmatter: Record<string, string>; body: string } {
+  const match = content.match(/^---\s*\n([\s\S]*?)---\s*\n?([\s\S]*)$/);
+  if (!match) {
+    return { frontmatter: {}, body: content };
+  }
+
+  const frontmatter: Record<string, string> = {};
+  const lines = match[1].split('\n');
+  for (const line of lines) {
+    const colonIndex = line.indexOf(':');
+    if (colonIndex > 0) {
+      const key = line.slice(0, colonIndex).trim();
+      const value = line.slice(colonIndex + 1).trim();
+      frontmatter[key] = value;
+    }
+  }
+
+  return { frontmatter, body: match[2] };
+}
+
+function loadSkillByPath(skillDirPath: string): DiskSkill | null {
+  const skillFilePath = path.join(skillDirPath, 'SKILL.md');
+  if (!safeExists(skillFilePath)) {
+    return null;
+  }
+
+  try {
+    const content = fs.readFileSync(skillFilePath, 'utf-8');
+    const { frontmatter } = parseFrontmatter(content);
+
+    return {
+      id: path.basename(skillDirPath),
+      name: frontmatter.name || path.basename(skillDirPath),
+      description: frontmatter.description || '',
+      icon: frontmatter.icon || '🛠️',
+      path: skillDirPath,
+      mode: frontmatter.mode || 'work',
+      enabled: true,
+      createdAt: safeExists(skillDirPath) ? fs.statSync(skillDirPath).mtimeMs : Date.now(),
+    };
+  } catch {
+    return null;
+  }
+}
+
+function loadSkillsFromDisk(): DiskSkill[] {
+  const skillsDir = getSkillsBaseDir();
+  if (!safeExists(skillsDir)) {
+    return [];
+  }
+
+  const skills: DiskSkill[] = [];
+
+  try {
+    const entries = fs.readdirSync(skillsDir, { withFileTypes: true });
+    for (const entry of entries) {
+      if (entry.isDirectory()) {
+        const skillDirPath = path.join(skillsDir, entry.name);
+        const skill = loadSkillByPath(skillDirPath);
+        if (skill) {
+          skills.push(skill);
+        }
+      }
+    }
+  } catch {
+    // Return empty array on error
+  }
+
+  return skills;
 }

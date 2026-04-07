@@ -3,6 +3,7 @@
   flex-direction: column;
   height: 100%;
   background-color: var(--bg-primary);
+  position: relative;
 }
 
 .chat-empty {
@@ -31,4 +32,30 @@
   flex: 1;
   overflow-y: auto;
   padding: 16px 0;
+}
+
+.scroll-to-bottom {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 140px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  z-index: 10;
+}
+
+.scroll-to-bottom:hover {
+  background-color: #f3f4f6;
+  color: #374151;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }

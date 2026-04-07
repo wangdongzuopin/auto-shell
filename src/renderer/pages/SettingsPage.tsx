@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
-import { Header } from '../components/common/Header';
 import { useAppStore } from '../stores/appStore';
 import type { PermissionMode } from '../../shared/types';
 
@@ -24,7 +23,6 @@ export const SettingsPage: React.FC = () => {
 
   return (
     <div className="settings-page">
-      <Header title="设置" showNav={false} />
       <div className="settings-content">
         <section className="settings-section">
           <h3>权限设置</h3>

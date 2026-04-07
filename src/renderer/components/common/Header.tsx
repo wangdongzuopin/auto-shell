@@ -1,5 +1,5 @@
 import React from 'react';
-import { Menu, ArrowLeft, ArrowRight, Minus, Square, X, Ghost } from 'lucide-react';
+import { Menu, Minus, Square, X } from 'lucide-react';
 import './Header.css';
 
 interface HeaderProps {
@@ -9,15 +9,15 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ sidebarCollapsed, onToggleSidebar }) => {
   const handleMinimize = () => {
-    window.electronAPI?.minimizeWindow?.();
+    window.api?.minimizeWindow?.();
   };
 
   const handleMaximize = () => {
-    window.electronAPI?.maximizeWindow?.();
+    window.api?.maximizeWindow?.();
   };
 
   const handleClose = () => {
-    window.electronAPI?.closeWindow?.();
+    window.api?.closeWindow?.();
   };
 
   return (
@@ -26,22 +26,13 @@ export const Header: React.FC<HeaderProps> = ({ sidebarCollapsed, onToggleSideba
         <button className="header-btn" onClick={onToggleSidebar} title={sidebarCollapsed ? '展开侧边栏' : '收起侧边栏'}>
           <Menu size={18} />
         </button>
-        <button className="header-btn">
-          <ArrowLeft size={18} />
-        </button>
-        <button className="header-btn">
-          <ArrowRight size={18} />
-        </button>
       </div>
 
       <div className="header-center">
-        <span className="plan-badge">Free plan</span>
+        <span className="plan-badge">AI Client</span>
       </div>
 
       <div className="header-right">
-        <button className="header-btn ghost">
-          <Ghost size={18} />
-        </button>
         <button className="header-btn" onClick={handleMinimize}>
           <Minus size={18} />
         </button>

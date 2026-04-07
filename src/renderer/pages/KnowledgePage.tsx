@@ -1,10 +1,8 @@
 import React from 'react';
-import { Header } from '../components/common/Header';
 
 export const KnowledgePage: React.FC = () => {
   return (
     <div className="knowledge-page">
-      <Header title="知识库" showNav={false} />
       <div className="page-content">
         <div className="knowledge-empty">
           <p>上传文档构建知识库</p>

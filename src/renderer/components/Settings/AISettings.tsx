@@ -207,7 +207,7 @@ export function AISettings() {
           cursor: pointer;
         }
         .model-select:hover {
-          border-color: var(--ai-border);
+          border-border-color: var(--ai-border);
         }
         .model-hint {
           font-size: 11px;

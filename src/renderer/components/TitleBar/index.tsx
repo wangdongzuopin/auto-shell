@@ -63,7 +63,7 @@ export function TitleBar() {
           font-size: 12px;
           font-weight: 700;
           letter-spacing: 0.01em;
-          color: var(--text-primary);
+          color: var(--text-text-primary);
         }
         .title-sub {
           display: none;

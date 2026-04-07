@@ -188,7 +188,7 @@ export function QuickCommands() {
         .logo-text {
           font-size: 15px;
           font-weight: 700;
-          color: var(--text-primary);
+          color: var(--text-text-primary);
           letter-spacing: -0.01em;
         }
         .cmd-search {
@@ -204,7 +204,7 @@ export function QuickCommands() {
           color: var(--text3);
         }
         .cmd-search:focus-within {
-          border-color: var(--accent);
+          border-border-color: var(--accent);
           box-shadow: 0 0 0 3px var(--accent-glow);
         }
         .cmd-search input {

@@ -112,7 +112,7 @@ export function Settings({ open, defaultTab = 'ai', onClose }: SettingsProps) {
         }
         .settings-tab.active {
           color: var(--text);
-          border-color: var(--ai-border);
+          border-border-color: var(--ai-border);
           background: var(--ai-bg);
         }
         .settings-body {
@@ -223,7 +223,7 @@ export function ToggleRow({ label, checked, onChange }: { label: string; checked
         }
         .toggle.on {
           background: var(--ai-bg);
-          border-color: var(--ai-border);
+          border-border-color: var(--ai-border);
         }
         .toggle-knob {
           width: 18px;

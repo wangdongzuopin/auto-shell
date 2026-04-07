@@ -3,6 +3,7 @@ const electron = require("electron");
 const path = require("path");
 const fs = require("fs");
 const os = require("os");
+const child_process = require("child_process");
 const pty = require("node-pty");
 function _interopNamespaceDefault(e) {
   const n = Object.create(null, { [Symbol.toStringTag]: { value: "Module" } });
@@ -55,6 +56,48 @@ ${ctx.stderr.slice(-1200)}
 命令: ${command}
 只输出 JSON。`
 };
+function buildSystemPrompt(skills) {
+  const enabledSkills = skills.filter((s) => s.enabled);
+  let prompt = `你是一个AI助手，叫Auto Shell。
+
+## 你的能力
+- 可以读取、创建和编辑文件
+- 可以执行终端命令
+- 可以搜索文件和内容
+- 可以使用各种技能来帮助你完成任务
+- 可以打开网页链接
+
+`;
+  if (enabledSkills.length > 0) {
+    prompt += `## 可用技能
+`;
+    for (const skill of enabledSkills) {
+      prompt += `- ${skill.name}: ${skill.description}
+`;
+    }
+    prompt += `
+`;
+  }
+  prompt += `## 使用工具
+当用户要求读取文件时，使用 Read 工具。
+当用户要求创建或修改文件时，使用 Write 工具。
+当用户要求执行命令时，使用 Bash 工具。
+当用户要求搜索文件时，使用 Glob 工具。
+当用户要求搜索文件内容时，使用 Grep 工具。
+当用户要求打开网页或浏览器时，使用 open_browser 工具，格式：[TOOL: open_browser: URL]
+
+`;
+  prompt += `## 规则
+1. 如果你不确定文件是否存在，先尝试读取
+2. 执行危险命令前先确认
+3. 始终用中文回复
+4. 如果工具执行失败，告诉用户错误信息
+5. 当需要打开网页时，先提取或确认URL，然后使用 [TOOL: open_browser: URL] 格式调用工具
+
+`;
+  return prompt;
+}
+buildSystemPrompt([]);
 class ClaudeProvider {
   constructor(config) {
     this.config = config;
@@ -671,7 +714,30 @@ const IPC = {
   // Window controls
   WINDOW_MINIMIZE: "window:minimize",
   WINDOW_MAXIMIZE: "window:maximize",
-  WINDOW_CLOSE: "window:close"
+  WINDOW_CLOSE: "window:close",
+  // Dialog
+  DIALOG_OPEN_FOLDER: "dialog:open-folder",
+  // Skills
+  SKILLS_GET_ALL: "skills:get-all",
+  SKILLS_GET_BY_PATH: "skills:get-by-path",
+  // Sessions
+  SESSION_SAVE: "session:save",
+  SESSION_LOAD: "session:load",
+  SESSION_LIST: "session:list",
+  SESSION_DELETE: "session:delete",
+  SESSION_LIST_ALL: "session:list-all",
+  // Tools
+  TOOL_READ: "tool:read",
+  TOOL_WRITE: "tool:write",
+  TOOL_GLOB: "tool:glob",
+  TOOL_GREP: "tool:grep",
+  TOOL_BASH: "tool:bash",
+  TOOL_OPEN_URL: "tool:open-url",
+  // MCP
+  MCP_GET_SERVERS: "mcp:get-servers",
+  MCP_GET_TOOLS: "mcp:get-tools",
+  MCP_CALL_TOOL: "mcp:call-tool",
+  MCP_DISCONNECT: "mcp:disconnect"
 };
 const CONFIG_DIR = path__namespace.join(os__namespace.homedir(), ".autoshell");
 const CONFIG_PATH = path__namespace.join(CONFIG_DIR, "config.json");
@@ -931,6 +997,236 @@ function recordTerminalCommand(cwd, command) {
 function normalizeCwdKey(cwd) {
   return cwd?.trim() || "~";
 }
+const SESSIONS_DIR = path__namespace.join(os__namespace.homedir(), ".autoshell", "sessions");
+function getSessionsDir() {
+  if (!fs__namespace.existsSync(SESSIONS_DIR)) {
+    fs__namespace.mkdirSync(SESSIONS_DIR, { recursive: true });
+  }
+  return SESSIONS_DIR;
+}
+function saveSession(threadId, data) {
+  const sessionsDir = getSessionsDir();
+  const filePath = path__namespace.join(sessionsDir, `${threadId}.json`);
+  fs__namespace.writeFileSync(filePath, JSON.stringify(data, null, 2), "utf-8");
+}
+function loadSession(threadId) {
+  const filePath = path__namespace.join(getSessionsDir(), `${threadId}.json`);
+  if (!fs__namespace.existsSync(filePath)) {
+    return null;
+  }
+  try {
+    return JSON.parse(fs__namespace.readFileSync(filePath, "utf-8"));
+  } catch {
+    return null;
+  }
+}
+function listSessions() {
+  const sessionsDir = getSessionsDir();
+  if (!fs__namespace.existsSync(sessionsDir)) {
+    return [];
+  }
+  return fs__namespace.readdirSync(sessionsDir).filter((f) => f.endsWith(".json")).map((f) => f.replace(".json", ""));
+}
+function deleteSession(threadId) {
+  const filePath = path__namespace.join(getSessionsDir(), `${threadId}.json`);
+  if (fs__namespace.existsSync(filePath)) {
+    fs__namespace.unlinkSync(filePath);
+  }
+}
+function loadAllSessions() {
+  const sessionsDir = getSessionsDir();
+  if (!fs__namespace.existsSync(sessionsDir)) {
+    return [];
+  }
+  const files = fs__namespace.readdirSync(sessionsDir).filter((f) => f.endsWith(".json"));
+  const sessions = [];
+  for (const file of files) {
+    try {
+      const content = fs__namespace.readFileSync(path__namespace.join(sessionsDir, file), "utf-8");
+      sessions.push(JSON.parse(content));
+    } catch {
+    }
+  }
+  return sessions;
+}
+class MCPClientImpl {
+  servers = /* @__PURE__ */ new Map();
+  async connect(server) {
+    if (this.servers.has(server.name)) {
+      return this.servers.get(server.name).tools;
+    }
+    return new Promise((resolve, reject) => {
+      const proc = child_process.spawn(server.command, server.args, {
+        env: { ...process.env, ...server.env },
+        stdio: ["pipe", "pipe", "pipe"],
+        shell: false
+      });
+      const connectedServer = {
+        process: proc,
+        tools: [],
+        requestId: 1
+      };
+      let stdoutBuffer = "";
+      proc.stdout?.on("data", (data) => {
+        stdoutBuffer += data.toString();
+        const lines = stdoutBuffer.split("\n");
+        stdoutBuffer = lines.pop() || "";
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          try {
+            const msg = JSON.parse(line);
+            this.handleMessage(server.name, msg, connectedServer);
+          } catch {
+          }
+        }
+      });
+      proc.stderr?.on("data", (data) => {
+        console.error(`MCP ${server.name} stderr:`, data.toString());
+      });
+      proc.on("error", (err) => {
+        console.error(`MCP ${server.name} error:`, err);
+        this.servers.delete(server.name);
+        reject(err);
+      });
+      proc.on("exit", (code) => {
+        console.log(`MCP ${server.name} exited with code ${code}`);
+        this.servers.delete(server.name);
+      });
+      this.servers.set(server.name, connectedServer);
+      const initRequest = {
+        jsonrpc: "2.0",
+        id: 0,
+        method: "initialize",
+        params: {
+          protocolVersion: "2024-11-05",
+          capabilities: {},
+          clientInfo: {
+            name: "auto-shell",
+            version: "1.0.0"
+          }
+        }
+      };
+      proc.stdin?.write(JSON.stringify(initRequest) + "\n");
+      setTimeout(() => {
+        proc.stdin?.write(JSON.stringify({
+          jsonrpc: "2.0",
+          method: "notifications/initialized"
+        }) + "\n");
+      }, 100);
+      setTimeout(() => {
+        if (connectedServer.tools.length > 0) {
+          resolve(connectedServer.tools);
+        } else {
+          resolve([]);
+        }
+      }, 2e3);
+    });
+  }
+  handleMessage(serverName, msg, server) {
+    if (msg.id !== void 0) {
+      if (msg.result && typeof msg.result === "object" && "tools" in msg.result) {
+        const result = msg.result;
+        if (result.tools) {
+          server.tools = result.tools;
+        }
+      }
+    }
+    if (msg.method === "tools/list") ;
+  }
+  async callTool(serverName, toolName, args) {
+    const server = this.servers.get(serverName);
+    if (!server) {
+      throw new Error(`MCP server ${serverName} not connected`);
+    }
+    return new Promise((resolve, reject) => {
+      const requestId = server.requestId++;
+      const request = {
+        jsonrpc: "2.0",
+        id: requestId,
+        method: "tools/call",
+        params: {
+          name: toolName,
+          arguments: args
+        }
+      };
+      const proc = server.process;
+      let stdoutBuffer = "";
+      const timeout = setTimeout(() => {
+        cleanup();
+        reject(new Error(`MCP tool ${toolName} timed out`));
+      }, 3e4);
+      const cleanup = () => {
+        proc.stdout?.removeListener("data", onData);
+      };
+      const onData = (data) => {
+        stdoutBuffer += data.toString();
+        const lines = stdoutBuffer.split("\n");
+        stdoutBuffer = lines.pop() || "";
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          try {
+            const msg = JSON.parse(line);
+            if (msg.id === requestId && msg.result) {
+              clearTimeout(timeout);
+              cleanup();
+              resolve(msg.result);
+            }
+            if (msg.id === requestId && msg.error) {
+              clearTimeout(timeout);
+              cleanup();
+              reject(new Error(msg.error.message || "Tool call failed"));
+            }
+          } catch {
+          }
+        }
+      };
+      proc.stdout?.on("data", onData);
+      proc.stdin?.write(JSON.stringify(request) + "\n");
+    });
+  }
+  disconnect(serverName) {
+    const server = this.servers.get(serverName);
+    if (server) {
+      server.process.kill();
+      this.servers.delete(serverName);
+    }
+  }
+  getTools(serverName) {
+    return this.servers.get(serverName)?.tools || [];
+  }
+  isConnected(serverName) {
+    return this.servers.has(serverName);
+  }
+}
+const mcpClient = new MCPClientImpl();
+const MCP_CONFIG_DIR = path__namespace.join(os__namespace.homedir(), ".autoshell");
+const MCP_CONFIG_PATH = path__namespace.join(MCP_CONFIG_DIR, "mcp-config.json");
+function getMCPConfig() {
+  if (!fs__namespace.existsSync(MCP_CONFIG_DIR)) {
+    fs__namespace.mkdirSync(MCP_CONFIG_DIR, { recursive: true });
+  }
+  if (!fs__namespace.existsSync(MCP_CONFIG_PATH)) {
+    return { servers: [] };
+  }
+  try {
+    return JSON.parse(fs__namespace.readFileSync(MCP_CONFIG_PATH, "utf-8"));
+  } catch {
+    return { servers: [] };
+  }
+}
+function getConnectedServers() {
+  const config = getMCPConfig();
+  return config.servers.filter((s) => mcpClient.isConnected(s.name)).map((s) => s.name);
+}
+function getServerTools(serverName) {
+  return mcpClient.getTools(serverName);
+}
+async function callMCPTool(serverName, toolName, args) {
+  return mcpClient.callTool(serverName, toolName, args);
+}
+function disconnectMCPServer(serverName) {
+  mcpClient.disconnect(serverName);
+}
 let currentProvider = null;
 async function getProvider() {
   if (currentProvider) {
@@ -973,9 +1269,9 @@ function registerIpcHandlers() {
     const provider = await getProvider();
     return provider.explainError(ctx);
   });
-  electron.ipcMain.handle(IPC.AI_NATURAL_CMD, async (_event, input, shell) => {
+  electron.ipcMain.handle(IPC.AI_NATURAL_CMD, async (_event, input, shell2) => {
     const provider = await getProvider();
-    return provider.naturalToCommand(input, shell);
+    return provider.naturalToCommand(input, shell2);
   });
   electron.ipcMain.handle(IPC.AI_EXPLAIN_CMD, async (_event, command) => {
     const provider = await getProvider();
@@ -1037,6 +1333,255 @@ function registerIpcHandlers() {
   });
   electron.ipcMain.handle(IPC.TERMINAL_HISTORY_RECORD, (_event, cwd, command) => {
     recordTerminalCommand(cwd, command);
+    return true;
+  });
+  electron.ipcMain.handle(IPC.DIALOG_OPEN_FOLDER, async (_event, title) => {
+    const result = await electron.dialog.showOpenDialog({
+      title,
+      properties: ["openDirectory"]
+    });
+    return result.canceled ? null : result.filePaths[0];
+  });
+  electron.ipcMain.handle(IPC.SKILLS_GET_ALL, async () => {
+    return loadSkillsFromDisk();
+  });
+  electron.ipcMain.handle(IPC.SKILLS_GET_BY_PATH, async (_event, skillPath) => {
+    return loadSkillByPath(skillPath);
+  });
+  electron.ipcMain.handle(IPC.SESSION_SAVE, (_event, threadId, data) => {
+    saveSession(threadId, data);
+    return true;
+  });
+  electron.ipcMain.handle(IPC.SESSION_LOAD, (_event, threadId) => {
+    return loadSession(threadId);
+  });
+  electron.ipcMain.handle(IPC.SESSION_LIST, () => {
+    return listSessions();
+  });
+  electron.ipcMain.handle(IPC.SESSION_DELETE, (_event, threadId) => {
+    deleteSession(threadId);
+    return true;
+  });
+  electron.ipcMain.handle(IPC.SESSION_LIST_ALL, () => {
+    return loadAllSessions();
+  });
+  electron.ipcMain.handle(IPC.TOOL_READ, async (_event, filePath) => {
+    try {
+      const content = fs__namespace.readFileSync(filePath, "utf-8");
+      return { success: true, content };
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e);
+      return { success: false, error: message };
+    }
+  });
+  electron.ipcMain.handle(IPC.TOOL_WRITE, async (_event, filePath, content) => {
+    try {
+      const dir = path__namespace.dirname(filePath);
+      if (!fs__namespace.existsSync(dir)) {
+        fs__namespace.mkdirSync(dir, { recursive: true });
+      }
+      fs__namespace.writeFileSync(filePath, content, "utf-8");
+      return { success: true };
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e);
+      return { success: false, error: message };
+    }
+  });
+  electron.ipcMain.handle(IPC.TOOL_GLOB, async (_event, pattern, cwd) => {
+    try {
+      let matchPattern = function(filePath, pattern2) {
+        const parts = pattern2.split("/");
+        const fileParts = filePath.replace(/\\/g, "/").split("/");
+        let fileIndex = 0;
+        for (const part of parts) {
+          if (part === "**") {
+            if (fileIndex >= fileParts.length) return false;
+            continue;
+          }
+          if (part === "*") {
+            if (fileIndex >= fileParts.length || fileParts[fileIndex].includes("/")) return false;
+            fileIndex++;
+            continue;
+          }
+          if (part.includes("*")) {
+            const regex = new RegExp("^" + part.replace(/\*/g, ".*") + "$");
+            if (fileIndex >= fileParts.length || !regex.test(fileParts[fileIndex])) return false;
+            fileIndex++;
+            continue;
+          }
+          if (fileIndex >= fileParts.length || fileParts[fileIndex] !== part) return false;
+          fileIndex++;
+        }
+        return fileIndex === fileParts.length || parts[parts.length - 1] === "**";
+      }, walkDir = function(dir, depth = 0) {
+        if (depth > 10) return;
+        try {
+          const entries = fs__namespace.readdirSync(dir, { withFileTypes: true });
+          for (const entry of entries) {
+            const fullPath = path__namespace.join(dir, entry.name);
+            if (entry.isDirectory()) {
+              walkDir(fullPath, depth + 1);
+            } else if (entry.isFile()) {
+              const relativePath = path__namespace.relative(normalizedCwd, fullPath).replace(/\\/g, "/");
+              if (matchPattern(relativePath, pattern) || matchPattern(entry.name, pattern)) {
+                results.push(fullPath);
+              }
+            }
+          }
+        } catch {
+        }
+      };
+      const results = [];
+      const normalizedCwd = cwd || process.cwd();
+      walkDir(normalizedCwd);
+      return { success: true, matches: results.slice(0, 100) };
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e);
+      return { success: false, error: message };
+    }
+  });
+  electron.ipcMain.handle(IPC.TOOL_GREP, async (_event, pattern, cwd, options) => {
+    try {
+      let walkDir = function(dir, depth = 0) {
+        if (depth > 10) return;
+        try {
+          const entries = fs__namespace.readdirSync(dir, { withFileTypes: true });
+          for (const entry of entries) {
+            const fullPath = path__namespace.join(dir, entry.name);
+            if (entry.isDirectory()) {
+              if (!entry.name.startsWith(".") && entry.name !== "node_modules") {
+                walkDir(fullPath, depth + 1);
+              }
+            } else if (entry.isFile()) {
+              if (options?.ext && options.ext.length > 0) {
+                const ext = path__namespace.extname(entry.name).slice(1);
+                if (!options.ext.includes(ext)) continue;
+              }
+              try {
+                const content = fs__namespace.readFileSync(fullPath, "utf-8");
+                const lines = content.split("\n");
+                lines.forEach((line, index) => {
+                  if (regex.test(line)) {
+                    results.push({
+                      file: fullPath,
+                      line: index + 1,
+                      content: line.trim()
+                    });
+                  }
+                });
+              } catch {
+              }
+            }
+          }
+        } catch {
+        }
+      };
+      const results = [];
+      const normalizedCwd = cwd || process.cwd();
+      const regex = new RegExp(pattern, "i");
+      walkDir(normalizedCwd);
+      return { success: true, matches: results.slice(0, 100) };
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e);
+      return { success: false, error: message };
+    }
+  });
+  electron.ipcMain.handle(IPC.TOOL_BASH, async (_event, command, cwd) => {
+    return new Promise((resolve) => {
+      const pty2 = require("node-pty");
+      const shell2 = process.platform === "win32" ? "powershell.exe" : "bash";
+      const cwdArg = cwd || os__namespace.homedir();
+      try {
+        const p = pty2.spawn(shell2, [], {
+          cwd: cwdArg,
+          env: process.env
+        });
+        let output = "";
+        let timeout;
+        const cleanup = () => {
+          clearTimeout(timeout);
+          try {
+            p.kill();
+          } catch {
+          }
+        };
+        timeout = setTimeout(() => {
+          cleanup();
+          resolve({ exitCode: -1, output: "Command timed out after 30 seconds" });
+        }, 3e4);
+        p.onData((data) => {
+          output += data;
+        });
+        p.onExit(({ exitCode }) => {
+          cleanup();
+          resolve({ exitCode: exitCode || 0, output });
+        });
+        p.write(command + "\r");
+      } catch (e) {
+        const message = e instanceof Error ? e.message : String(e);
+        resolve({ exitCode: -1, output: "", error: message });
+      }
+    });
+  });
+  electron.ipcMain.handle(IPC.TOOL_OPEN_URL, async (_event, url) => {
+    try {
+      if (!url || typeof url !== "string") {
+        return { success: false, error: "Invalid URL" };
+      }
+      let targetUrl = url;
+      if (!url.startsWith("http://") && !url.startsWith("https://")) {
+        targetUrl = "https://" + url;
+      }
+      let parsedUrl;
+      try {
+        parsedUrl = new URL(targetUrl);
+      } catch {
+        return { success: false, error: `Invalid URL format: ${url}` };
+      }
+      if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:") {
+        return { success: false, error: `Invalid URL protocol: must use http:// or https://, got ${parsedUrl.protocol}` };
+      }
+      const { execFile } = require("child_process");
+      const platform = process.platform;
+      const execFilePromise = (file, args) => {
+        return new Promise((resolve) => {
+          execFile(file, args, { shell: true }, (error, _stdout, _stderr) => {
+            resolve({ code: error ? 1 : 0 });
+          });
+        });
+      };
+      if (platform === "win32") {
+        const { code } = await execFilePromise("rundll32", ["url,OpenURL", targetUrl]);
+        return { success: code === 0 };
+      } else if (platform === "darwin") {
+        const { code } = await execFilePromise("open", [targetUrl]);
+        return { success: code === 0 };
+      } else {
+        const { code } = await execFilePromise("xdg-open", [targetUrl]);
+        return { success: code === 0 };
+      }
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e);
+      return { success: false, error: message };
+    }
+  });
+  electron.ipcMain.handle(IPC.MCP_GET_SERVERS, () => {
+    return getConnectedServers();
+  });
+  electron.ipcMain.handle(IPC.MCP_GET_TOOLS, (_event, serverName) => {
+    return getServerTools(serverName);
+  });
+  electron.ipcMain.handle(IPC.MCP_CALL_TOOL, async (_event, serverName, toolName, args) => {
+    try {
+      const result = await callMCPTool(serverName, toolName, args);
+      return { success: true, result };
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e);
+      return { success: false, error: message };
+    }
+  });
+  electron.ipcMain.handle(IPC.MCP_DISCONNECT, (_event, serverName) => {
+    disconnectMCPServer(serverName);
     return true;
   });
 }
@@ -1186,6 +1731,69 @@ function safeExists(targetPath) {
   } catch {
     return false;
   }
+}
+function getSkillsBaseDir() {
+  return path__namespace.join(os__namespace.homedir(), ".claude", "skills");
+}
+function parseFrontmatter(content) {
+  const match = content.match(/^---\s*\n([\s\S]*?)---\s*\n?([\s\S]*)$/);
+  if (!match) {
+    return { frontmatter: {}, body: content };
+  }
+  const frontmatter = {};
+  const lines = match[1].split("\n");
+  for (const line of lines) {
+    const colonIndex = line.indexOf(":");
+    if (colonIndex > 0) {
+      const key = line.slice(0, colonIndex).trim();
+      const value = line.slice(colonIndex + 1).trim();
+      frontmatter[key] = value;
+    }
+  }
+  return { frontmatter, body: match[2] };
+}
+function loadSkillByPath(skillDirPath) {
+  const skillFilePath = path__namespace.join(skillDirPath, "SKILL.md");
+  if (!safeExists(skillFilePath)) {
+    return null;
+  }
+  try {
+    const content = fs__namespace.readFileSync(skillFilePath, "utf-8");
+    const { frontmatter } = parseFrontmatter(content);
+    return {
+      id: path__namespace.basename(skillDirPath),
+      name: frontmatter.name || path__namespace.basename(skillDirPath),
+      description: frontmatter.description || "",
+      icon: frontmatter.icon || "🛠️",
+      path: skillDirPath,
+      mode: frontmatter.mode || "work",
+      enabled: true,
+      createdAt: safeExists(skillDirPath) ? fs__namespace.statSync(skillDirPath).mtimeMs : Date.now()
+    };
+  } catch {
+    return null;
+  }
+}
+function loadSkillsFromDisk() {
+  const skillsDir = getSkillsBaseDir();
+  if (!safeExists(skillsDir)) {
+    return [];
+  }
+  const skills = [];
+  try {
+    const entries = fs__namespace.readdirSync(skillsDir, { withFileTypes: true });
+    for (const entry of entries) {
+      if (entry.isDirectory()) {
+        const skillDirPath = path__namespace.join(skillsDir, entry.name);
+        const skill = loadSkillByPath(skillDirPath);
+        if (skill) {
+          skills.push(skill);
+        }
+      }
+    }
+  } catch {
+  }
+  return skills;
 }
 const instances = /* @__PURE__ */ new Map();
 function resolveCwd(cwd) {

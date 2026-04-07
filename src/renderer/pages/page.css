@@ -71,6 +71,150 @@
 .skill-card p {
   font-size: 14px;
   color: var(--text-secondary);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.5;
+  max-height: 3em;
+}
+
+.skills-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.skills-header h2 {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.add-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background-color: var(--text-primary);
+  color: var(--bg-card);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.add-btn:hover {
+  opacity: 0.9;
+}
+
+.import-form {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.import-form .form-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.import-form .form-row label {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.import-form .form-row label span {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.import-form .form-row input,
+.import-form .form-row select {
+  padding: 10px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.import-form .form-row input:focus,
+.import-form .form-row select:focus {
+  outline: none;
+  border-color: var(--text-primary);
+}
+
+.import-form .form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.cancel-btn,
+.confirm-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.cancel-btn {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.confirm-btn {
+  background-color: var(--text-primary);
+  color: var(--bg-card);
+}
+
+.skill-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.skill-header .delete-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.skill-card:hover .delete-btn {
+  opacity: 1;
+}
+
+.skill-header .delete-btn:hover {
+  background-color: var(--hover-bg);
+  color: var(--color-error);
+}
+
+.skill-mode {
+  margin-top: 12px;
+  font-size: 11px;
+  padding: 2px 8px;
+  background-color: var(--bg-primary);
+  color: var(--text-secondary);
+  border-radius: 10px;
+  display: inline-block;
 }
 
 .settings-content {
@@ -191,6 +335,64 @@
 }
 
 .native-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.path-input-wrapper {
+  display: flex;
+  gap: 8px;
+}
+
+.path-input-wrapper input {
+  flex: 1;
+}
+
+.path-browse-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.path-browse-btn:hover:not(:disabled) {
+  border-color: var(--text-secondary);
+}
+
+.path-browse-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.form-row label.full-width {
+  flex: 1;
+}
+
+.form-row label.full-width input {
+  width: 100%;
+}
+
+.import-form .form-row input:disabled {
+  opacity: 0.6;
+}
+
+.confirm-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }

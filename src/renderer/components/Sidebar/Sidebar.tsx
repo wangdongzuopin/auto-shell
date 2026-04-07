@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Settings } from 'lucide-react';
 import { SidebarMenu } from './SidebarMenu';
 import { RecentThreads } from './RecentThreads';
-import { UserProfile } from './UserProfile';
 import { useChatStore } from '../../stores/chatStore';
 import './Sidebar.css';
 
@@ -28,28 +27,38 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
         </div>
       </div>
 
+      <div className="sidebar-actions">
+        <button
+          className="sidebar-action-btn"
+          onClick={handleNewChat}
+          title={collapsed ? '新建对话' : undefined}
+        >
+          <Plus size={18} />
+          {!collapsed && <span>新建对话</span>}
+        </button>
+
+        <button
+          className="sidebar-action-btn"
+          title={collapsed ? '搜索' : undefined}
+        >
+          <Search size={18} />
+          {!collapsed && <span>搜索</span>}
+        </button>
+
+        <button
+          className="sidebar-action-btn"
+          onClick={() => navigate('/settings')}
+          title={collapsed ? '设置' : undefined}
+        >
+          <Settings size={18} />
+          {!collapsed && <span>设置</span>}
+        </button>
+      </div>
+
       {!collapsed && (
         <>
-          <div className="sidebar-actions">
-            <button className="sidebar-action-btn" onClick={handleNewChat} title="新建对话">
-              <Plus size={18} />
-              <span>新建对话</span>
-            </button>
-
-            <button className="sidebar-action-btn" title="搜索">
-              <Search size={18} />
-              <span>搜索</span>
-            </button>
-
-            <button className="sidebar-action-btn" onClick={() => navigate('/settings')} title="设置">
-              <Settings size={18} />
-              <span>设置</span>
-            </button>
-          </div>
-
           <SidebarMenu />
           <RecentThreads />
-          <UserProfile />
         </>
       )}
     </aside>

@@ -83,10 +83,10 @@ export function ThemeSelector() {
           padding: 0;
         }
         .theme-swatch:hover {
-          border-color: rgba(76,141,255,0.28);
+          border-border-color: rgba(76,141,255,0.28);
         }
         .theme-swatch.active {
-          border-color: rgba(76,141,255,0.48);
+          border-border-color: rgba(76,141,255,0.48);
           box-shadow: inset 0 0 0 1px rgba(76,141,255,0.12);
         }
         .swatch-preview {

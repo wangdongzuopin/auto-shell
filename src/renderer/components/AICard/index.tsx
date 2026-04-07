@@ -164,7 +164,7 @@ export function AICard() {
         }
         .fix-run:hover,
         .ai-close:hover {
-          border-color: rgba(76,141,255,0.5);
+          border-border-color: rgba(76,141,255,0.5);
           color: white;
         }
         .ai-close {

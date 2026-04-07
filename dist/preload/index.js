@@ -32,7 +32,30 @@ const IPC = {
   // Window controls
   WINDOW_MINIMIZE: "window:minimize",
   WINDOW_MAXIMIZE: "window:maximize",
-  WINDOW_CLOSE: "window:close"
+  WINDOW_CLOSE: "window:close",
+  // Dialog
+  DIALOG_OPEN_FOLDER: "dialog:open-folder",
+  // Skills
+  SKILLS_GET_ALL: "skills:get-all",
+  SKILLS_GET_BY_PATH: "skills:get-by-path",
+  // Sessions
+  SESSION_SAVE: "session:save",
+  SESSION_LOAD: "session:load",
+  SESSION_LIST: "session:list",
+  SESSION_DELETE: "session:delete",
+  SESSION_LIST_ALL: "session:list-all",
+  // Tools
+  TOOL_READ: "tool:read",
+  TOOL_WRITE: "tool:write",
+  TOOL_GLOB: "tool:glob",
+  TOOL_GREP: "tool:grep",
+  TOOL_BASH: "tool:bash",
+  TOOL_OPEN_URL: "tool:open-url",
+  // MCP
+  MCP_GET_SERVERS: "mcp:get-servers",
+  MCP_GET_TOOLS: "mcp:get-tools",
+  MCP_CALL_TOOL: "mcp:call-tool",
+  MCP_DISCONNECT: "mcp:disconnect"
 };
 const api = {
   checkAIAvailable: () => electron.ipcRenderer.invoke(IPC.AI_CHECK_AVAILABLE),
@@ -102,6 +125,26 @@ const api = {
   },
   minimizeWindow: () => electron.ipcRenderer.send(IPC.WINDOW_MINIMIZE),
   maximizeWindow: () => electron.ipcRenderer.send(IPC.WINDOW_MAXIMIZE),
-  closeWindow: () => electron.ipcRenderer.send(IPC.WINDOW_CLOSE)
+  closeWindow: () => electron.ipcRenderer.send(IPC.WINDOW_CLOSE),
+  openFolderDialog: (title) => electron.ipcRenderer.invoke(IPC.DIALOG_OPEN_FOLDER, title),
+  getSkillsFromDisk: () => electron.ipcRenderer.invoke(IPC.SKILLS_GET_ALL),
+  getSkillByPath: (path) => electron.ipcRenderer.invoke(IPC.SKILLS_GET_BY_PATH, path),
+  saveSession: (threadId, data) => electron.ipcRenderer.invoke(IPC.SESSION_SAVE, threadId, data),
+  loadSession: (threadId) => electron.ipcRenderer.invoke(IPC.SESSION_LOAD, threadId),
+  listSessions: () => electron.ipcRenderer.invoke(IPC.SESSION_LIST),
+  deleteSession: (threadId) => electron.ipcRenderer.invoke(IPC.SESSION_DELETE, threadId),
+  listAllSessions: () => electron.ipcRenderer.invoke(IPC.SESSION_LIST_ALL),
+  // Tools
+  readFile: (filePath) => electron.ipcRenderer.invoke(IPC.TOOL_READ, filePath),
+  writeFile: (filePath, content) => electron.ipcRenderer.invoke(IPC.TOOL_WRITE, filePath, content),
+  globFiles: (pattern, cwd) => electron.ipcRenderer.invoke(IPC.TOOL_GLOB, pattern, cwd),
+  grepFiles: (pattern, cwd, options) => electron.ipcRenderer.invoke(IPC.TOOL_GREP, pattern, cwd, options),
+  bashCommand: (command, cwd) => electron.ipcRenderer.invoke(IPC.TOOL_BASH, command, cwd),
+  openUrl: (url) => electron.ipcRenderer.invoke(IPC.TOOL_OPEN_URL, url),
+  // MCP
+  getMCPServers: () => electron.ipcRenderer.invoke(IPC.MCP_GET_SERVERS),
+  getMCPTools: (serverName) => electron.ipcRenderer.invoke(IPC.MCP_GET_TOOLS, serverName),
+  callMCPTool: (serverName, toolName, args) => electron.ipcRenderer.invoke(IPC.MCP_CALL_TOOL, serverName, toolName, args),
+  disconnectMCPServer: (serverName) => electron.ipcRenderer.invoke(IPC.MCP_DISCONNECT, serverName)
 };
 electron.contextBridge.exposeInMainWorld("api", api);

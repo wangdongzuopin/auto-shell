@@ -100,7 +100,7 @@ export function TabBar({ onOpenChat, onOpenSettings }: TabBarProps) {
           min-width: 0;
           border: 1px solid transparent;
           background: transparent;
-          transition: background .14s ease, color .14s ease, border-color .14s ease;
+          transition: background .14s ease, color .14s ease, border-border-color .14s ease;
         }
         .tab:hover {
           background: rgba(0,0,0,0.04);
@@ -108,8 +108,8 @@ export function TabBar({ onOpenChat, onOpenSettings }: TabBarProps) {
         }
         .tab.active {
           background: rgba(var(--bg-rgb), calc(var(--terminal-shell-alpha) * 1.4));
-          color: var(--text-primary);
-          border-color: var(--border);
+          color: var(--text-text-primary);
+          border-border-color: var(--border);
           font-weight: 600;
         }
         .tab-dot {

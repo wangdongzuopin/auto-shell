@@ -1,6 +1,6 @@
 .chat-message {
   display: flex;
-  gap: 16px;
+  gap: 12px;
   padding: 16px 24px;
   max-width: 100%;
 }
@@ -25,20 +25,20 @@
 }
 
 .user-avatar {
-  background-color: var(--bg-card);
-  color: var(--text-primary);
+  background-color: #e5e7eb;
+  color: #374151;
 }
 
 .ai-avatar {
-  background-color: var(--text-primary);
-  color: var(--bg-card);
+  background-color: #1f2937;
+  color: #ffffff;
 }
 
 .message-content {
-  max-width: 70%;
+  max-width: 72%;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
 .chat-message.user .message-content {
@@ -46,37 +46,41 @@
 }
 
 .message-bubble {
-  padding: 12px 16px;
-  border-radius: var(--radius-md);
-  background-color: var(--bg-card);
-  box-shadow: var(--shadow-card);
-  line-height: 1.6;
+  padding: 14px 18px;
+  border-radius: 18px;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  line-height: 1.65;
   white-space: pre-wrap;
   word-break: break-word;
+  font-size: 15px;
+  color: #1f2937;
 }
 
 .chat-message.user .message-bubble {
-  background-color: var(--text-primary);
-  color: var(--bg-card);
+  background-color: #1f2937;
+  color: #ffffff;
+  border-color: #1f2937;
 }
 
 .message-time {
   font-size: 11px;
-  color: var(--text-secondary);
+  color: #9ca3af;
   padding: 0 4px;
 }
 
+/* Artifact card */
 .artifact-card {
   margin-top: 12px;
-  background-color: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
   overflow: hidden;
 }
 
 .artifact-header {
-  padding: 8px 12px;
-  background-color: var(--bg-sidebar);
+  padding: 10px 14px;
+  background-color: #f3f4f6;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -85,31 +89,238 @@
 .artifact-title {
   font-size: 13px;
   font-weight: 500;
+  color: #374151;
 }
 
 .artifact-type {
   font-size: 11px;
-  color: var(--text-secondary);
+  color: #6b7280;
 }
 
 .artifact-content {
-  padding: 12px;
+  padding: 14px;
   margin: 0;
-  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
   font-size: 13px;
+  line-height: 1.6;
   overflow-x: auto;
+  color: #1f2937;
+  background-color: #ffffff;
 }
 
 .artifact-copy {
-  padding: 8px 12px;
+  padding: 8px 14px;
   font-size: 12px;
-  color: var(--color-info);
+  color: #3b82f6;
   background: none;
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid #e5e7eb;
   width: 100%;
   text-align: right;
 }
 
 .artifact-copy:hover {
-  background-color: var(--hover-bg);
+  background-color: #f3f4f6;
+}
+
+/* Thinking indicator */
+.thinking-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0;
+}
+
+.thinking-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #9ca3af;
+  animation: thinking-bounce 1.4s ease-in-out infinite;
+}
+
+.thinking-dot:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.thinking-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.thinking-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+.thinking-text {
+  font-size: 13px;
+  color: #6b7280;
+  margin-left: 4px;
+}
+
+@keyframes thinking-bounce {
+  0%, 60%, 100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+  30% {
+    transform: translateY(-6px);
+    opacity: 1;
+  }
+}
+
+/* Markdown rendering */
+.message-bubble h1,
+.message-bubble h2,
+.message-bubble h3,
+.message-bubble h4,
+.message-bubble h5,
+.message-bubble h6 {
+  margin: 0 0 10px 0;
+  font-weight: 600;
+  line-height: 1.4;
+  color: #111827;
+}
+
+.message-bubble h1 { font-size: 1.5em; }
+.message-bubble h2 { font-size: 1.3em; }
+.message-bubble h3 { font-size: 1.1em; }
+.message-bubble h4, .message-bubble h5, .message-bubble h6 { font-size: 1em; }
+
+.message-bubble p {
+  margin: 0 0 12px 0;
+}
+
+.message-bubble p:last-child {
+  margin-bottom: 0;
+}
+
+.message-bubble ul,
+.message-bubble ol {
+  margin: 0 0 12px 0;
+  padding-left: 24px;
+}
+
+.message-bubble li {
+  margin-bottom: 6px;
+}
+
+.message-bubble code {
+  background-color: #f3f4f6;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+  font-size: 0.9em;
+  color: #be185d;
+}
+
+.message-bubble.user .message-bubble code {
+  background-color: rgba(255, 255, 255, 0.15);
+  color: #fde68a;
+}
+
+.message-bubble pre {
+  background-color: #1f2937;
+  padding: 14px;
+  border-radius: 10px;
+  overflow-x: auto;
+  margin: 0 0 12px 0;
+}
+
+.message-bubble pre:last-child {
+  margin-bottom: 0;
+}
+
+.message-bubble pre code {
+  background: none;
+  padding: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #e5e7eb;
+}
+
+.message-bubble blockquote {
+  margin: 0 0 12px 0;
+  padding: 10px 16px;
+  border-left: 4px solid #d1d5db;
+  background-color: #f9fafb;
+  color: #4b5563;
+}
+
+.message-bubble blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+.message-bubble a {
+  color: #3b82f6;
+  text-decoration: none;
+}
+
+.message-bubble a:hover {
+  text-decoration: underline;
+}
+
+.message-bubble table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0 0 12px 0;
+  font-size: 14px;
+}
+
+.message-bubble th,
+.message-bubble td {
+  border: 1px solid #e5e7eb;
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.message-bubble th {
+  background-color: #f9fafb;
+  font-weight: 600;
+}
+
+.message-bubble tr:nth-child(even) {
+  background-color: #f9fafb;
+}
+
+.message-bubble hr {
+  border: none;
+  border-top: 1px solid #e5e7eb;
+  margin: 16px 0;
+}
+
+.message-bubble img {
+  max-width: 100%;
+  border-radius: 8px;
+}
+
+/* User message markdown overrides */
+.chat-message.user .message-bubble h1,
+.chat-message.user .message-bubble h2,
+.chat-message.user .message-bubble h3,
+.chat-message.user .message-bubble h4,
+.chat-message.user .message-bubble h5,
+.chat-message.user .message-bubble h6 {
+  color: #ffffff;
+}
+
+.chat-message.user .message-bubble blockquote {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-left-color: rgba(255, 255, 255, 0.3);
+  color: #d1d5db;
+}
+
+.chat-message.user .message-bubble table {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.chat-message.user .message-bubble th,
+.chat-message.user .message-bubble td {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.chat-message.user .message-bubble th {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.chat-message.user .message-bubble hr {
+  border-color: rgba(255, 255, 255, 0.2);
 }

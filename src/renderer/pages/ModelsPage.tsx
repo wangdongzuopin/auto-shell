@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Header } from '../components/common/Header';
 import { useModelStore, type AIModel } from '../stores/modelStore';
 import { Plus, Trash2, Star, Edit2, X, Check } from 'lucide-react';
 import './ModelsPage.css';
+import './page.css';
 
 export const ModelsPage: React.FC = () => {
   const { models, addModel, updateModel, deleteModel, setDefaultModel } = useModelStore();
@@ -58,7 +58,6 @@ export const ModelsPage: React.FC = () => {
 
   return (
     <div className="models-page">
-      <Header title="模型设置" showNav={false} />
       <div className="page-content">
         <div className="models-header">
           <h2>AI 模型</h2>

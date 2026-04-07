@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Sidebar } from './components/Sidebar/Sidebar';
 import { Header } from './components/common/Header';
+import { ConfirmDialogManager } from './components/ConfirmDialog';
 import { Home } from './pages/Home';
 import { ChatPage } from './pages/ChatPage';
 import { KnowledgePage } from './pages/KnowledgePage';
@@ -10,11 +11,17 @@ import { ProjectsPage } from './pages/ProjectsPage';
 import { ArtifactsPage } from './pages/ArtifactsPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { ModelsPage } from './pages/ModelsPage';
+import { useChatStore } from './stores/chatStore';
 import './styles/global.css';
 import './App.css';
 
 export default function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const loadSessionsFromDisk = useChatStore((state) => state.loadSessionsFromDisk);
+
+  useEffect(() => {
+    loadSessionsFromDisk();
+  }, []);
 
   return (
     <BrowserRouter>
@@ -38,6 +45,7 @@ export default function App() {
             </Routes>
           </main>
         </div>
+        <ConfirmDialogManager />
       </div>
     </BrowserRouter>
   );

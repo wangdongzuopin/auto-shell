@@ -19,21 +19,29 @@
   gap: 2px;
 }
 
+.recent-item-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border-radius: var(--radius-sm);
+}
+
+.recent-item-wrapper:hover {
+  background-color: var(--hover-bg);
+}
+
 .recent-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
   width: 100%;
   height: 36px;
-  padding: 0 12px;
+  padding: 0 36px 0 12px;
   border-radius: var(--radius-sm);
   color: var(--text-primary);
   font-size: 13px;
   transition: background-color 0.15s ease;
-}
-
-.recent-item:hover {
-  background-color: var(--hover-bg);
+  flex: 1;
 }
 
 .recent-title {
@@ -42,13 +50,90 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  padding-right: 8px;
 }
 
 .recent-time {
   font-size: 11px;
   color: var(--text-secondary);
-  margin-left: 8px;
   flex-shrink: 0;
+}
+
+.recent-more-btn {
+  position: absolute;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  opacity: 0;
+  transition: all 0.15s ease;
+}
+
+.recent-item-wrapper:hover .recent-more-btn {
+  opacity: 1;
+}
+
+.recent-more-btn:hover {
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+}
+
+.recent-menu {
+  position: absolute;
+  right: 8px;
+  top: 100%;
+  z-index: 100;
+  min-width: 120px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.recent-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 13px;
+  color: var(--text-primary);
+  text-align: left;
+  transition: background-color 0.15s ease;
+}
+
+.recent-menu-item:hover {
+  background-color: var(--hover-bg);
+}
+
+.recent-menu-item.danger {
+  color: var(--color-error);
+}
+
+.recent-menu-item.danger:hover {
+  background-color: var(--hover-bg);
+}
+
+.recent-edit-input {
+  flex: 1;
+  height: 32px;
+  padding: 0 36px 0 12px;
+  margin: 2px 0;
+  border: 1px solid var(--text-primary);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
+}
+
+.recent-edit-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
 }
 
 .recent-empty {
