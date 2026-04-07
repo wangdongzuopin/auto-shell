@@ -1,6 +1,6 @@
 import React from 'react';
-import { ChatArea } from '../components/Chat/ChatArea';
+import { Messages } from '../../components/Messages/Messages';
 
 export const ChatPage: React.FC = () => {
-  return <ChatArea />;
+  return <Messages />;
 };

@@ -11,6 +11,7 @@ import { ProjectsPage } from './pages/ProjectsPage';
 import { ArtifactsPage } from './pages/ArtifactsPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { ModelsPage } from './pages/ModelsPage';
+import { AppStateProvider } from '../state/AppState';
 import { useChatStore } from './stores/chatStore';
 import './styles/global.css';
 import './App.css';
@@ -24,29 +25,31 @@ export default function App() {
   }, []);
 
   return (
-    <BrowserRouter>
-      <div className="app-container">
-        <Header
-          sidebarCollapsed={sidebarCollapsed}
-          onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
-        />
-        <div className="app-body">
-          <Sidebar collapsed={sidebarCollapsed} />
-          <main className="main-content">
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/chat/:threadId" element={<ChatPage />} />
-              <Route path="/knowledge" element={<KnowledgePage />} />
-              <Route path="/skills" element={<SkillsPage />} />
-              <Route path="/projects" element={<ProjectsPage />} />
-              <Route path="/artifacts" element={<ArtifactsPage />} />
-              <Route path="/settings" element={<SettingsPage />} />
-              <Route path="/settings/models" element={<ModelsPage />} />
-            </Routes>
-          </main>
+    <AppStateProvider>
+      <BrowserRouter>
+        <div className="app-container">
+          <Header
+            sidebarCollapsed={sidebarCollapsed}
+            onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
+          />
+          <div className="app-body">
+            <Sidebar collapsed={sidebarCollapsed} />
+            <main className="main-content">
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/chat/:threadId" element={<ChatPage />} />
+                <Route path="/knowledge" element={<KnowledgePage />} />
+                <Route path="/skills" element={<SkillsPage />} />
+                <Route path="/projects" element={<ProjectsPage />} />
+                <Route path="/artifacts" element={<ArtifactsPage />} />
+                <Route path="/settings" element={<SettingsPage />} />
+                <Route path="/settings/models" element={<ModelsPage />} />
+              </Routes>
+            </main>
+          </div>
+          <ConfirmDialogManager />
         </div>
-        <ConfirmDialogManager />
-      </div>
-    </BrowserRouter>
+      </BrowserRouter>
+    </AppStateProvider>
   );
 }
