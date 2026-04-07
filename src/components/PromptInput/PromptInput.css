@@ -1,0 +1,58 @@
+/* src/components/PromptInput/PromptInput.css */
+
+.prompt-input-container {
+  width: 100%;
+}
+
+.prompt-input-wrapper {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  background: #f5f5f5;
+  border-radius: 24px;
+  padding: 8px 16px;
+}
+
+.prompt-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  resize: none;
+  font-size: 14px;
+  line-height: 1.5;
+  max-height: 120px;
+  outline: none;
+}
+
+.prompt-input::placeholder {
+  color: #999;
+}
+
+.prompt-input-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.prompt-send,
+.prompt-stop {
+  padding: 8px 16px;
+  border-radius: 16px;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.prompt-send {
+  background: #2196f3;
+  color: white;
+}
+
+.prompt-send:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.prompt-stop {
+  background: #f44336;
+  color: white;
+}
