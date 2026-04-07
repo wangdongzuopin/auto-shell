@@ -9947,7 +9947,7 @@ const createImpl = (createState2) => {
   Object.assign(useBoundStore, api);
   return useBoundStore;
 };
-const create$1 = (createState2) => createImpl;
+const create$1 = (createState2) => createState2 ? createImpl(createState2) : createImpl;
 const generateId$2 = () => Math.random().toString(36).substring(2, 15);
 const saveThreadToDisk = (thread) => {
   if (window.api?.saveSession) {
@@ -10407,12 +10407,36 @@ const Header = ({ sidebarCollapsed, onToggleSidebar }) => {
     ] })
   ] });
 };
+const CodeIcon = () => /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [
+  /* @__PURE__ */ jsxRuntimeExports.jsx("polyline", { points: "16 18 22 12 16 6" }),
+  /* @__PURE__ */ jsxRuntimeExports.jsx("polyline", { points: "8 6 2 12 8 18" })
+] });
+const WriteIcon = () => /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [
+  /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M12 20h9" }),
+  /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" })
+] });
+const CreateIcon = () => /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [
+  /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M12 3v18" }),
+  /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M5.5 8.5L12 3l6.5 5.5" }),
+  /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M5.5 15.5L12 21l6.5-5.5" })
+] });
+const LearnIcon = () => /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [
+  /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M22 10v6M2 10l10-5 10 5-10 5z" }),
+  /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M6 12v5c3 3 9 3 12 0v-5" })
+] });
+const LifeIcon = () => /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [
+  /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M17 8h1a4 4 0 1 1 0 8h-1" }),
+  /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z" }),
+  /* @__PURE__ */ jsxRuntimeExports.jsx("line", { x1: "6", x2: "6", y1: "2", y2: "4" }),
+  /* @__PURE__ */ jsxRuntimeExports.jsx("line", { x1: "10", x2: "10", y1: "2", y2: "4" }),
+  /* @__PURE__ */ jsxRuntimeExports.jsx("line", { x1: "14", x2: "14", y1: "2", y2: "4" })
+] });
 const quickActions = [
-  { icon: "💻", label: "代码", prompt: "帮我写代码" },
-  { icon: "📝", label: "写作", prompt: "帮我写作" },
-  { icon: "✨", label: "创建", prompt: "帮我创建一个项目" },
-  { icon: "📖", label: "学习", prompt: "我想学习" },
-  { icon: "🌿", label: "生活", prompt: "帮我解决生活问题" }
+  { icon: /* @__PURE__ */ jsxRuntimeExports.jsx(CodeIcon, {}), label: "Code", prompt: "帮我写代码" },
+  { icon: /* @__PURE__ */ jsxRuntimeExports.jsx(WriteIcon, {}), label: "Write", prompt: "帮我写作" },
+  { icon: /* @__PURE__ */ jsxRuntimeExports.jsx(CreateIcon, {}), label: "Create", prompt: "帮我创建一个项目" },
+  { icon: /* @__PURE__ */ jsxRuntimeExports.jsx(LearnIcon, {}), label: "Learn", prompt: "我想学习" },
+  { icon: /* @__PURE__ */ jsxRuntimeExports.jsx(LifeIcon, {}), label: "Life stuff", prompt: "帮我解决生活问题" }
 ];
 const QuickActions = () => {
   const navigate = useNavigate();
@@ -23189,6 +23213,206 @@ const MessageRow = ({ message }) => {
     /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "message-body", children: renderContent() })
   ] });
 };
+const defaultTheme = {
+  name: "Auto Shell Dark",
+  background: "#0f1115",
+  foreground: "#d8dee9",
+  accent: "#4c8dff"
+};
+const defaultAppearance = {
+  terminalTransparency: false,
+  terminalOpacity: 0.7,
+  terminalBackdrop: false
+};
+const defaultConfigs = {
+  minimax: {
+    baseUrl: "https://api.minimaxi.com/anthropic",
+    model: "MiniMax-M2.7"
+  },
+  glm: {
+    baseUrl: "https://open.bigmodel.cn/api/paas/v4",
+    model: "glm-4.5"
+  },
+  claude: {
+    baseUrl: "https://api.anthropic.com",
+    model: "claude-3-7-sonnet-latest"
+  },
+  openai: {
+    baseUrl: "https://api.openai.com/v1",
+    model: "gpt-4o-mini"
+  },
+  ollama: {
+    baseUrl: "http://localhost:11434",
+    model: "qwen2.5:7b"
+  },
+  openaiCompatible: {
+    baseUrl: "https://api.openai.com/v1",
+    model: "gpt-4o-mini"
+  }
+};
+const defaultFeatures = {
+  errorCard: true,
+  naturalCommand: true,
+  explainCommand: true,
+  completion: false
+};
+function applyThemeToDocument(theme) {
+  const light = isLightColor(theme.background);
+  const surfaceDelta = light ? -10 : 8;
+  const elevatedDelta = light ? -16 : 14;
+  const backgroundRgb = hexToRgb(theme.background);
+  document.documentElement.dataset.theme = light ? "light" : "dark";
+  document.documentElement.style.setProperty("--bg", theme.background);
+  document.documentElement.style.setProperty("--bg-rgb", backgroundRgb);
+  document.documentElement.style.setProperty("--bg2", shiftColor(theme.background, surfaceDelta));
+  document.documentElement.style.setProperty("--bg3", shiftColor(theme.background, light ? elevatedDelta : surfaceDelta * 1.75));
+  document.documentElement.style.setProperty("--bg4", shiftColor(theme.background, light ? elevatedDelta * 1.22 : surfaceDelta * 2.5));
+  document.documentElement.style.setProperty("--bg5", shiftColor(theme.background, light ? elevatedDelta * 1.42 : surfaceDelta * 3.25));
+  document.documentElement.style.setProperty("--border", light ? "rgba(26, 37, 56, 0.14)" : "rgba(255, 255, 255, 0.08)");
+  document.documentElement.style.setProperty("--border2", light ? "rgba(26, 37, 56, 0.24)" : "rgba(255, 255, 255, 0.16)");
+  document.documentElement.style.setProperty("--text", theme.foreground);
+  document.documentElement.style.setProperty("--text2", mixColors(theme.foreground, theme.background, light ? 0.36 : 0.6));
+  document.documentElement.style.setProperty("--text3", mixColors(theme.foreground, theme.background, light ? 0.54 : 0.78));
+  document.documentElement.style.setProperty("--accent", theme.accent);
+  document.documentElement.style.setProperty("--accent-dim", withAlpha(theme.accent, light ? "14" : "22"));
+  document.documentElement.style.setProperty("--ai-bg", withAlpha(theme.accent, light ? "0d" : "14"));
+  document.documentElement.style.setProperty("--ai-border", withAlpha(theme.accent, light ? "26" : "44"));
+  document.documentElement.style.setProperty("--app-glow", withAlpha(theme.accent, light ? "0f" : "20"));
+  document.documentElement.style.setProperty("--surface-top", shiftColor(theme.background, light ? 4 : 6));
+  document.documentElement.style.setProperty("--surface-bottom", shiftColor(theme.background, light ? -6 : 0));
+  document.documentElement.style.setProperty("--scrollbar-thumb", light ? "rgba(26, 37, 56, 0.18)" : "rgba(255, 255, 255, 0.12)");
+  document.documentElement.style.setProperty("--scrollbar-thumb-hover", light ? "rgba(26, 37, 56, 0.28)" : "rgba(255, 255, 255, 0.18)");
+  document.documentElement.style.setProperty("--focus-ring", withAlpha(theme.accent, light ? "cc" : "e6"));
+}
+function applyAppearanceToDocument(appearance) {
+  document.documentElement.style.setProperty("--terminal-opacity", appearance.terminalTransparency ? String(appearance.terminalOpacity) : "1");
+  document.documentElement.style.setProperty("--terminal-blur", appearance.terminalTransparency && appearance.terminalBackdrop ? "20px" : "0px");
+  document.documentElement.style.setProperty("--terminal-surface-alpha", appearance.terminalTransparency ? String(Math.max(appearance.terminalOpacity * 0.22, 0.08)) : "1");
+  document.documentElement.style.setProperty("--terminal-shell-alpha", appearance.terminalTransparency ? String(Math.max(appearance.terminalOpacity * 0.16, 0.05)) : "1");
+}
+const useSettingsStore = create$1((set, get) => ({
+  theme: defaultTheme,
+  appearance: defaultAppearance,
+  aiSettings: {
+    provider: "minimax",
+    configs: defaultConfigs
+  },
+  features: defaultFeatures,
+  settingsOpen: false,
+  settingsTab: "ai",
+  load: async () => {
+    try {
+      const config = await window.api.getConfig();
+      set({
+        theme: config.theme ?? defaultTheme,
+        aiSettings: {
+          provider: config.provider,
+          configs: {
+            ...defaultConfigs,
+            ...config.providerConfigs
+          }
+        },
+        features: config.aiFeatures ?? defaultFeatures
+      });
+      applyThemeToDocument(config.theme ?? defaultTheme);
+    } catch (error) {
+      console.error("Failed to load settings:", error);
+      applyThemeToDocument(defaultTheme);
+    }
+    await get().loadAppearance();
+    applyThemeToDocument(get().theme);
+  },
+  setTheme: async (theme) => {
+    set({ theme });
+    applyThemeToDocument(theme);
+    await window.api.saveTheme(theme);
+  },
+  loadAppearance: async () => {
+    try {
+      const appearance = await window.api.getAppearance();
+      set({ appearance });
+      applyAppearanceToDocument(appearance);
+    } catch (error) {
+      console.error("Failed to load appearance settings:", error);
+    }
+  },
+  setAppearance: async (appearance) => {
+    set({ appearance });
+    await window.api.saveAppearance(appearance);
+    applyAppearanceToDocument(appearance);
+  },
+  setProvider: async (provider) => {
+    set((state) => ({
+      aiSettings: {
+        ...state.aiSettings,
+        provider
+      }
+    }));
+    await window.api.setProvider(provider);
+  },
+  setProviderConfig: async (provider, config) => {
+    set((state) => ({
+      aiSettings: {
+        ...state.aiSettings,
+        configs: {
+          ...state.aiSettings.configs,
+          [provider]: config
+        }
+      }
+    }));
+    await window.api.saveProviderConfig(provider, config);
+  },
+  setFeatures: async (features) => {
+    const nextFeatures = {
+      ...get().features,
+      ...features
+    };
+    set({ features: nextFeatures });
+    await window.api.saveFeatures(nextFeatures);
+  }
+}));
+function shiftColor(hex, amount) {
+  const normalized = hex.replace("#", "");
+  const value = parseInt(normalized, 16);
+  const delta = Math.round(amount);
+  const r2 = clamp((value >> 16) + delta);
+  const g = clamp((value >> 8 & 255) + delta);
+  const b = clamp((value & 255) + delta);
+  return `#${(r2 << 16 | g << 8 | b).toString(16).padStart(6, "0")}`;
+}
+function mixColors(primary, secondary, ratio) {
+  const a = parseHex(primary);
+  const b = parseHex(secondary);
+  const mix = (start, end) => Math.round(start * (1 - ratio) + end * ratio);
+  return rgbToHex(mix(a.r, b.r), mix(a.g, b.g), mix(a.b, b.b));
+}
+function withAlpha(hex, alpha) {
+  return `${hex}${alpha}`;
+}
+function isLightColor(hex) {
+  const { r: r2, g, b } = parseHex(hex);
+  const luminance = (0.2126 * r2 + 0.7152 * g + 0.0722 * b) / 255;
+  return luminance > 0.72;
+}
+function parseHex(hex) {
+  const normalized = hex.replace("#", "");
+  const value = parseInt(normalized, 16);
+  return {
+    r: value >> 16 & 255,
+    g: value >> 8 & 255,
+    b: value & 255
+  };
+}
+function rgbToHex(r2, g, b) {
+  return `#${(r2 << 16 | g << 8 | b).toString(16).padStart(6, "0")}`;
+}
+function hexToRgb(hex) {
+  const { r: r2, g, b } = parseHex(hex);
+  return `${r2}, ${g}, ${b}`;
+}
+function clamp(value) {
+  return Math.max(0, Math.min(255, value));
+}
 function generateUUID() {
   return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
     const r2 = Math.random() * 16 | 0;
@@ -23217,11 +23441,82 @@ function createUserMessage(content2, options) {
     }
   };
 }
+const MODEL_PRESETS = {
+  "claude-3-5-sonnet": {
+    id: "claude-3-5-sonnet",
+    name: "Claude 3.5 Sonnet",
+    brand: "Anthropic",
+    baseUrl: "https://api.anthropic.com",
+    apiPath: "/v1/messages",
+    defaultTemperature: 0.7,
+    defaultMaxTokens: 4096
+  },
+  "claude-3-haiku": {
+    id: "claude-3-haiku",
+    name: "Claude 3 Haiku",
+    brand: "Anthropic",
+    baseUrl: "https://api.anthropic.com",
+    apiPath: "/v1/messages",
+    defaultTemperature: 0.7,
+    defaultMaxTokens: 4096
+  },
+  "gpt-4o": {
+    id: "gpt-4o",
+    name: "GPT-4o",
+    brand: "OpenAI",
+    baseUrl: "https://api.openai.com",
+    apiPath: "/v1/chat/completions",
+    defaultTemperature: 0.7,
+    defaultMaxTokens: 4096
+  },
+  "gpt-4o-mini": {
+    id: "gpt-4o-mini",
+    name: "GPT-4o Mini",
+    brand: "OpenAI",
+    baseUrl: "https://api.openai.com",
+    apiPath: "/v1/chat/completions",
+    defaultTemperature: 0.7,
+    defaultMaxTokens: 4096
+  },
+  "MiniMax-M2.7": {
+    id: "MiniMax-M2.7",
+    name: "MiniMax M2.7",
+    brand: "MiniMax",
+    baseUrl: "https://api.minimaxi.com/anthropic",
+    apiPath: "/v1/messages",
+    defaultTemperature: 0.7,
+    defaultMaxTokens: 4096
+  },
+  "glm-4": {
+    id: "glm-4",
+    name: "GLM-4",
+    brand: "Zhipu",
+    baseUrl: "https://open.bigmodel.cn/api/paas/v4",
+    apiPath: "/chat/completions",
+    defaultTemperature: 0.7,
+    defaultMaxTokens: 4096
+  },
+  "llama3": {
+    id: "llama3",
+    name: "Llama 3",
+    brand: "Ollama",
+    baseUrl: "http://localhost:11434",
+    apiPath: "/api/chat",
+    defaultTemperature: 0.7,
+    defaultMaxTokens: 4096
+  }
+};
+function getAllModelPresets() {
+  return Object.values(MODEL_PRESETS);
+}
 const PromptInput = () => {
   const [input, setInput] = reactExports.useState("");
   const isLoading = useAppState((s) => s.isLoading);
   const setState = useSetAppState();
   const messagesRef = reactExports.useRef(null);
+  const aiSettings = useSettingsStore((s) => s.aiSettings);
+  const currentModel = aiSettings.configs[aiSettings.provider]?.model || "MiniMax-M2.7";
+  const models = getAllModelPresets();
   const handleSubmit = reactExports.useCallback(async () => {
     if (!input.trim() || isLoading) return;
     const userMsg = createUserMessage(input.trim());
@@ -23260,12 +23555,42 @@ const PromptInput = () => {
         value: input,
         onChange: (e) => setInput(e.target.value),
         onKeyDown: handleKeyDown,
-        placeholder: "输入消息...",
+        placeholder: "Reply...",
         rows: 1
       }
     ),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "prompt-input-actions", children: isLoading ? /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "prompt-stop", onClick: handleStop, children: "停止" }) : /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "prompt-send", onClick: handleSubmit, disabled: !input.trim(), children: "发送" }) })
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "prompt-input-footer", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "prompt-tool-btn", title: "Add attachment", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("line", { x1: "12", y1: "5", x2: "12", y2: "19" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("line", { x1: "5", y1: "12", x2: "19", y2: "12" })
+      ] }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "prompt-input-actions", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "select",
+          {
+            value: currentModel,
+            onChange: () => {
+            },
+            className: "model-select",
+            children: models.map((model) => /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: model.id, children: model.name }, model.id))
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "prompt-tool-btn", title: "Voice input", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M19 10v2a7 7 0 0 1-14 0v-2" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("line", { x1: "12", y1: "19", x2: "12", y2: "23" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("line", { x1: "8", y1: "23", x2: "16", y2: "23" })
+        ] }) }),
+        isLoading ? /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "prompt-stop", onClick: handleStop, children: "停止" }) : /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "prompt-send", onClick: handleSubmit, disabled: !input.trim(), children: "发送" })
+      ] })
+    ] })
   ] }) });
+};
+const getGreeting = () => {
+  const hour = (/* @__PURE__ */ new Date()).getHours();
+  if (hour < 12) return "Morning";
+  if (hour < 18) return "Afternoon";
+  return "Evening";
 };
 const Messages = () => {
   const messages = useAppState((s) => s.messages);
@@ -23274,6 +23599,8 @@ const Messages = () => {
   const messagesEndRef = reactExports.useRef(null);
   const messagesContainerRef = reactExports.useRef(null);
   const [showScrollButton, setShowScrollButton] = reactExports.useState(false);
+  const greeting = getGreeting();
+  const username = "jelly";
   reactExports.useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
@@ -23293,8 +23620,14 @@ const Messages = () => {
   if (messages.length === 0) {
     return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "messages-container", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "chat-empty", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "empty-state", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { children: "你好" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { children: "有什么可以帮助你的吗？" })
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("h2", { className: "greeting-title", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "greeting-star", children: "✴" }),
+          " ",
+          greeting,
+          ", ",
+          username
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "greeting-subtitle", children: "How can I help you today?" })
       ] }) }),
       /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "messages-input-area", children: /* @__PURE__ */ jsxRuntimeExports.jsx(PromptInput, {}) })
     ] });
@@ -23304,7 +23637,7 @@ const Messages = () => {
       messages.map((message, index2) => /* @__PURE__ */ jsxRuntimeExports.jsx(MessageRow, { message }, message.uuid ?? index2)),
       /* @__PURE__ */ jsxRuntimeExports.jsx("div", { ref: messagesEndRef })
     ] }),
-    showScrollButton && /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "scroll-to-bottom", onClick: scrollToBottom, children: "滚动到底部" }),
+    showScrollButton && /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "scroll-to-bottom", onClick: scrollToBottom, children: "↓" }),
     /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "messages-input-area", children: /* @__PURE__ */ jsxRuntimeExports.jsx(PromptInput, {}) })
   ] });
 };

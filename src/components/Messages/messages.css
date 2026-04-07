@@ -1,4 +1,4 @@
-/* src/components/Messages/Messages.css - Aligned with old Chat.css */
+/* src/components/Messages/Messages.css */
 
 .messages-container {
   display: flex;
@@ -9,6 +9,8 @@
 }
 
 .chat-empty {
+  flex: 1;
+  display: flex;
   justify-content: center;
   align-items: center;
 }
@@ -18,16 +20,27 @@
   padding: 24px;
 }
 
-.empty-state h2 {
-  font-size: 32px;
-  font-weight: 600;
+.greeting-title {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 36px;
+  font-weight: 400;
   color: var(--text-primary);
   margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
-.empty-state p {
+.greeting-star {
+  color: #c17f59;
+  font-size: 32px;
+}
+
+.greeting-subtitle {
   font-size: 16px;
   color: var(--text-secondary);
+  margin-top: 8px;
 }
 
 .chat-messages {
@@ -37,33 +50,32 @@
 }
 
 .messages-input-area {
-  padding: 16px;
-  background: white;
-  border-top: 1px solid #eee;
+  padding: 16px 24px 24px;
+  background: transparent;
 }
 
 .scroll-to-bottom {
   position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
+  right: 32px;
   bottom: 140px;
-  width: 44px;
-  height: 44px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   background-color: #ffffff;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #6b7280;
+  color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.15s ease;
   z-index: 10;
+  font-size: 16px;
 }
 
 .scroll-to-bottom:hover {
-  background-color: #f3f4f6;
-  color: #374151;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  background-color: var(--hover-bg);
+  color: var(--text-primary);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }

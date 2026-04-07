@@ -2,10 +2,18 @@
 
 import React, { useRef, useCallback, useState, useEffect } from 'react'
 import { useAppState } from '../../state/hooks'
+import { useSettingsStore } from '../../renderer/store/settings'
 import type { NormalizedMessage } from '../../types/message'
 import { MessageRow } from './MessageRow'
 import { PromptInput } from '../PromptInput/PromptInput'
 import './Messages.css'
+
+const getGreeting = () => {
+  const hour = new Date().getHours()
+  if (hour < 12) return 'Morning'
+  if (hour < 18) return 'Afternoon'
+  return 'Evening'
+}
 
 export const Messages: React.FC = () => {
   const messages = useAppState((s) => s.messages)
@@ -14,6 +22,9 @@ export const Messages: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
   const [showScrollButton, setShowScrollButton] = useState(false)
+
+  const greeting = getGreeting()
+  const username = 'jelly'
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -41,8 +52,10 @@ export const Messages: React.FC = () => {
       <div className="messages-container">
         <div className="chat-empty">
           <div className="empty-state">
-            <h2>你好</h2>
-            <p>有什么可以帮助你的吗？</p>
+            <h2 className="greeting-title">
+              <span className="greeting-star">✴</span> {greeting}, {username}
+            </h2>
+            <p className="greeting-subtitle">How can I help you today?</p>
           </div>
         </div>
         <div className="messages-input-area">
@@ -62,7 +75,7 @@ export const Messages: React.FC = () => {
       </div>
       {showScrollButton && (
         <button className="scroll-to-bottom" onClick={scrollToBottom}>
-          滚动到底部
+          ↓
         </button>
       )}
       <div className="messages-input-area">

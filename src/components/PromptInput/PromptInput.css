@@ -2,15 +2,18 @@
 
 .prompt-input-container {
   width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
 }
 
 .prompt-input-wrapper {
   display: flex;
-  align-items: flex-end;
-  gap: 12px;
-  background: #f5f5f5;
-  border-radius: 24px;
-  padding: 8px 16px;
+  flex-direction: column;
+  background: #ffffff;
+  border: 1px solid #e8e8e8;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
 }
 
 .prompt-input {
@@ -22,15 +25,75 @@
   line-height: 1.5;
   max-height: 120px;
   outline: none;
+  padding: 16px 20px;
+  color: var(--text-primary);
 }
 
 .prompt-input::placeholder {
   color: #999;
 }
 
+.prompt-input-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px 12px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.prompt-input-tools {
+  display: flex;
+  gap: 4px;
+}
+
 .prompt-input-actions {
   display: flex;
+  align-items: center;
   gap: 8px;
+}
+
+.prompt-tool-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: #666;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+}
+
+.prompt-tool-btn:hover {
+  background: #f5f5f5;
+  color: #333;
+}
+
+.model-select {
+  appearance: none;
+  background: #f5f5f5;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 6px 28px 6px 10px;
+  font-size: 12px;
+  color: var(--text-primary);
+  cursor: pointer;
+  outline: none;
+  transition: all 0.15s ease;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+}
+
+.model-select:hover {
+  background-color: #eee;
+  border-color: #d0d0d0;
+}
+
+.model-select:focus {
+  border-color: #c0c0c0;
 }
 
 .prompt-send,
@@ -40,10 +103,11 @@
   border: none;
   cursor: pointer;
   font-weight: 500;
+  font-size: 13px;
 }
 
 .prompt-send {
-  background: #2196f3;
+  background: #1a1a1a;
   color: white;
 }
 
@@ -53,6 +117,6 @@
 }
 
 .prompt-stop {
-  background: #f44336;
+  background: #ef4444;
   color: white;
 }
