@@ -7788,11 +7788,6 @@ function useNavigateUnstable() {
   return navigate;
 }
 reactExports.createContext(null);
-function useParams() {
-  let { matches } = reactExports.useContext(RouteContext);
-  let routeMatch = matches[matches.length - 1];
-  return routeMatch ? routeMatch.params : {};
-}
 function useResolvedPath(to, { relative } = {}) {
   let { matches } = reactExports.useContext(RouteContext);
   let { pathname: locationPathname } = useLocation();
@@ -9467,54 +9462,35 @@ const createLucideIcon = (iconName, iconNode) => {
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$o = [["path", { d: "M20 6 9 17l-5-5", key: "1gmf2c" }]];
-const Check = createLucideIcon("check", __iconNode$o);
+const __iconNode$j = [["path", { d: "M20 6 9 17l-5-5", key: "1gmf2c" }]];
+const Check = createLucideIcon("check", __iconNode$j);
 /**
  * @license lucide-react v1.7.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$n = [["path", { d: "m6 9 6 6 6-6", key: "qrunsl" }]];
-const ChevronDown = createLucideIcon("chevron-down", __iconNode$n);
+const __iconNode$i = [["path", { d: "m9 18 6-6-6-6", key: "mthhwq" }]];
+const ChevronRight = createLucideIcon("chevron-right", __iconNode$i);
 /**
  * @license lucide-react v1.7.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$m = [["path", { d: "m9 18 6-6-6-6", key: "mthhwq" }]];
-const ChevronRight = createLucideIcon("chevron-right", __iconNode$m);
-/**
- * @license lucide-react v1.7.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$l = [
-  ["path", { d: "m7 6 5 5 5-5", key: "1lc07p" }],
-  ["path", { d: "m7 13 5 5 5-5", key: "1d48rs" }]
-];
-const ChevronsDown = createLucideIcon("chevrons-down", __iconNode$l);
-/**
- * @license lucide-react v1.7.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$k = [
+const __iconNode$h = [
   ["circle", { cx: "12", cy: "12", r: "1", key: "41hilf" }],
   ["circle", { cx: "12", cy: "5", r: "1", key: "gxeob9" }],
   ["circle", { cx: "12", cy: "19", r: "1", key: "lyex9k" }]
 ];
-const EllipsisVertical = createLucideIcon("ellipsis-vertical", __iconNode$k);
+const EllipsisVertical = createLucideIcon("ellipsis-vertical", __iconNode$h);
 /**
  * @license lucide-react v1.7.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$j = [
+const __iconNode$g = [
   [
     "path",
     {
@@ -9527,14 +9503,14 @@ const __iconNode$j = [
   ["path", { d: "M16 13H8", key: "t4e002" }],
   ["path", { d: "M16 17H8", key: "z1uh3a" }]
 ];
-const FileText = createLucideIcon("file-text", __iconNode$j);
+const FileText = createLucideIcon("file-text", __iconNode$g);
 /**
  * @license lucide-react v1.7.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$i = [
+const __iconNode$f = [
   [
     "path",
     {
@@ -9543,43 +9519,7 @@ const __iconNode$i = [
     }
   ]
 ];
-const FolderOpen = createLucideIcon("folder-open", __iconNode$i);
-/**
- * @license lucide-react v1.7.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$h = [
-  [
-    "path",
-    {
-      d: "M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z",
-      key: "1kt360"
-    }
-  ]
-];
-const Folder = createLucideIcon("folder", __iconNode$h);
-/**
- * @license lucide-react v1.7.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$g = [["path", { d: "M21 12a9 9 0 1 1-6.219-8.56", key: "13zald" }]];
-const LoaderCircle = createLucideIcon("loader-circle", __iconNode$g);
-/**
- * @license lucide-react v1.7.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$f = [
-  ["path", { d: "M4 5h16", key: "1tepv9" }],
-  ["path", { d: "M4 12h16", key: "1lakjw" }],
-  ["path", { d: "M4 19h16", key: "1djgab" }]
-];
-const Menu = createLucideIcon("menu", __iconNode$f);
+const FolderOpen = createLucideIcon("folder-open", __iconNode$f);
 /**
  * @license lucide-react v1.7.0 - ISC
  *
@@ -9590,32 +9530,32 @@ const __iconNode$e = [
   [
     "path",
     {
-      d: "M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z",
-      key: "18887p"
+      d: "M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z",
+      key: "1kt360"
     }
   ]
 ];
-const MessageSquare = createLucideIcon("message-square", __iconNode$e);
+const Folder = createLucideIcon("folder", __iconNode$e);
 /**
  * @license lucide-react v1.7.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$d = [
-  ["path", { d: "M12 19v3", key: "npa21l" }],
-  ["path", { d: "M19 10v2a7 7 0 0 1-14 0v-2", key: "1vc78b" }],
-  ["rect", { x: "9", y: "2", width: "6", height: "13", rx: "3", key: "s6n7sd" }]
+const __iconNode$d = [["path", { d: "M21 12a9 9 0 1 1-6.219-8.56", key: "13zald" }]];
+const LoaderCircle = createLucideIcon("loader-circle", __iconNode$d);
+/**
+ * @license lucide-react v1.7.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$c = [
+  ["path", { d: "M4 5h16", key: "1tepv9" }],
+  ["path", { d: "M4 12h16", key: "1lakjw" }],
+  ["path", { d: "M4 19h16", key: "1djgab" }]
 ];
-const Mic = createLucideIcon("mic", __iconNode$d);
-/**
- * @license lucide-react v1.7.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$c = [["path", { d: "M5 12h14", key: "1ays0h" }]];
-const Minus = createLucideIcon("minus", __iconNode$c);
+const Menu = createLucideIcon("menu", __iconNode$c);
 /**
  * @license lucide-react v1.7.0 - ISC
  *
@@ -9626,24 +9566,20 @@ const __iconNode$b = [
   [
     "path",
     {
-      d: "M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z",
-      key: "1a8usu"
+      d: "M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z",
+      key: "18887p"
     }
-  ],
-  ["path", { d: "m15 5 4 4", key: "1mk7zo" }]
+  ]
 ];
-const Pencil = createLucideIcon("pencil", __iconNode$b);
+const MessageSquare = createLucideIcon("message-square", __iconNode$b);
 /**
  * @license lucide-react v1.7.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$a = [
-  ["path", { d: "M5 12h14", key: "1ays0h" }],
-  ["path", { d: "M12 5v14", key: "s699le" }]
-];
-const Plus = createLucideIcon("plus", __iconNode$a);
+const __iconNode$a = [["path", { d: "M5 12h14", key: "1ays0h" }]];
+const Minus = createLucideIcon("minus", __iconNode$a);
 /**
  * @license lucide-react v1.7.0 - ISC
  *
@@ -9651,10 +9587,16 @@ const Plus = createLucideIcon("plus", __iconNode$a);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$9 = [
-  ["path", { d: "m21 21-4.34-4.34", key: "14j7rj" }],
-  ["circle", { cx: "11", cy: "11", r: "8", key: "4ej97u" }]
+  [
+    "path",
+    {
+      d: "M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z",
+      key: "1a8usu"
+    }
+  ],
+  ["path", { d: "m15 5 4 4", key: "1mk7zo" }]
 ];
-const Search = createLucideIcon("search", __iconNode$9);
+const Pencil = createLucideIcon("pencil", __iconNode$9);
 /**
  * @license lucide-react v1.7.0 - ISC
  *
@@ -9662,16 +9604,10 @@ const Search = createLucideIcon("search", __iconNode$9);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$8 = [
-  [
-    "path",
-    {
-      d: "M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z",
-      key: "1ffxy3"
-    }
-  ],
-  ["path", { d: "m21.854 2.147-10.94 10.939", key: "12cjpa" }]
+  ["path", { d: "M5 12h14", key: "1ays0h" }],
+  ["path", { d: "M12 5v14", key: "s699le" }]
 ];
-const Send = createLucideIcon("send", __iconNode$8);
+const Plus = createLucideIcon("plus", __iconNode$8);
 /**
  * @license lucide-react v1.7.0 - ISC
  *
@@ -9679,6 +9615,17 @@ const Send = createLucideIcon("send", __iconNode$8);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$7 = [
+  ["path", { d: "m21 21-4.34-4.34", key: "14j7rj" }],
+  ["circle", { cx: "11", cy: "11", r: "8", key: "4ej97u" }]
+];
+const Search = createLucideIcon("search", __iconNode$7);
+/**
+ * @license lucide-react v1.7.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$6 = [
   [
     "path",
     {
@@ -9688,14 +9635,14 @@ const __iconNode$7 = [
   ],
   ["circle", { cx: "12", cy: "12", r: "3", key: "1v7zrd" }]
 ];
-const Settings = createLucideIcon("settings", __iconNode$7);
+const Settings = createLucideIcon("settings", __iconNode$6);
 /**
  * @license lucide-react v1.7.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$6 = [
+const __iconNode$5 = [
   [
     "path",
     {
@@ -9707,17 +9654,7 @@ const __iconNode$6 = [
   ["path", { d: "M22 4h-4", key: "gwowj6" }],
   ["circle", { cx: "4", cy: "20", r: "2", key: "6kqj1y" }]
 ];
-const Sparkles = createLucideIcon("sparkles", __iconNode$6);
-/**
- * @license lucide-react v1.7.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$5 = [
-  ["rect", { width: "18", height: "18", x: "3", y: "3", rx: "2", key: "afitv7" }]
-];
-const Square = createLucideIcon("square", __iconNode$5);
+const Sparkles = createLucideIcon("sparkles", __iconNode$5);
 /**
  * @license lucide-react v1.7.0 - ISC
  *
@@ -9725,6 +9662,16 @@ const Square = createLucideIcon("square", __iconNode$5);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$4 = [
+  ["rect", { width: "18", height: "18", x: "3", y: "3", rx: "2", key: "afitv7" }]
+];
+const Square = createLucideIcon("square", __iconNode$4);
+/**
+ * @license lucide-react v1.7.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$3 = [
   [
     "path",
     {
@@ -9733,21 +9680,7 @@ const __iconNode$4 = [
     }
   ]
 ];
-const Star = createLucideIcon("star", __iconNode$4);
-/**
- * @license lucide-react v1.7.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$3 = [
-  ["path", { d: "M10 11v6", key: "nco0om" }],
-  ["path", { d: "M14 11v6", key: "outv1u" }],
-  ["path", { d: "M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6", key: "miytrc" }],
-  ["path", { d: "M3 6h18", key: "d0wm0j" }],
-  ["path", { d: "M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2", key: "e791ji" }]
-];
-const Trash2 = createLucideIcon("trash-2", __iconNode$3);
+const Star = createLucideIcon("star", __iconNode$3);
 /**
  * @license lucide-react v1.7.0 - ISC
  *
@@ -9755,6 +9688,20 @@ const Trash2 = createLucideIcon("trash-2", __iconNode$3);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$2 = [
+  ["path", { d: "M10 11v6", key: "nco0om" }],
+  ["path", { d: "M14 11v6", key: "outv1u" }],
+  ["path", { d: "M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6", key: "miytrc" }],
+  ["path", { d: "M3 6h18", key: "d0wm0j" }],
+  ["path", { d: "M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2", key: "e791ji" }]
+];
+const Trash2 = createLucideIcon("trash-2", __iconNode$2);
+/**
+ * @license lucide-react v1.7.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$1 = [
   [
     "path",
     {
@@ -9763,18 +9710,7 @@ const __iconNode$2 = [
     }
   ]
 ];
-const Wrench = createLucideIcon("wrench", __iconNode$2);
-/**
- * @license lucide-react v1.7.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$1 = [
-  ["path", { d: "M18 6 6 18", key: "1bl5f8" }],
-  ["path", { d: "m6 6 12 12", key: "d8bk6v" }]
-];
-const X = createLucideIcon("x", __iconNode$1);
+const Wrench = createLucideIcon("wrench", __iconNode$1);
 /**
  * @license lucide-react v1.7.0 - ISC
  *
@@ -9782,15 +9718,10 @@ const X = createLucideIcon("x", __iconNode$1);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode = [
-  [
-    "path",
-    {
-      d: "M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z",
-      key: "1xq2db"
-    }
-  ]
+  ["path", { d: "M18 6 6 18", key: "1bl5f8" }],
+  ["path", { d: "m6 6 12 12", key: "d8bk6v" }]
 ];
-const Zap = createLucideIcon("zap", __iconNode);
+const X = createLucideIcon("x", __iconNode);
 const menuItems = [
   { key: "chat", label: "对话", icon: MessageSquare, path: "/" },
   { key: "knowledge", label: "知识库", icon: FileText, path: "/knowledge" },
@@ -9853,7 +9784,7 @@ const createStoreImpl = (createState2) => {
   const initialState = state = createState2(setState, getState, api);
   return api;
 };
-const createStore = (createState2) => createState2 ? createStoreImpl(createState2) : createStoreImpl;
+const createStore$1 = (createState2) => createState2 ? createStoreImpl(createState2) : createStoreImpl;
 var withSelector = { exports: {} };
 var withSelector_production = {};
 var shim$2 = { exports: {} };
@@ -10011,7 +9942,7 @@ const createImpl = (createState2) => {
       "[DEPRECATED] Passing a vanilla store will be unsupported in a future version. Instead use `import { useStore } from 'zustand'`."
     );
   }
-  const api = typeof createState2 === "function" ? createStore(createState2) : createState2;
+  const api = typeof createState2 === "function" ? createStore$1(createState2) : createState2;
   const useBoundStore = (selector, equalityFn) => useStore(api, selector, equalityFn);
   Object.assign(useBoundStore, api);
   return useBoundStore;
@@ -10523,437 +10454,184 @@ const Home = () => {
     /* @__PURE__ */ jsxRuntimeExports.jsx(QuickActions, {})
   ] }) });
 };
-const __vite_import_meta_env__ = {};
-function createJSONStorage(getStorage, options) {
-  let storage;
-  try {
-    storage = getStorage();
-  } catch (_e) {
-    return;
-  }
-  const persistStorage = {
-    getItem: (name2) => {
-      var _a;
-      const parse2 = (str2) => {
-        if (str2 === null) {
-          return null;
-        }
-        return JSON.parse(str2, void 0);
-      };
-      const str = (_a = storage.getItem(name2)) != null ? _a : null;
-      if (str instanceof Promise) {
-        return str.then(parse2);
-      }
-      return parse2(str);
+function createStore(initialState, onChange) {
+  let state = initialState;
+  const listeners2 = /* @__PURE__ */ new Set();
+  return {
+    getState: () => state,
+    setState: (updater) => {
+      const prev = state;
+      const next = updater(prev);
+      if (Object.is(next, prev)) return;
+      state = next;
+      onChange?.({ newState: next, oldState: prev });
+      for (const listener of listeners2) listener();
     },
-    setItem: (name2, newValue) => storage.setItem(
-      name2,
-      JSON.stringify(newValue, void 0)
-    ),
-    removeItem: (name2) => storage.removeItem(name2)
+    subscribe: (listener) => {
+      listeners2.add(listener);
+      return () => listeners2.delete(listener);
+    }
   };
-  return persistStorage;
 }
-const toThenable = (fn) => (input) => {
-  try {
-    const result = fn(input);
-    if (result instanceof Promise) {
-      return result;
-    }
-    return {
-      then(onFulfilled) {
-        return toThenable(onFulfilled)(result);
-      },
-      catch(_onRejected) {
-        return this;
-      }
-    };
-  } catch (e) {
-    return {
-      then(_onFulfilled) {
-        return this;
-      },
-      catch(onRejected) {
-        return toThenable(onRejected)(e);
-      }
-    };
-  }
-};
-const oldImpl = (config, baseOptions) => (set, get, api) => {
-  let options = {
-    getStorage: () => localStorage,
-    serialize: JSON.stringify,
-    deserialize: JSON.parse,
-    partialize: (state) => state,
-    version: 0,
-    merge: (persistedState, currentState) => ({
-      ...currentState,
-      ...persistedState
-    }),
-    ...baseOptions
-  };
-  let hasHydrated = false;
-  const hydrationListeners = /* @__PURE__ */ new Set();
-  const finishHydrationListeners = /* @__PURE__ */ new Set();
-  let storage;
-  try {
-    storage = options.getStorage();
-  } catch (_e) {
-  }
-  if (!storage) {
-    return config(
-      (...args) => {
-        console.warn(
-          `[zustand persist middleware] Unable to update item '${options.name}', the given storage is currently unavailable.`
-        );
-        set(...args);
-      },
-      get,
-      api
-    );
-  }
-  const thenableSerialize = toThenable(options.serialize);
-  const setItem = () => {
-    const state = options.partialize({ ...get() });
-    let errorInSync;
-    const thenable = thenableSerialize({ state, version: options.version }).then(
-      (serializedValue) => storage.setItem(options.name, serializedValue)
-    ).catch((e) => {
-      errorInSync = e;
-    });
-    if (errorInSync) {
-      throw errorInSync;
-    }
-    return thenable;
-  };
-  const savedSetState = api.setState;
-  api.setState = (state, replace2) => {
-    savedSetState(state, replace2);
-    void setItem();
-  };
-  const configResult = config(
-    (...args) => {
-      set(...args);
-      void setItem();
+const IDLE_SPECULATION_STATE = { status: "idle" };
+function getDefaultAppState() {
+  return {
+    settings: {},
+    messages: [],
+    toolPermissionContext: {
+      mode: "default",
+      allowedCommands: [],
+      deniedCommands: []
     },
-    get,
-    api
+    permissionMode: "default",
+    isLoading: false,
+    expandedView: "none",
+    isBriefOnly: false,
+    speculation: IDLE_SPECULATION_STATE,
+    speculationSessionTimeSavedMs: 0,
+    thinkingEnabled: true,
+    promptSuggestion: {
+      text: null,
+      promptId: null,
+      shownAt: 0,
+      acceptedAt: 0,
+      generationRequestId: null
+    },
+    promptSuggestionEnabled: false,
+    mcp: {
+      clients: [],
+      tools: [],
+      commands: [],
+      resources: {},
+      pluginReconnectKey: 0
+    },
+    notifications: {
+      current: null,
+      queue: []
+    },
+    inbox: {
+      messages: []
+    },
+    elicitation: {
+      queue: []
+    }
+  };
+}
+const AppStoreContext = reactExports.createContext(null);
+function AppStateProvider({
+  children,
+  initialState,
+  onChangeAppState
+}) {
+  const [store] = reactExports.useState(
+    () => createStore(initialState ?? getDefaultAppState(), onChangeAppState)
   );
-  let stateFromStorage;
-  const hydrate = () => {
-    var _a;
-    if (!storage) return;
-    hasHydrated = false;
-    hydrationListeners.forEach((cb2) => cb2(get()));
-    const postRehydrationCallback = ((_a = options.onRehydrateStorage) == null ? void 0 : _a.call(options, get())) || void 0;
-    return toThenable(storage.getItem.bind(storage))(options.name).then((storageValue) => {
-      if (storageValue) {
-        return options.deserialize(storageValue);
-      }
-    }).then((deserializedStorageValue) => {
-      if (deserializedStorageValue) {
-        if (typeof deserializedStorageValue.version === "number" && deserializedStorageValue.version !== options.version) {
-          if (options.migrate) {
-            return options.migrate(
-              deserializedStorageValue.state,
-              deserializedStorageValue.version
-            );
-          }
-          console.error(
-            `State loaded from storage couldn't be migrated since no migrate function was provided`
-          );
-        } else {
-          return deserializedStorageValue.state;
-        }
-      }
-    }).then((migratedState) => {
-      var _a2;
-      stateFromStorage = options.merge(
-        migratedState,
-        (_a2 = get()) != null ? _a2 : configResult
-      );
-      set(stateFromStorage, true);
-      return setItem();
-    }).then(() => {
-      postRehydrationCallback == null ? void 0 : postRehydrationCallback(stateFromStorage, void 0);
-      hasHydrated = true;
-      finishHydrationListeners.forEach((cb2) => cb2(stateFromStorage));
-    }).catch((e) => {
-      postRehydrationCallback == null ? void 0 : postRehydrationCallback(void 0, e);
-    });
-  };
-  api.persist = {
-    setOptions: (newOptions) => {
-      options = {
-        ...options,
-        ...newOptions
-      };
-      if (newOptions.getStorage) {
-        storage = newOptions.getStorage();
-      }
-    },
-    clearStorage: () => {
-      storage == null ? void 0 : storage.removeItem(options.name);
-    },
-    getOptions: () => options,
-    rehydrate: () => hydrate(),
-    hasHydrated: () => hasHydrated,
-    onHydrate: (cb2) => {
-      hydrationListeners.add(cb2);
-      return () => {
-        hydrationListeners.delete(cb2);
-      };
-    },
-    onFinishHydration: (cb2) => {
-      finishHydrationListeners.add(cb2);
-      return () => {
-        finishHydrationListeners.delete(cb2);
-      };
-    }
-  };
-  hydrate();
-  return stateFromStorage || configResult;
-};
-const newImpl = (config, baseOptions) => (set, get, api) => {
-  let options = {
-    storage: createJSONStorage(() => localStorage),
-    partialize: (state) => state,
-    version: 0,
-    merge: (persistedState, currentState) => ({
-      ...currentState,
-      ...persistedState
-    }),
-    ...baseOptions
-  };
-  let hasHydrated = false;
-  const hydrationListeners = /* @__PURE__ */ new Set();
-  const finishHydrationListeners = /* @__PURE__ */ new Set();
-  let storage = options.storage;
-  if (!storage) {
-    return config(
-      (...args) => {
-        console.warn(
-          `[zustand persist middleware] Unable to update item '${options.name}', the given storage is currently unavailable.`
-        );
-        set(...args);
-      },
-      get,
-      api
-    );
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(AppStoreContext.Provider, { value: store, children });
+}
+function useAppStore$1() {
+  const store = reactExports.useContext(AppStoreContext);
+  if (!store) {
+    throw new Error("useAppStore must be used within AppStateProvider");
   }
-  const setItem = () => {
-    const state = options.partialize({ ...get() });
-    return storage.setItem(options.name, {
-      state,
-      version: options.version
-    });
-  };
-  const savedSetState = api.setState;
-  api.setState = (state, replace2) => {
-    savedSetState(state, replace2);
-    void setItem();
-  };
-  const configResult = config(
-    (...args) => {
-      set(...args);
-      void setItem();
-    },
-    get,
-    api
+  return store;
+}
+function useAppState(selector) {
+  const store = useAppStore$1();
+  const getSnapshot = reactExports.useCallback(() => selector(store.getState()), [store, selector]);
+  return reactExports.useSyncExternalStore(store.subscribe, getSnapshot, getSnapshot);
+}
+function useSetAppState() {
+  return useAppStore$1().setState;
+}
+const ITEM_HEIGHT_ESTIMATE = 80;
+const OVERSCAN = 5;
+const VirtualMessageList = ({
+  messages,
+  renderMessage,
+  onScroll
+}) => {
+  const containerRef = reactExports.useRef(null);
+  const scrollRef = reactExports.useRef(null);
+  const [scrollTop, setScrollTop] = reactExports.useState(0);
+  const [containerHeight, setContainerHeight] = reactExports.useState(0);
+  const startIndex = Math.max(0, Math.floor(scrollTop / ITEM_HEIGHT_ESTIMATE) - OVERSCAN);
+  const endIndex = Math.min(
+    messages.length - 1,
+    Math.ceil((scrollTop + containerHeight) / ITEM_HEIGHT_ESTIMATE) + OVERSCAN
   );
-  api.getInitialState = () => configResult;
-  let stateFromStorage;
-  const hydrate = () => {
-    var _a, _b;
-    if (!storage) return;
-    hasHydrated = false;
-    hydrationListeners.forEach((cb2) => {
-      var _a2;
-      return cb2((_a2 = get()) != null ? _a2 : configResult);
-    });
-    const postRehydrationCallback = ((_b = options.onRehydrateStorage) == null ? void 0 : _b.call(options, (_a = get()) != null ? _a : configResult)) || void 0;
-    return toThenable(storage.getItem.bind(storage))(options.name).then((deserializedStorageValue) => {
-      if (deserializedStorageValue) {
-        if (typeof deserializedStorageValue.version === "number" && deserializedStorageValue.version !== options.version) {
-          if (options.migrate) {
-            return [
-              true,
-              options.migrate(
-                deserializedStorageValue.state,
-                deserializedStorageValue.version
-              )
-            ];
-          }
-          console.error(
-            `State loaded from storage couldn't be migrated since no migrate function was provided`
-          );
-        } else {
-          return [false, deserializedStorageValue.state];
-        }
-      }
-      return [false, void 0];
-    }).then((migrationResult) => {
-      var _a2;
-      const [migrated, migratedState] = migrationResult;
-      stateFromStorage = options.merge(
-        migratedState,
-        (_a2 = get()) != null ? _a2 : configResult
-      );
-      set(stateFromStorage, true);
-      if (migrated) {
-        return setItem();
-      }
-    }).then(() => {
-      postRehydrationCallback == null ? void 0 : postRehydrationCallback(stateFromStorage, void 0);
-      stateFromStorage = get();
-      hasHydrated = true;
-      finishHydrationListeners.forEach((cb2) => cb2(stateFromStorage));
-    }).catch((e) => {
-      postRehydrationCallback == null ? void 0 : postRehydrationCallback(void 0, e);
-    });
-  };
-  api.persist = {
-    setOptions: (newOptions) => {
-      options = {
-        ...options,
-        ...newOptions
-      };
-      if (newOptions.storage) {
-        storage = newOptions.storage;
-      }
-    },
-    clearStorage: () => {
-      storage == null ? void 0 : storage.removeItem(options.name);
-    },
-    getOptions: () => options,
-    rehydrate: () => hydrate(),
-    hasHydrated: () => hasHydrated,
-    onHydrate: (cb2) => {
-      hydrationListeners.add(cb2);
-      return () => {
-        hydrationListeners.delete(cb2);
-      };
-    },
-    onFinishHydration: (cb2) => {
-      finishHydrationListeners.add(cb2);
-      return () => {
-        finishHydrationListeners.delete(cb2);
-      };
+  const visibleMessages = [];
+  for (let i = startIndex; i <= endIndex; i++) {
+    if (messages[i]) {
+      visibleMessages.push({
+        msg: messages[i],
+        index: i,
+        offset: i * ITEM_HEIGHT_ESTIMATE
+      });
     }
-  };
-  if (!options.skipHydration) {
-    hydrate();
   }
-  return stateFromStorage || configResult;
-};
-const persistImpl = (config, baseOptions) => {
-  if ("getStorage" in baseOptions || "serialize" in baseOptions || "deserialize" in baseOptions) {
-    if ((__vite_import_meta_env__ ? "production" : void 0) !== "production") {
-      console.warn(
-        "[DEPRECATED] `getStorage`, `serialize` and `deserialize` options are deprecated. Use `storage` option instead."
-      );
+  const handleScroll = reactExports.useCallback(() => {
+    if (containerRef.current) {
+      const { scrollTop: st, scrollHeight, clientHeight } = containerRef.current;
+      setScrollTop(st);
+      const isAtBottom = scrollHeight - st - clientHeight < 50;
+      onScroll?.(!isAtBottom);
     }
-    return oldImpl(config, baseOptions);
-  }
-  return newImpl(config, baseOptions);
-};
-const persist = persistImpl;
-const generateId$1 = () => Math.random().toString(36).substring(2, 15);
-const useSkillStore = create$1()(
-  persist(
-    (set, get) => ({
-      skills: [
-        {
-          id: "code-assistant",
-          name: "代码助手",
-          description: "帮你写代码、调试、审查代码",
-          icon: "💻",
-          path: "",
-          mode: "work",
-          enabled: true,
-          createdAt: Date.now()
-        },
-        {
-          id: "writing-assistant",
-          name: "写作助手",
-          description: "帮你写作、翻译、润色文章",
-          icon: "📝",
-          path: "",
-          mode: "companion",
-          enabled: true,
-          createdAt: Date.now()
-        },
-        {
-          id: "search-assistant",
-          name: "搜索助手",
-          description: "帮你搜索信息、分析数据",
-          icon: "🔍",
-          path: "",
-          mode: "work",
-          enabled: true,
-          createdAt: Date.now()
+  }, [onScroll]);
+  reactExports.useEffect(() => {
+    const container2 = containerRef.current;
+    if (container2) {
+      const observer = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          setContainerHeight(entry.contentRect.height);
         }
-      ],
-      activeSkillId: null,
-      loadedFromDisk: false,
-      addSkill: (skillData) => {
-        const newSkill = {
-          ...skillData,
-          id: generateId$1(),
-          createdAt: Date.now()
-        };
-        set((state) => ({ skills: [...state.skills, newSkill] }));
-        return newSkill;
-      },
-      updateSkill: (id2, updates) => set((state) => ({
-        skills: state.skills.map((s) => s.id === id2 ? { ...s, ...updates } : s)
-      })),
-      deleteSkill: (id2) => set((state) => ({
-        skills: state.skills.filter((s) => s.id !== id2),
-        activeSkillId: state.activeSkillId === id2 ? null : state.activeSkillId
-      })),
-      setActiveSkill: (id2) => set({ activeSkillId: id2 }),
-      getActiveSkill: () => {
-        const state = get();
-        return state.skills.find((s) => s.id === state.activeSkillId);
-      },
-      importSkill: (skillData) => {
-        const newSkill = {
-          ...skillData,
-          id: generateId$1(),
-          mode: skillData.mode || "work",
-          enabled: true,
-          createdAt: Date.now()
-        };
-        set((state) => ({ skills: [...state.skills, newSkill] }));
-        return newSkill;
-      },
-      loadSkillsFromDisk: async () => {
-        try {
-          const diskSkills = await window.api.getSkillsFromDisk();
-          if (diskSkills && diskSkills.length > 0) {
-            const existingIds = new Set(get().skills.map((s) => s.id));
-            const newSkills = diskSkills.filter((ds) => !existingIds.has(ds.id));
-            if (newSkills.length > 0) {
-              set((state) => ({
-                skills: [...state.skills, ...newSkills],
-                loadedFromDisk: true
-              }));
-            }
-          }
-        } catch (error) {
-          console.error("Failed to load skills from disk:", error);
-        }
-      },
-      refreshSkills: async () => {
-        await get().loadSkillsFromDisk();
-      }
-    }),
+      });
+      observer.observe(container2);
+      return () => observer.disconnect();
+    }
+  }, []);
+  reactExports.useEffect(() => {
+    if (containerRef.current && scrollRef.current && scrollTop + containerHeight >= scrollRef.current.scrollHeight - 100) {
+      containerRef.current.scrollTop = containerRef.current.scrollHeight;
+    }
+  }, [messages.length, scrollTop, containerHeight]);
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    "div",
     {
-      name: "skill-storage"
+      ref: (el2) => {
+        containerRef.current = el2;
+        scrollRef.current = el2;
+      },
+      className: "virtual-message-list",
+      onScroll: handleScroll,
+      children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "div",
+        {
+          className: "virtual-message-list-inner",
+          style: { height: messages.length * ITEM_HEIGHT_ESTIMATE },
+          children: visibleMessages.map(({ msg, index: index2, offset }) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "div",
+            {
+              className: "virtual-message-item",
+              style: { transform: `translateY(${offset}px)` },
+              children: renderMessage(msg, index2)
+            },
+            msg.uuid ?? index2
+          ))
+        }
+      )
     }
-  )
-);
+  );
+};
+const UserTextMessage = ({ text: text2, timestamp }) => {
+  const formatTime2 = (ts) => {
+    if (!ts) return "";
+    return new Date(ts).toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" });
+  };
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "message-bubble user", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "message-content", children: text2 }),
+    timestamp && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "message-time", children: formatTime2(timestamp) })
+  ] });
+};
 function ok$1() {
 }
 function unreachable() {
@@ -23483,603 +23161,232 @@ function remarkGfm(options) {
   fromMarkdownExtensions.push(gfmFromMarkdown());
   toMarkdownExtensions.push(gfmToMarkdown(settings));
 }
-const ChatMessage = ({ message }) => {
-  const isUser = message.role === "user";
-  const isLoading = !message.content && !isUser;
-  const formatTime2 = (timestamp) => {
-    return new Date(timestamp).toLocaleTimeString("zh-CN", {
-      hour: "2-digit",
-      minute: "2-digit"
-    });
+const AssistantTextMessage = ({ text: text2, timestamp }) => {
+  const formatTime2 = (ts) => {
+    if (!ts) return "";
+    return new Date(ts).toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" });
   };
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: `chat-message ${isUser ? "user" : "assistant"}`, children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "message-avatar", children: isUser ? /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "avatar user-avatar", children: "J" }) : /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "avatar ai-avatar", children: "AI" }) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "message-content", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "message-bubble", children: [
-        isLoading ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "thinking-indicator", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "thinking-dot" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "thinking-dot" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "thinking-dot" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "thinking-text", children: "思考中..." })
-        ] }) : isUser ? message.content : /* @__PURE__ */ jsxRuntimeExports.jsx(Markdown, { remarkPlugins: [remarkGfm], children: message.content }),
-        message.artifacts?.map((artifact) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "artifact-card", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "artifact-header", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "artifact-title", children: artifact.title }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "artifact-type", children: artifact.type })
-          ] }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("pre", { className: "artifact-content", children: /* @__PURE__ */ jsxRuntimeExports.jsx("code", { children: artifact.content }) }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "artifact-copy", children: "复制" })
-        ] }, artifact.id))
-      ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "message-time", children: formatTime2(message.timestamp) })
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "message-bubble assistant", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "message-content", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Markdown, { remarkPlugins: [remarkGfm], children: text2 }) }),
+    timestamp && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "message-time", children: formatTime2(timestamp) })
+  ] });
+};
+const AssistantThinkingMessage = ({ thinking }) => {
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "message-bubble thinking", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "thinking-indicator", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "thinking-dot" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "thinking-dot" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "thinking-dot" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "thinking-text", children: "思考中..." })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "thinking-content", children: thinking })
+  ] });
+};
+const AssistantToolUseMessage = ({
+  toolUse,
+  onApprove,
+  onDeny
+}) => {
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "message-bubble tool-use", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "tool-use-header", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "tool-use-icon", children: "⚡" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "tool-use-name", children: toolUse.name })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "tool-use-content", children: /* @__PURE__ */ jsxRuntimeExports.jsx("pre", { children: JSON.stringify(toolUse.input, null, 2) }) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "tool-use-actions", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "tool-use-approve", onClick: () => onApprove?.(toolUse.id), children: "允许" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "tool-use-deny", onClick: () => onDeny?.(toolUse.id), children: "拒绝" })
     ] })
   ] });
 };
-const generateId = () => Math.random().toString(36).substring(2, 15);
-const useModelStore = create$1()(
-  persist(
-    (set, get) => ({
-      models: [
-        {
-          id: "default-sonnet",
-          name: "Sonnet 4",
-          provider: "anthropic",
-          modelName: "claude-sonnet-4-20250514",
-          isDefault: true
-        },
-        {
-          id: "default-opus",
-          name: "Opus 4",
-          provider: "anthropic",
-          modelName: "claude-opus-4-5-20251114",
-          isDefault: false
-        },
-        {
-          id: "default-minimax",
-          name: "MiniMax",
-          provider: "minimax",
-          modelName: "MiniMax-Text-01",
-          isDefault: false
-        }
-      ],
-      activeModelId: "default-sonnet",
-      addModel: (modelData) => {
-        const newModel = {
-          ...modelData,
-          id: generateId()
-        };
-        set((state) => ({ models: [...state.models, newModel] }));
-        return newModel;
-      },
-      updateModel: (id2, updates) => set((state) => ({
-        models: state.models.map(
-          (m2) => m2.id === id2 ? { ...m2, ...updates } : m2
-        )
-      })),
-      deleteModel: (id2) => set((state) => {
-        const newModels = state.models.filter((m2) => m2.id !== id2);
-        if (state.models.find((m2) => m2.id === id2)?.isDefault && newModels.length > 0) {
-          newModels[0].isDefault = true;
-        }
-        const activeModelId = state.activeModelId === id2 ? newModels.find((m2) => m2.isDefault)?.id || newModels[0]?.id : state.activeModelId;
-        return {
-          models: newModels,
-          activeModelId
-        };
-      }),
-      setDefaultModel: (id2) => set((state) => ({
-        models: state.models.map((m2) => ({
-          ...m2,
-          isDefault: m2.id === id2
-        }))
-      })),
-      setActiveModel: (id2) => set({ activeModelId: id2 }),
-      getDefaultModel: () => get().models.find((m2) => m2.isDefault),
-      getActiveModel: () => {
-        const state = get();
-        return state.models.find((m2) => m2.id === state.activeModelId) || state.models.find((m2) => m2.isDefault);
-      }
-    }),
-    {
-      name: "model-storage"
-    }
-  )
-);
-const ChatInput = ({
-  onSend,
-  isLoading = false,
-  onStop
-}) => {
-  const [input, setInput] = reactExports.useState("");
-  const [showModelDropdown, setShowModelDropdown] = reactExports.useState(false);
-  const [showSkillPicker, setShowSkillPicker] = reactExports.useState(false);
-  const [skillSearch, setSkillSearch] = reactExports.useState("");
-  const [selectedSkill, setSelectedSkill] = reactExports.useState(null);
-  const [selectedSkillIndex, setSelectedSkillIndex] = reactExports.useState(0);
-  const { models, activeModelId, setActiveModel, getDefaultModel } = useModelStore();
-  const skills = useSkillStore((state) => state.skills);
-  const textareaRef = reactExports.useRef(null);
-  const skillPickerRef = reactExports.useRef(null);
-  const fileInputRef = reactExports.useRef(null);
-  const activeModel = models.find((m2) => m2.id === activeModelId) || getDefaultModel();
-  const filteredSkills = skills.filter(
-    (skill) => skill.name.toLowerCase().includes(skillSearch.toLowerCase()) || skill.description.toLowerCase().includes(skillSearch.toLowerCase())
-  );
-  reactExports.useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-      const lineHeight = 24;
-      const maxLines = 5;
-      const maxHeight = lineHeight * maxLines;
-      const newHeight = Math.min(textareaRef.current.scrollHeight, maxHeight);
-      textareaRef.current.style.height = `${newHeight}px`;
-    }
-  }, [input]);
-  reactExports.useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (skillPickerRef.current && !skillPickerRef.current.contains(e.target)) {
-        setShowSkillPicker(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-  reactExports.useEffect(() => {
-    if (selectedSkillIndex >= filteredSkills.length) {
-      setSelectedSkillIndex(Math.max(0, filteredSkills.length - 1));
-    }
-  }, [filteredSkills, selectedSkillIndex]);
-  const handleInputChange = (e) => {
-    const value = e.target.value;
-    setInput(value);
-    const lastSlashIndex = value.lastIndexOf("/");
-    if (lastSlashIndex !== -1 && lastSlashIndex === value.length - 1) {
-      setShowSkillPicker(true);
-      setSkillSearch("");
-      setSelectedSkillIndex(0);
-    } else if (showSkillPicker && lastSlashIndex !== -1) {
-      setSkillSearch(value.slice(lastSlashIndex + 1));
-      setSelectedSkillIndex(0);
-    } else if (!value.includes("/")) {
-      setShowSkillPicker(false);
-      setSkillSearch("");
-    }
-  };
-  const handleSelectSkill = (skill) => {
-    const lastSlashIndex = input.lastIndexOf("/");
-    const beforeSlash = input.slice(0, lastSlashIndex);
-    setInput(beforeSlash);
-    setSelectedSkill(skill);
-    setShowSkillPicker(false);
-    setSkillSearch("");
-    setTimeout(() => {
-      textareaRef.current?.focus();
-    }, 0);
-  };
-  const handleRemoveSkill = () => {
-    setSelectedSkill(null);
-  };
-  const handleSend = () => {
-    if (input.trim() && !isLoading) {
-      onSend(input.trim(), selectedSkill?.id);
-      setInput("");
-      setSelectedSkill(null);
-    }
-  };
-  const handleKeyDown = (e) => {
-    if (showSkillPicker && filteredSkills.length > 0) {
-      if (e.key === "ArrowDown") {
-        e.preventDefault();
-        setSelectedSkillIndex(
-          (prev) => prev < filteredSkills.length - 1 ? prev + 1 : 0
-        );
-        return;
-      }
-      if (e.key === "ArrowUp") {
-        e.preventDefault();
-        setSelectedSkillIndex(
-          (prev) => prev > 0 ? prev - 1 : filteredSkills.length - 1
-        );
-        return;
-      }
-      if (e.key === "Enter") {
-        e.preventDefault();
-        handleSelectSkill(filteredSkills[selectedSkillIndex]);
-        return;
-      }
-      if (e.key === "Escape") {
-        e.preventDefault();
-        setShowSkillPicker(false);
-        return;
-      }
-    }
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
-    if (e.key === "Escape") {
-      if (showSkillPicker) {
-        setShowSkillPicker(false);
-      }
-      if (showModelDropdown) {
-        setShowModelDropdown(false);
-      }
-    }
-  };
-  const handleAttach = () => {
-    fileInputRef.current?.click();
-  };
-  const handleFileChange = (e) => {
-    const files = e.target.files;
-    if (files && files.length > 0) {
-      console.log("Selected files:", files);
-    }
-  };
-  const handleSelectModel = (modelId) => {
-    setActiveModel(modelId);
-    setShowModelDropdown(false);
-  };
-  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "chat-input-container", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-input-wrapper", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "input-main", children: [
-      selectedSkill && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "selected-skill-tag", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "skill-tag-icon", children: selectedSkill.icon }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "skill-tag-name", children: selectedSkill.name }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "skill-tag-remove", onClick: handleRemoveSkill, children: "×" })
-      ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
-        "textarea",
-        {
-          ref: textareaRef,
-          className: "chat-textarea",
-          placeholder: "输入要求...",
-          value: input,
-          onChange: handleInputChange,
-          onKeyDown: handleKeyDown
-        }
-      ),
-      showSkillPicker && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "skill-picker", ref: skillPickerRef, children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "skill-picker-header", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "选择技能" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "skill-picker-hint", children: "↑↓ 选择 · Enter 确认" })
-        ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "skill-picker-list", children: filteredSkills.length > 0 ? filteredSkills.map((skill, index2) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
-          "button",
-          {
-            className: `skill-picker-item ${index2 === selectedSkillIndex ? "selected" : ""}`,
-            onClick: () => handleSelectSkill(skill),
-            onMouseEnter: () => setSelectedSkillIndex(index2),
-            children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "skill-picker-icon", children: skill.icon }),
-              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "skill-picker-info", children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "skill-picker-name", children: skill.name }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "skill-picker-desc", children: skill.description })
-              ] })
-            ]
-          },
-          skill.id
-        )) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "skill-picker-empty", children: "没有找到技能" }) })
-      ] })
+const UserToolResultMessage = ({ toolResult }) => {
+  const content2 = typeof toolResult.content === "string" ? toolResult.content : JSON.stringify(toolResult.content, null, 2);
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: `message-bubble tool-result ${toolResult.is_error ? "error" : ""}`, children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "tool-result-header", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "tool-result-icon", children: toolResult.is_error ? "❌" : "✅" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "tool-result-label", children: "工具结果" })
     ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "input-toolbar", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "toolbar-left", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
-          "input",
-          {
-            type: "file",
-            ref: fileInputRef,
-            className: "file-input-hidden",
-            onChange: handleFileChange,
-            multiple: true
-          }
-        ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "toolbar-btn", onClick: handleAttach, title: "上传文件", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Plus, { size: 18 }) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "toolbar-divider" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs(
-          "button",
-          {
-            className: "toolbar-dropdown",
-            onClick: () => setShowModelDropdown(!showModelDropdown),
-            children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx(Zap, { size: 14 }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: activeModel?.name || "选择模型" }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronDown, { size: 12 })
-            ]
-          }
-        ),
-        showModelDropdown && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "model-dropdown", children: models.map((model) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
-          "button",
-          {
-            className: `model-option ${model.id === activeModelId ? "active" : ""}`,
-            onClick: () => handleSelectModel(model.id),
-            children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: model.name }),
-              model.isDefault && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "default-tag", children: "默认" })
-            ]
-          },
-          model.id
-        )) })
-      ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "toolbar-right", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "toolbar-btn", title: "语音输入", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Mic, { size: 16 }) }),
-        isLoading ? /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "send-btn loading", onClick: onStop, children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "stop-icon" }) }) : /* @__PURE__ */ jsxRuntimeExports.jsx(
-          "button",
-          {
-            className: "send-btn",
-            onClick: handleSend,
-            disabled: !input.trim(),
-            children: /* @__PURE__ */ jsxRuntimeExports.jsx(Send, { size: 16 })
-          }
-        )
-      ] })
-    ] })
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "tool-result-content", children: /* @__PURE__ */ jsxRuntimeExports.jsx("pre", { children: content2 }) })
+  ] });
+};
+const SystemTextMessage = ({ message }) => {
+  const levelClass = message.level ? `system-${message.level}` : "";
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: `message-bubble system ${levelClass}`, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "system-content", children: [
+    message.subtype && /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "system-subtype", children: [
+      "[",
+      message.subtype,
+      "]"
+    ] }),
+    message.message
   ] }) });
 };
-function buildSystemPrompt(skills) {
-  const enabledSkills = skills.filter((s) => s.enabled);
-  let prompt = `你是一个AI助手，叫Auto Shell。
-
-## 你的能力
-- 可以读取、创建和编辑文件
-- 可以执行终端命令
-- 可以搜索文件和内容
-- 可以使用各种技能来帮助你完成任务
-- 可以打开网页链接
-
-`;
-  if (enabledSkills.length > 0) {
-    prompt += `## 可用技能
-`;
-    for (const skill of enabledSkills) {
-      prompt += `- ${skill.name}: ${skill.description}
-`;
+const MessageRow = ({ message }) => {
+  const renderContent = () => {
+    switch (message.type) {
+      case "user": {
+        const content2 = message.message?.content;
+        if (typeof content2 === "string") {
+          return /* @__PURE__ */ jsxRuntimeExports.jsx(UserTextMessage, { text: content2, timestamp: message.timestamp });
+        }
+        if (Array.isArray(content2)) {
+          return content2.map((block, i) => {
+            if (block.type === "text") {
+              return /* @__PURE__ */ jsxRuntimeExports.jsx(UserTextMessage, { text: block.text, timestamp: message.timestamp }, i);
+            }
+            if (block.type === "tool_result") {
+              return /* @__PURE__ */ jsxRuntimeExports.jsx(UserToolResultMessage, { toolResult: block }, i);
+            }
+            return null;
+          });
+        }
+        return null;
+      }
+      case "assistant": {
+        const blocks = message.message?.content;
+        if (!blocks || blocks.length === 0) {
+          return /* @__PURE__ */ jsxRuntimeExports.jsx(AssistantThinkingMessage, { thinking: "..." });
+        }
+        return blocks.map((block, i) => {
+          switch (block.type) {
+            case "text":
+              return /* @__PURE__ */ jsxRuntimeExports.jsx(AssistantTextMessage, { text: block.text, timestamp: message.timestamp }, i);
+            case "thinking":
+              return /* @__PURE__ */ jsxRuntimeExports.jsx(AssistantThinkingMessage, { thinking: block.thinking }, i);
+            case "tool_use":
+              return /* @__PURE__ */ jsxRuntimeExports.jsx(AssistantToolUseMessage, { toolUse: block }, i);
+            default:
+              return null;
+          }
+        });
+      }
+      case "system":
+        return /* @__PURE__ */ jsxRuntimeExports.jsx(SystemTextMessage, { message });
+      case "progress":
+        return /* @__PURE__ */ jsxRuntimeExports.jsx(AssistantThinkingMessage, { thinking: "加载中..." });
+      default:
+        return null;
     }
-    prompt += `
-`;
-  }
-  prompt += `## 使用工具
-当用户要求读取文件时，使用 Read 工具。
-当用户要求创建或修改文件时，使用 Write 工具。
-当用户要求执行命令时，使用 Bash 工具。
-当用户要求搜索文件时，使用 Glob 工具。
-当用户要求搜索文件内容时，使用 Grep 工具。
-当用户要求打开网页或浏览器时，使用 open_browser 工具，格式：[TOOL: open_browser: URL]
-
-`;
-  prompt += `## 规则
-1. 如果你不确定文件是否存在，先尝试读取
-2. 执行危险命令前先确认
-3. 始终用中文回复
-4. 如果工具执行失败，告诉用户错误信息
-5. 当需要打开网页时，先提取或确认URL，然后使用 [TOOL: open_browser: URL] 格式调用工具
-
-`;
-  return prompt;
+  };
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: `message-row message-row-${message.type}`, children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "message-avatar", children: message.type === "user" ? /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "avatar user-avatar", children: "J" }) : message.type === "assistant" ? /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "avatar ai-avatar", children: "AI" }) : /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "avatar system-avatar", children: "SYS" }) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "message-body", children: renderContent() })
+  ] });
+};
+function generateUUID() {
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r2 = Math.random() * 16 | 0;
+    const v2 = c === "x" ? r2 : r2 & 3 | 8;
+    return v2.toString(16);
+  });
 }
-buildSystemPrompt([]);
-const ChatArea = () => {
-  const { threadId } = useParams();
-  const currentThread = useChatStore((state) => state.currentThread);
-  const setCurrentThread = useChatStore((state) => state.setCurrentThread);
-  const addMessage = useChatStore((state) => state.addMessage);
-  const updateMessage = useChatStore((state) => state.updateMessage);
-  const setLoading = useChatStore((state) => state.setLoading);
-  const isLoading = useChatStore((state) => state.isLoading);
-  const skills = useSkillStore((state) => state.skills);
-  const messagesEndRef = reactExports.useRef(null);
-  const messagesContainerRef = reactExports.useRef(null);
+function createAssistantMessage(content2, options) {
+  return {
+    type: "assistant",
+    uuid: generateUUID(),
+    timestamp: (/* @__PURE__ */ new Date()).toISOString(),
+    message: {
+      content: content2
+    }
+  };
+}
+function createUserMessage(content2, options) {
+  return {
+    type: "user",
+    uuid: generateUUID(),
+    timestamp: (/* @__PURE__ */ new Date()).toISOString(),
+    isMeta: options?.isMeta,
+    message: {
+      content: content2
+    }
+  };
+}
+const PromptInput = () => {
+  const [input, setInput] = reactExports.useState("");
+  const isLoading = useAppState((s) => s.isLoading);
+  const setState = useSetAppState();
+  const messagesRef = reactExports.useRef(null);
+  const handleSubmit = reactExports.useCallback(async () => {
+    if (!input.trim() || isLoading) return;
+    const userMsg = createUserMessage(input.trim());
+    setState((prev) => ({
+      ...prev,
+      messages: [...prev.messages, userMsg],
+      isLoading: true
+    }));
+    setInput("");
+    setTimeout(() => {
+      const assistantMsg = createAssistantMessage([
+        { type: "text", text: `收到: ${userMsg.message.content}` }
+      ]);
+      setState((prev) => ({
+        ...prev,
+        messages: [...prev.messages, assistantMsg],
+        isLoading: false
+      }));
+    }, 1e3);
+  }, [input, isLoading, setState]);
+  const handleKeyDown = reactExports.useCallback((e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit();
+    }
+  }, [handleSubmit]);
+  const handleStop = reactExports.useCallback(() => {
+    setState((prev) => ({ ...prev, isLoading: false }));
+  }, [setState]);
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "prompt-input-container", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "prompt-input-wrapper", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "textarea",
+      {
+        ref: messagesRef,
+        className: "prompt-input",
+        value: input,
+        onChange: (e) => setInput(e.target.value),
+        onKeyDown: handleKeyDown,
+        placeholder: "输入消息...",
+        rows: 1
+      }
+    ),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "prompt-input-actions", children: isLoading ? /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "prompt-stop", onClick: handleStop, children: "停止" }) : /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "prompt-send", onClick: handleSubmit, disabled: !input.trim(), children: "发送" }) })
+  ] }) });
+};
+const Messages = () => {
+  const messages = useAppState((s) => s.messages);
+  useAppState((s) => s.isLoading);
+  useAppState((s) => s)?.setState;
   const [showScrollButton, setShowScrollButton] = reactExports.useState(false);
-  reactExports.useEffect(() => {
-    if (threadId) {
-      setCurrentThread(threadId);
-    }
-  }, [threadId, setCurrentThread]);
-  reactExports.useEffect(() => {
-    if (messagesEndRef.current && !showScrollButton) {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [currentThread?.messages, showScrollButton]);
-  const handleScroll = reactExports.useCallback(() => {
-    if (messagesContainerRef.current) {
-      const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
-      const isAtBottom = scrollHeight - scrollTop - clientHeight < 50;
-      setShowScrollButton(!isAtBottom);
-    }
+  const handleScroll = reactExports.useCallback((isNotAtBottom) => {
+    setShowScrollButton(isNotAtBottom);
   }, []);
   const scrollToBottom = reactExports.useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    setShowScrollButton(false);
   }, []);
-  const handleStop = reactExports.useCallback(() => {
-    setLoading(false);
-  }, [setLoading]);
-  const handleSend = reactExports.useCallback(async (content2, selectedSkillId) => {
-    if (!currentThread || isLoading) return;
-    let finalContent = content2;
-    if (selectedSkillId) {
-      const selectedSkill = skills.find((s) => s.id === selectedSkillId);
-      if (selectedSkill) {
-        finalContent = `[Skill: ${selectedSkill.name}] ${content2}`;
-      }
-    }
-    const userMessage = {
-      id: Math.random().toString(36).substring(2, 15),
-      role: "user",
-      content: finalContent,
-      timestamp: Date.now()
-    };
-    addMessage(currentThread.id, userMessage);
-    setLoading(true);
-    const assistantMessageId = Math.random().toString(36).substring(2, 15);
-    const assistantMessage = {
-      id: assistantMessageId,
-      role: "assistant",
-      content: "",
-      timestamp: Date.now()
-    };
-    addMessage(currentThread.id, assistantMessage);
-    const allMessages = [...currentThread.messages, userMessage];
-    const apiMessages = allMessages.map((m2) => ({
-      role: m2.role,
-      content: m2.content
-    }));
-    const systemPrompt = buildSystemPrompt(skills);
-    apiMessages.unshift({ role: "system", content: systemPrompt });
-    const executeToolCall = async (toolName, arg) => {
-      switch (toolName) {
-        case "open_browser":
-          if (window.api?.openUrl) {
-            const result = await window.api.openUrl(arg.trim());
-            if (result.success) {
-              return `正在打开浏览器: ${arg.trim()}`;
-            } else {
-              return `打开浏览器失败: ${result.error}`;
-            }
-          }
-          return `浏览器打开功能暂不可用`;
-        case "read":
-          if (window.api?.readFile) {
-            const result = await window.api.readFile(arg.trim());
-            if (result.success) {
-              return `文件内容:
-\`\`\`
-${result.content}
-\`\`\``;
-            } else {
-              return `读取文件失败: ${result.error}`;
-            }
-          }
-          return `文件读取功能暂不可用`;
-        case "write": {
-          const [filepath, ...contentParts] = arg.split("::");
-          if (window.api?.writeFile) {
-            const result = await window.api.writeFile(filepath.trim(), contentParts.join("::"));
-            if (result.success) {
-              return `文件已写入: ${filepath.trim()}`;
-            } else {
-              return `写入文件失败: ${result.error}`;
-            }
-          }
-          return `文件写入功能暂不可用`;
-        }
-        case "bash": {
-          if (window.api?.bashCommand) {
-            const result = await window.api.bashCommand(arg.trim());
-            if (result.exitCode === 0) {
-              return `命令执行结果:
-\`\`\`
-${result.output}
-\`\`\``;
-            } else {
-              return `命令执行失败:
-\`\`\`
-${result.output}
-\`\`\``;
-            }
-          }
-          return `命令执行功能暂不可用`;
-        }
-        default:
-          return `[未知工具: ${toolName}]`;
-      }
-    };
-    const processToolCalls = async (text2) => {
-      let result = text2;
-      const toolCallRegex2 = /\[TOOL:\s*(\w+):\s*([^\]]+)\]/g;
-      let match;
-      while ((match = toolCallRegex2.exec(result)) !== null) {
-        const fullMatch = match[0];
-        const toolName = match[1];
-        const toolArg = match[2];
-        const toolResult = await executeToolCall(toolName, toolArg);
-        result = result.replace(fullMatch, `
-${toolResult}
-`);
-      }
-      const toolCallBlockRegex = /\[TOOL_CALL\]\s*\{[\s\S]*?\}\s*\[\/TOOL_CALL\]/g;
-      const toolCallBlockMatches = [...result.matchAll(toolCallBlockRegex)];
-      for (const blockMatch of toolCallBlockMatches) {
-        const fullBlock = blockMatch[0];
-        const jsonMatch = fullBlock.match(/\{[\s\S]*?\}/);
-        if (jsonMatch) {
-          try {
-            const toolCall = JSON.parse(jsonMatch[0]);
-            if (toolCall.tool === "Bash" && toolCall.args && toolCall.args.command) {
-              const cmd = toolCall.args.command;
-              const urlMatch = cmd.match(/(?:open|xdg-open|start)\s+(https?:\/\/[^\s]+)/);
-              if (urlMatch) {
-                const url = urlMatch[1];
-                const toolResult = await executeToolCall("open_browser", url);
-                result = result.replace(fullBlock, `
-${toolResult}
-`);
-              } else {
-                const toolResult = await executeToolCall("bash", toolCall.args.command);
-                result = result.replace(fullBlock, `
-${toolResult}
-`);
-              }
-            }
-          } catch {
-          }
-        }
-      }
-      return result;
-    };
-    try {
-      let accumulatedContent = "";
-      const pendingToolCalls = /* @__PURE__ */ new Map();
-      const stopFn = window.api?.streamChatWithAI(
-        assistantMessageId,
-        apiMessages,
-        {
-          onChunk: (chunk) => {
-            accumulatedContent += chunk;
-            updateMessage(currentThread.id, assistantMessageId, { content: accumulatedContent });
-          },
-          onDone: async () => {
-            try {
-              const processedContent = await processToolCalls(accumulatedContent);
-              updateMessage(currentThread.id, assistantMessageId, { content: processedContent });
-            } catch (e) {
-              console.error("Error processing tool calls:", e);
-            }
-            setLoading(false);
-          },
-          onError: (error) => {
-            updateMessage(currentThread.id, assistantMessageId, {
-              content: `错误: ${error}`
-            });
-            setLoading(false);
-          }
-        }
-      );
-      if (stopFn) {
-      }
-    } catch (error) {
-      updateMessage(currentThread.id, assistantMessageId, {
-        content: `错误: ${error instanceof Error ? error.message : "未知错误"}`
-      });
-      setLoading(false);
-    }
-  }, [currentThread, isLoading, addMessage, updateMessage, setLoading]);
-  if (!currentThread) {
-    return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "chat-area chat-empty", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "empty-state", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { children: "你好，jelly" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { children: "有什么可以帮助你的吗？" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(QuickActions, {})
-    ] }) });
+  const renderMessage = reactExports.useCallback((msg) => {
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(MessageRow, { message: msg });
+  }, []);
+  if (messages.length === 0) {
+    return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "messages-empty", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "empty-state", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { children: "你好" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { children: "有什么可以帮助你的吗？" })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "messages-input-area", children: /* @__PURE__ */ jsxRuntimeExports.jsx(PromptInput, {}) })
+    ] });
   }
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-area", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-messages", ref: messagesContainerRef, onScroll: handleScroll, children: [
-      currentThread.messages.map((message) => /* @__PURE__ */ jsxRuntimeExports.jsx(ChatMessage, { message }, message.id)),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { ref: messagesEndRef })
-    ] }),
-    showScrollButton && /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "scroll-to-bottom", onClick: scrollToBottom, title: "滚动到底部", children: /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronsDown, { size: 20 }) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(ChatInput, { onSend: handleSend, onStop: handleStop, isLoading })
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "messages-container", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "messages-list", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+      VirtualMessageList,
+      {
+        messages,
+        renderMessage,
+        onScroll: handleScroll
+      }
+    ) }),
+    showScrollButton && /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "scroll-to-bottom", onClick: scrollToBottom, children: "滚动到底部" }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "messages-input-area", children: /* @__PURE__ */ jsxRuntimeExports.jsx(PromptInput, {}) })
   ] });
 };
 const ChatPage = () => {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(ChatArea, {});
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(Messages, {});
 };
 const KnowledgePage = () => {
   return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "knowledge-page", children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "page-content", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "knowledge-empty", children: [
@@ -24173,6 +23480,437 @@ const IconPicker = ({ value, onChange }) => {
     ] })
   ] });
 };
+const __vite_import_meta_env__ = {};
+function createJSONStorage(getStorage, options) {
+  let storage;
+  try {
+    storage = getStorage();
+  } catch (_e) {
+    return;
+  }
+  const persistStorage = {
+    getItem: (name2) => {
+      var _a;
+      const parse2 = (str2) => {
+        if (str2 === null) {
+          return null;
+        }
+        return JSON.parse(str2, void 0);
+      };
+      const str = (_a = storage.getItem(name2)) != null ? _a : null;
+      if (str instanceof Promise) {
+        return str.then(parse2);
+      }
+      return parse2(str);
+    },
+    setItem: (name2, newValue) => storage.setItem(
+      name2,
+      JSON.stringify(newValue, void 0)
+    ),
+    removeItem: (name2) => storage.removeItem(name2)
+  };
+  return persistStorage;
+}
+const toThenable = (fn) => (input) => {
+  try {
+    const result = fn(input);
+    if (result instanceof Promise) {
+      return result;
+    }
+    return {
+      then(onFulfilled) {
+        return toThenable(onFulfilled)(result);
+      },
+      catch(_onRejected) {
+        return this;
+      }
+    };
+  } catch (e) {
+    return {
+      then(_onFulfilled) {
+        return this;
+      },
+      catch(onRejected) {
+        return toThenable(onRejected)(e);
+      }
+    };
+  }
+};
+const oldImpl = (config, baseOptions) => (set, get, api) => {
+  let options = {
+    getStorage: () => localStorage,
+    serialize: JSON.stringify,
+    deserialize: JSON.parse,
+    partialize: (state) => state,
+    version: 0,
+    merge: (persistedState, currentState) => ({
+      ...currentState,
+      ...persistedState
+    }),
+    ...baseOptions
+  };
+  let hasHydrated = false;
+  const hydrationListeners = /* @__PURE__ */ new Set();
+  const finishHydrationListeners = /* @__PURE__ */ new Set();
+  let storage;
+  try {
+    storage = options.getStorage();
+  } catch (_e) {
+  }
+  if (!storage) {
+    return config(
+      (...args) => {
+        console.warn(
+          `[zustand persist middleware] Unable to update item '${options.name}', the given storage is currently unavailable.`
+        );
+        set(...args);
+      },
+      get,
+      api
+    );
+  }
+  const thenableSerialize = toThenable(options.serialize);
+  const setItem = () => {
+    const state = options.partialize({ ...get() });
+    let errorInSync;
+    const thenable = thenableSerialize({ state, version: options.version }).then(
+      (serializedValue) => storage.setItem(options.name, serializedValue)
+    ).catch((e) => {
+      errorInSync = e;
+    });
+    if (errorInSync) {
+      throw errorInSync;
+    }
+    return thenable;
+  };
+  const savedSetState = api.setState;
+  api.setState = (state, replace2) => {
+    savedSetState(state, replace2);
+    void setItem();
+  };
+  const configResult = config(
+    (...args) => {
+      set(...args);
+      void setItem();
+    },
+    get,
+    api
+  );
+  let stateFromStorage;
+  const hydrate = () => {
+    var _a;
+    if (!storage) return;
+    hasHydrated = false;
+    hydrationListeners.forEach((cb2) => cb2(get()));
+    const postRehydrationCallback = ((_a = options.onRehydrateStorage) == null ? void 0 : _a.call(options, get())) || void 0;
+    return toThenable(storage.getItem.bind(storage))(options.name).then((storageValue) => {
+      if (storageValue) {
+        return options.deserialize(storageValue);
+      }
+    }).then((deserializedStorageValue) => {
+      if (deserializedStorageValue) {
+        if (typeof deserializedStorageValue.version === "number" && deserializedStorageValue.version !== options.version) {
+          if (options.migrate) {
+            return options.migrate(
+              deserializedStorageValue.state,
+              deserializedStorageValue.version
+            );
+          }
+          console.error(
+            `State loaded from storage couldn't be migrated since no migrate function was provided`
+          );
+        } else {
+          return deserializedStorageValue.state;
+        }
+      }
+    }).then((migratedState) => {
+      var _a2;
+      stateFromStorage = options.merge(
+        migratedState,
+        (_a2 = get()) != null ? _a2 : configResult
+      );
+      set(stateFromStorage, true);
+      return setItem();
+    }).then(() => {
+      postRehydrationCallback == null ? void 0 : postRehydrationCallback(stateFromStorage, void 0);
+      hasHydrated = true;
+      finishHydrationListeners.forEach((cb2) => cb2(stateFromStorage));
+    }).catch((e) => {
+      postRehydrationCallback == null ? void 0 : postRehydrationCallback(void 0, e);
+    });
+  };
+  api.persist = {
+    setOptions: (newOptions) => {
+      options = {
+        ...options,
+        ...newOptions
+      };
+      if (newOptions.getStorage) {
+        storage = newOptions.getStorage();
+      }
+    },
+    clearStorage: () => {
+      storage == null ? void 0 : storage.removeItem(options.name);
+    },
+    getOptions: () => options,
+    rehydrate: () => hydrate(),
+    hasHydrated: () => hasHydrated,
+    onHydrate: (cb2) => {
+      hydrationListeners.add(cb2);
+      return () => {
+        hydrationListeners.delete(cb2);
+      };
+    },
+    onFinishHydration: (cb2) => {
+      finishHydrationListeners.add(cb2);
+      return () => {
+        finishHydrationListeners.delete(cb2);
+      };
+    }
+  };
+  hydrate();
+  return stateFromStorage || configResult;
+};
+const newImpl = (config, baseOptions) => (set, get, api) => {
+  let options = {
+    storage: createJSONStorage(() => localStorage),
+    partialize: (state) => state,
+    version: 0,
+    merge: (persistedState, currentState) => ({
+      ...currentState,
+      ...persistedState
+    }),
+    ...baseOptions
+  };
+  let hasHydrated = false;
+  const hydrationListeners = /* @__PURE__ */ new Set();
+  const finishHydrationListeners = /* @__PURE__ */ new Set();
+  let storage = options.storage;
+  if (!storage) {
+    return config(
+      (...args) => {
+        console.warn(
+          `[zustand persist middleware] Unable to update item '${options.name}', the given storage is currently unavailable.`
+        );
+        set(...args);
+      },
+      get,
+      api
+    );
+  }
+  const setItem = () => {
+    const state = options.partialize({ ...get() });
+    return storage.setItem(options.name, {
+      state,
+      version: options.version
+    });
+  };
+  const savedSetState = api.setState;
+  api.setState = (state, replace2) => {
+    savedSetState(state, replace2);
+    void setItem();
+  };
+  const configResult = config(
+    (...args) => {
+      set(...args);
+      void setItem();
+    },
+    get,
+    api
+  );
+  api.getInitialState = () => configResult;
+  let stateFromStorage;
+  const hydrate = () => {
+    var _a, _b;
+    if (!storage) return;
+    hasHydrated = false;
+    hydrationListeners.forEach((cb2) => {
+      var _a2;
+      return cb2((_a2 = get()) != null ? _a2 : configResult);
+    });
+    const postRehydrationCallback = ((_b = options.onRehydrateStorage) == null ? void 0 : _b.call(options, (_a = get()) != null ? _a : configResult)) || void 0;
+    return toThenable(storage.getItem.bind(storage))(options.name).then((deserializedStorageValue) => {
+      if (deserializedStorageValue) {
+        if (typeof deserializedStorageValue.version === "number" && deserializedStorageValue.version !== options.version) {
+          if (options.migrate) {
+            return [
+              true,
+              options.migrate(
+                deserializedStorageValue.state,
+                deserializedStorageValue.version
+              )
+            ];
+          }
+          console.error(
+            `State loaded from storage couldn't be migrated since no migrate function was provided`
+          );
+        } else {
+          return [false, deserializedStorageValue.state];
+        }
+      }
+      return [false, void 0];
+    }).then((migrationResult) => {
+      var _a2;
+      const [migrated, migratedState] = migrationResult;
+      stateFromStorage = options.merge(
+        migratedState,
+        (_a2 = get()) != null ? _a2 : configResult
+      );
+      set(stateFromStorage, true);
+      if (migrated) {
+        return setItem();
+      }
+    }).then(() => {
+      postRehydrationCallback == null ? void 0 : postRehydrationCallback(stateFromStorage, void 0);
+      stateFromStorage = get();
+      hasHydrated = true;
+      finishHydrationListeners.forEach((cb2) => cb2(stateFromStorage));
+    }).catch((e) => {
+      postRehydrationCallback == null ? void 0 : postRehydrationCallback(void 0, e);
+    });
+  };
+  api.persist = {
+    setOptions: (newOptions) => {
+      options = {
+        ...options,
+        ...newOptions
+      };
+      if (newOptions.storage) {
+        storage = newOptions.storage;
+      }
+    },
+    clearStorage: () => {
+      storage == null ? void 0 : storage.removeItem(options.name);
+    },
+    getOptions: () => options,
+    rehydrate: () => hydrate(),
+    hasHydrated: () => hasHydrated,
+    onHydrate: (cb2) => {
+      hydrationListeners.add(cb2);
+      return () => {
+        hydrationListeners.delete(cb2);
+      };
+    },
+    onFinishHydration: (cb2) => {
+      finishHydrationListeners.add(cb2);
+      return () => {
+        finishHydrationListeners.delete(cb2);
+      };
+    }
+  };
+  if (!options.skipHydration) {
+    hydrate();
+  }
+  return stateFromStorage || configResult;
+};
+const persistImpl = (config, baseOptions) => {
+  if ("getStorage" in baseOptions || "serialize" in baseOptions || "deserialize" in baseOptions) {
+    if ((__vite_import_meta_env__ ? "production" : void 0) !== "production") {
+      console.warn(
+        "[DEPRECATED] `getStorage`, `serialize` and `deserialize` options are deprecated. Use `storage` option instead."
+      );
+    }
+    return oldImpl(config, baseOptions);
+  }
+  return newImpl(config, baseOptions);
+};
+const persist = persistImpl;
+const generateId$1 = () => Math.random().toString(36).substring(2, 15);
+const useSkillStore = create$1()(
+  persist(
+    (set, get) => ({
+      skills: [
+        {
+          id: "code-assistant",
+          name: "代码助手",
+          description: "帮你写代码、调试、审查代码",
+          icon: "💻",
+          path: "",
+          mode: "work",
+          enabled: true,
+          createdAt: Date.now()
+        },
+        {
+          id: "writing-assistant",
+          name: "写作助手",
+          description: "帮你写作、翻译、润色文章",
+          icon: "📝",
+          path: "",
+          mode: "companion",
+          enabled: true,
+          createdAt: Date.now()
+        },
+        {
+          id: "search-assistant",
+          name: "搜索助手",
+          description: "帮你搜索信息、分析数据",
+          icon: "🔍",
+          path: "",
+          mode: "work",
+          enabled: true,
+          createdAt: Date.now()
+        }
+      ],
+      activeSkillId: null,
+      loadedFromDisk: false,
+      addSkill: (skillData) => {
+        const newSkill = {
+          ...skillData,
+          id: generateId$1(),
+          createdAt: Date.now()
+        };
+        set((state) => ({ skills: [...state.skills, newSkill] }));
+        return newSkill;
+      },
+      updateSkill: (id2, updates) => set((state) => ({
+        skills: state.skills.map((s) => s.id === id2 ? { ...s, ...updates } : s)
+      })),
+      deleteSkill: (id2) => set((state) => ({
+        skills: state.skills.filter((s) => s.id !== id2),
+        activeSkillId: state.activeSkillId === id2 ? null : state.activeSkillId
+      })),
+      setActiveSkill: (id2) => set({ activeSkillId: id2 }),
+      getActiveSkill: () => {
+        const state = get();
+        return state.skills.find((s) => s.id === state.activeSkillId);
+      },
+      importSkill: (skillData) => {
+        const newSkill = {
+          ...skillData,
+          id: generateId$1(),
+          mode: skillData.mode || "work",
+          enabled: true,
+          createdAt: Date.now()
+        };
+        set((state) => ({ skills: [...state.skills, newSkill] }));
+        return newSkill;
+      },
+      loadSkillsFromDisk: async () => {
+        try {
+          const diskSkills = await window.api.getSkillsFromDisk();
+          if (diskSkills && diskSkills.length > 0) {
+            const existingIds = new Set(get().skills.map((s) => s.id));
+            const newSkills = diskSkills.filter((ds) => !existingIds.has(ds.id));
+            if (newSkills.length > 0) {
+              set((state) => ({
+                skills: [...state.skills, ...newSkills],
+                loadedFromDisk: true
+              }));
+            }
+          }
+        } catch (error) {
+          console.error("Failed to load skills from disk:", error);
+        }
+      },
+      refreshSkills: async () => {
+        await get().loadSkillsFromDisk();
+      }
+    }),
+    {
+      name: "skill-storage"
+    }
+  )
+);
 const SkillsPage = () => {
   const { skills, deleteSkill, importSkill, loadSkillsFromDisk } = useSkillStore();
   const [showImport, setShowImport] = reactExports.useState(false);
@@ -24469,6 +24207,76 @@ const SettingsPage = () => {
     ] })
   ] }) });
 };
+const generateId = () => Math.random().toString(36).substring(2, 15);
+const useModelStore = create$1()(
+  persist(
+    (set, get) => ({
+      models: [
+        {
+          id: "default-sonnet",
+          name: "Sonnet 4",
+          provider: "anthropic",
+          modelName: "claude-sonnet-4-20250514",
+          isDefault: true
+        },
+        {
+          id: "default-opus",
+          name: "Opus 4",
+          provider: "anthropic",
+          modelName: "claude-opus-4-5-20251114",
+          isDefault: false
+        },
+        {
+          id: "default-minimax",
+          name: "MiniMax",
+          provider: "minimax",
+          modelName: "MiniMax-Text-01",
+          isDefault: false
+        }
+      ],
+      activeModelId: "default-sonnet",
+      addModel: (modelData) => {
+        const newModel = {
+          ...modelData,
+          id: generateId()
+        };
+        set((state) => ({ models: [...state.models, newModel] }));
+        return newModel;
+      },
+      updateModel: (id2, updates) => set((state) => ({
+        models: state.models.map(
+          (m2) => m2.id === id2 ? { ...m2, ...updates } : m2
+        )
+      })),
+      deleteModel: (id2) => set((state) => {
+        const newModels = state.models.filter((m2) => m2.id !== id2);
+        if (state.models.find((m2) => m2.id === id2)?.isDefault && newModels.length > 0) {
+          newModels[0].isDefault = true;
+        }
+        const activeModelId = state.activeModelId === id2 ? newModels.find((m2) => m2.isDefault)?.id || newModels[0]?.id : state.activeModelId;
+        return {
+          models: newModels,
+          activeModelId
+        };
+      }),
+      setDefaultModel: (id2) => set((state) => ({
+        models: state.models.map((m2) => ({
+          ...m2,
+          isDefault: m2.id === id2
+        }))
+      })),
+      setActiveModel: (id2) => set({ activeModelId: id2 }),
+      getDefaultModel: () => get().models.find((m2) => m2.isDefault),
+      getActiveModel: () => {
+        const state = get();
+        return state.models.find((m2) => m2.id === state.activeModelId) || state.models.find((m2) => m2.isDefault);
+      }
+    }),
+    {
+      name: "model-storage"
+    }
+  )
+);
 const ModelsPage = () => {
   const { models, addModel, updateModel, deleteModel, setDefaultModel } = useModelStore();
   const [editingId, setEditingId] = reactExports.useState(null);
@@ -24645,7 +24453,7 @@ function App() {
   reactExports.useEffect(() => {
     loadSessionsFromDisk();
   }, []);
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(BrowserRouter, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "app-container", children: [
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(AppStateProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(BrowserRouter, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "app-container", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(
       Header,
       {
@@ -24667,7 +24475,7 @@ function App() {
       ] }) })
     ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsx(ConfirmDialogManager, {})
-  ] }) });
+  ] }) }) });
 }
 const container = document.getElementById("root");
 if (container) {

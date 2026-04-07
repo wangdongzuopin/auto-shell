@@ -2,6 +2,9 @@
 
 import type { PermissionMode } from '../types/message'
 
+// Re-export PermissionMode for convenience
+export type { PermissionMode }
+
 export type ToolPermissionContext = {
   mode: PermissionMode
   allowedCommands: string[]
