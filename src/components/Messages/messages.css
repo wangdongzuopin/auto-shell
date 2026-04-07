@@ -1,0 +1,124 @@
+/* src/components/messages/messages.css */
+
+.message-bubble {
+  padding: 12px 16px;
+  border-radius: 12px;
+  max-width: 80%;
+  margin-bottom: 8px;
+}
+
+.message-bubble.user {
+  background: #e3f2fd;
+  margin-left: auto;
+}
+
+.message-bubble.assistant {
+  background: #f5f5f5;
+}
+
+.message-bubble.thinking {
+  background: #fff3e0;
+}
+
+.message-bubble.tool-use {
+  background: #e8f5e9;
+  border: 1px solid #4caf50;
+}
+
+.message-bubble.tool-result {
+  background: #f5f5f5;
+  border: 1px solid #9e9e9e;
+}
+
+.message-bubble.tool-result.error {
+  background: #ffebee;
+  border-color: #f44336;
+}
+
+.message-bubble.system {
+  background: #e3f2fd;
+  max-width: 100%;
+  text-align: center;
+}
+
+.message-content {
+  word-wrap: break-word;
+}
+
+.message-time {
+  display: block;
+  font-size: 11px;
+  color: #999;
+  margin-top: 4px;
+  text-align: right;
+}
+
+.thinking-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.thinking-dot {
+  width: 8px;
+  height: 8px;
+  background: #ff9800;
+  border-radius: 50%;
+  animation: thinking-pulse 1.4s infinite;
+}
+
+.thinking-dot:nth-child(2) { animation-delay: 0.2s; }
+.thinking-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes thinking-pulse {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.5; }
+  40% { transform: scale(1); opacity: 1; }
+}
+
+.thinking-content {
+  font-size: 12px;
+  color: #666;
+  white-space: pre-wrap;
+}
+
+.tool-use-header,
+.tool-result-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.tool-use-content pre,
+.tool-result-content pre {
+  background: rgba(0,0,0,0.05);
+  padding: 8px;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-size: 13px;
+}
+
+.tool-use-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.tool-use-actions button {
+  padding: 4px 12px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+}
+
+.tool-use-approve {
+  background: #4caf50;
+  color: white;
+}
+
+.tool-use-deny {
+  background: #f44336;
+  color: white;
+}
