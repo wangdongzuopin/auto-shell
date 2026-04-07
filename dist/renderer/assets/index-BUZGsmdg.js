@@ -10026,7 +10026,7 @@ const useChatStore = create$1()((set, get) => ({
           updatedAt: Date.now()
         };
       } else {
-        thread = state.currentThread;
+        thread = state.currentThread ?? void 0;
       }
     }
     if (!thread) return state;
@@ -10036,7 +10036,8 @@ const useChatStore = create$1()((set, get) => ({
       updatedAt: Date.now()
     };
     if (isFirstMessage && message.role === "user" && thread.title === "新对话") {
-      const title = message.content.slice(0, 30) + (message.content.length > 30 ? "..." : "");
+      const contentStr = typeof message.content === "string" ? message.content : "";
+      const title = contentStr.slice(0, 30) + (contentStr.length > 30 ? "..." : "");
       updatedThread.title = title || "新对话";
     }
     saveThreadToDisk(updatedThread);
@@ -10066,12 +10067,7 @@ const useChatStore = create$1()((set, get) => ({
     }
     return {
       threads: updatedThreads,
-      currentThread: state.currentThreadId === threadId ? {
-        ...state.currentThread,
-        messages: state.currentThread.messages.map(
-          (m2) => m2.id === messageId ? { ...m2, ...updates } : m2
-        )
-      } : state.currentThread
+      currentThread: state.currentThreadId === threadId && updatedThread ? updatedThread : state.currentThread
     };
   }),
   clearMessages: (threadId) => set((state) => {

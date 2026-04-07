@@ -143,7 +143,7 @@ const SIZE_PRESET: Record<
   }
 };
 
-function spriteFor(mode: keyof typeof SPRITES, tick: number): string[] {
+function spriteFor(mode: keyof typeof SPRITES, tick: number): readonly string[] {
   if (mode === 'sleeping') {
     return SPRITES.sleeping[0];
   }

@@ -1,35 +1,54 @@
 import { create } from 'zustand';
-import type { Thread, Message, Artifact } from '../../shared/types';
+import type { Thread, Artifact } from '../../shared/types';
+
+// Legacy simple message type for chatStore (used by Home.tsx)
+interface LegacyMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  artifacts?: Artifact[];
+  timestamp: number;
+}
+
+interface LegacyThread {
+  id: string;
+  title: string;
+  messages: LegacyMessage[];
+  createdAt: number;
+  updatedAt: number;
+  model?: string;
+  knowledgeIds?: string[];
+}
 
 interface ChatState {
-  threads: Thread[];
+  threads: LegacyThread[];
   currentThreadId: string | null;
-  currentThread: Thread | null;
+  currentThread: LegacyThread | null;
   isLoading: boolean;
   initialized: boolean;
 
-  createThread: (title?: string) => Thread;
+  createThread: (title?: string) => LegacyThread;
   deleteThread: (id: string) => void;
-  updateThread: (id: string, updates: Partial<Thread>) => void;
+  updateThread: (id: string, updates: Partial<LegacyThread>) => void;
   setCurrentThread: (id: string | null) => void;
-  getThread: (id: string) => Thread | undefined;
+  getThread: (id: string) => LegacyThread | undefined;
 
-  addMessage: (threadId: string, message: Message) => void;
-  updateMessage: (threadId: string, messageId: string, updates: Partial<Message>) => void;
+  addMessage: (threadId: string, message: LegacyMessage) => void;
+  updateMessage: (threadId: string, messageId: string, updates: Partial<LegacyMessage>) => void;
   clearMessages: (threadId: string) => void;
 
   addArtifact: (threadId: string, artifact: Artifact) => void;
 
   setLoading: (loading: boolean) => void;
   loadSessionsFromDisk: () => Promise<void>;
-  saveThread: (thread: Thread) => void;
+  saveThread: (thread: LegacyThread) => void;
   removeThreadFile: (threadId: string) => Promise<void>;
 }
 
 const generateId = () => Math.random().toString(36).substring(2, 15);
 
 // Helper to save a thread to disk
-const saveThreadToDisk = (thread: Thread) => {
+const saveThreadToDisk = (thread: LegacyThread) => {
   if (window.api?.saveSession) {
     window.api.saveSession(thread.id, thread).catch(console.error);
   }
@@ -54,7 +73,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
 
   createThread: (title) => {
     const now = Date.now();
-    const thread: Thread = {
+    const thread: LegacyThread = {
       id: generateId(),
       title: title || '新对话',
       messages: [],
@@ -125,13 +144,13 @@ export const useChatStore = create<ChatState>()((set, get) => ({
           updatedAt: Date.now(),
         };
       } else {
-        thread = state.currentThread;
+        thread = state.currentThread ?? undefined;
       }
     }
 
     if (!thread) return state;
 
-    const updatedThread = {
+    const updatedThread: LegacyThread = {
       ...thread,
       messages: [...thread.messages, message],
       updatedAt: Date.now(),
@@ -139,7 +158,8 @@ export const useChatStore = create<ChatState>()((set, get) => ({
 
     // Update title from first user message if it's still the default
     if (isFirstMessage && message.role === 'user' && thread.title === '新对话') {
-      const title = message.content.slice(0, 30) + (message.content.length > 30 ? '...' : '');
+      const contentStr = typeof message.content === 'string' ? message.content : '';
+      const title = contentStr.slice(0, 30) + (contentStr.length > 30 ? '...' : '');
       updatedThread.title = title || '新对话';
     }
 
@@ -147,7 +167,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
     saveThreadToDisk(updatedThread);
 
     // Build new threads array
-    let newThreads: Thread[];
+    let newThreads: LegacyThread[];
     if (isFirstMessage && message.role === 'user') {
       // Add to beginning of threads list
       newThreads = [updatedThread, ...state.threads.filter((t) => t.id !== threadId)];
@@ -179,13 +199,8 @@ export const useChatStore = create<ChatState>()((set, get) => ({
     }
     return {
       threads: updatedThreads,
-      currentThread: state.currentThreadId === threadId
-        ? {
-            ...state.currentThread!,
-            messages: state.currentThread.messages.map((m) =>
-              m.id === messageId ? { ...m, ...updates } : m
-            ),
-          }
+      currentThread: state.currentThreadId === threadId && updatedThread
+        ? updatedThread
         : state.currentThread,
     };
   }),
@@ -230,11 +245,11 @@ export const useChatStore = create<ChatState>()((set, get) => ({
       const sessions = await window.api.listAllSessions();
       if (sessions && sessions.length > 0) {
         const sorted = sessions
-          .filter((s: Thread) => s && s.id && s.messages && s.messages.length > 0)
-          .sort((a: Thread, b: Thread) => (b.updatedAt || 0) - (a.updatedAt || 0))
-          .slice(0, 50);
+          .filter((s) => s && s.id && s.messages && s.messages.length > 0)
+          .sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))
+          .slice(0, 50) as LegacyThread[];
         // Mark all loaded threads as having messages
-        sorted.forEach((t: Thread) => threadHasMessages.add(t.id));
+        sorted.forEach((t) => threadHasMessages.add(t.id));
         set({ threads: sorted, initialized: true });
       } else {
         set({ initialized: true });
