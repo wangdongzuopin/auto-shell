@@ -2,7 +2,7 @@
 
 import React from 'react'
 import type { SystemMessage } from '../../types/message'
-import './messages.css'
+import './Messages.css'
 
 interface SystemTextMessageProps {
   message: SystemMessage

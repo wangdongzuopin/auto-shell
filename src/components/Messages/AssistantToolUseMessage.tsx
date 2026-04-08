@@ -2,7 +2,7 @@
 
 import React from 'react'
 import type { ToolUseBlock } from '../../types/message'
-import './messages.css'
+import './Messages.css'
 
 interface AssistantToolUseMessageProps {
   toolUse: ToolUseBlock

@@ -50,6 +50,7 @@ export const useModelStore = create<ModelState>()(
           name: 'MiniMax',
           provider: 'minimax',
           modelName: 'MiniMax-Text-01',
+          baseUrl: 'https://api.minimaxi.com/v1',
           isDefault: false,
         },
       ],

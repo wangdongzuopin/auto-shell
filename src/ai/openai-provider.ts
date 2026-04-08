@@ -1,6 +1,25 @@
 import type { ChatMessage } from '../shared/types';
 import { PROMPTS } from './prompts';
+import { formatFetchFailureError } from './fetch-errors';
 import { AIProvider, CommandExplanation, CompletionContext, ErrorContext, Suggestion } from './provider';
+
+/** OpenAI 兼容接口在 baseUrl 后拼接 /chat/completions；裸域名需补 /v1，已有路径则保留（如智谱、自建网关）。 */
+function normalizeOpenAiCompatBaseUrl(raw: string): string {
+  const trimmed = raw.trim().replace(/\/+$/, '');
+  if (!trimmed) {
+    return 'https://api.openai.com/v1';
+  }
+  try {
+    const parsed = new URL(trimmed);
+    const path = parsed.pathname.replace(/\/+$/, '') || '';
+    if (path === '') {
+      return `${parsed.origin}/v1`;
+    }
+    return `${parsed.origin}${path}`;
+  } catch {
+    return trimmed;
+  }
+}
 
 export interface OpenAIConfig {
   apiKey: string;
@@ -17,7 +36,7 @@ export class OpenAIProvider implements AIProvider {
   }
 
   private get baseUrl(): string {
-    return this.config.baseUrl ?? 'https://api.openai.com/v1';
+    return normalizeOpenAiCompatBaseUrl(this.config.baseUrl ?? 'https://api.openai.com/v1');
   }
 
   private get model(): string {
@@ -34,7 +53,8 @@ export class OpenAIProvider implements AIProvider {
         signal: AbortSignal.timeout(5000)
       });
       return response.ok;
-    } catch {
+    } catch (e) {
+      console.warn(`[AI:${this.name}] isAvailable fetch failed`, formatFetchFailureError(e));
       return false;
     }
   }
@@ -59,18 +79,23 @@ export class OpenAIProvider implements AIProvider {
       messageCount: messages.length
     });
 
-    const response = await fetch(`${this.baseUrl}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${this.config.apiKey}`
-      },
-      body: JSON.stringify({
-        model: this.model,
-        messages,
-        stream: true
-      })
-    });
+    let response: Response;
+    try {
+      response = await fetch(`${this.baseUrl}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.config.apiKey}`
+        },
+        body: JSON.stringify({
+          model: this.model,
+          messages,
+          stream: true
+        })
+      });
+    } catch (e) {
+      throw new Error(`${this.name} ${formatFetchFailureError(e)}`);
+    }
 
     if (!response.ok) {
       const text = await response.text();
@@ -81,8 +106,35 @@ export class OpenAIProvider implements AIProvider {
       throw new Error(`${this.name} 请求失败: ${response.status} ${text}`);
     }
 
+    const contentType = response.headers.get('content-type') ?? '';
+
+    // 部分服务在 stream:true 时仍返回整段 JSON（非 SSE），需走非流式解析以免 JSON.parse 在 SSE 解析中报错
+    if (contentType.includes('application/json')) {
+      const raw = await response.text();
+      let data: unknown;
+      try {
+        data = JSON.parse(raw);
+      } catch {
+        throw new Error(`${this.name} 返回了无法解析的 JSON，请检查 Base URL 是否指向 chat/completions。`);
+      }
+      const errMsg = formatOpenAIErrorPayload(data);
+      if (errMsg) {
+        throw new Error(`${this.name}: ${errMsg}`);
+      }
+      const textOut = extractOpenAIText(data);
+      if (!textOut?.trim()) {
+        throw new Error(`${this.name} 已调用成功，但返回内容为空。请检查模型名称是否与接口一致。`);
+      }
+      onChunk(textOut);
+      return textOut.trim();
+    }
+
     let output = '';
-    await readSseStream(response, (payload) => {
+    await readSseStream(this.name, response, (payload) => {
+      const errMsg = formatOpenAIErrorPayload(payload);
+      if (errMsg) {
+        throw new Error(`${this.name}: ${errMsg}`);
+      }
       const chunk = extractOpenAIStreamChunk(payload);
       if (chunk) {
         output += chunk;
@@ -91,7 +143,9 @@ export class OpenAIProvider implements AIProvider {
     });
 
     if (!output.trim()) {
-      throw new Error(`${this.name} 已调用成功，但流式内容为空。请检查模型响应格式。`);
+      throw new Error(
+        `${this.name} 已调用成功，但流式内容为空。请确认接口支持 SSE（text/event-stream），且模型 ID 正确。`
+      );
     }
 
     return output.trim();
@@ -122,18 +176,23 @@ export class OpenAIProvider implements AIProvider {
       stream
     });
 
-    const response = await fetch(`${this.baseUrl}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${this.config.apiKey}`
-      },
-      body: JSON.stringify({
-        model: this.model,
-        messages,
-        stream
-      })
-    });
+    let response: Response;
+    try {
+      response = await fetch(`${this.baseUrl}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.config.apiKey}`
+        },
+        body: JSON.stringify({
+          model: this.model,
+          messages,
+          stream
+        })
+      });
+    } catch (e) {
+      throw new Error(`${this.name} ${formatFetchFailureError(e)}`);
+    }
 
     const rawText = await response.text();
     if (!response.ok) {
@@ -177,7 +236,32 @@ function extractOpenAIStreamChunk(payload: any): string {
   return '';
 }
 
-async function readSseStream(response: Response, onPayload: (payload: any) => void): Promise<void> {
+function formatOpenAIErrorPayload(data: unknown): string | null {
+  if (!data || typeof data !== 'object') {
+    return null;
+  }
+  const err = (data as { error?: unknown }).error;
+  if (err == null) {
+    return null;
+  }
+  if (typeof err === 'string') {
+    return err;
+  }
+  if (typeof err === 'object' && err !== null && 'message' in err && typeof (err as { message: unknown }).message === 'string') {
+    return (err as { message: string }).message;
+  }
+  try {
+    return JSON.stringify(err);
+  } catch {
+    return String(err);
+  }
+}
+
+async function readSseStream(
+  providerName: string,
+  response: Response,
+  onPayload: (payload: any) => void
+): Promise<void> {
   const reader = response.body?.getReader();
   if (!reader) {
     throw new Error('模型响应不支持流式读取。');
@@ -193,6 +277,7 @@ async function readSseStream(response: Response, onPayload: (payload: any) => vo
     }
 
     buffer += decoder.decode(value, { stream: true });
+    buffer = buffer.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
     const segments = buffer.split('\n\n');
     buffer = segments.pop() ?? '';
 
@@ -211,7 +296,14 @@ async function readSseStream(response: Response, onPayload: (payload: any) => vo
         continue;
       }
 
-      onPayload(JSON.parse(payloadText));
+      try {
+        onPayload(JSON.parse(payloadText));
+      } catch (e) {
+        console.warn(`[AI:${providerName}] 跳过无法解析的 SSE 片段`, {
+          preview: payloadText.slice(0, 160),
+          error: e instanceof Error ? e.message : e
+        });
+      }
     }
   }
 }

@@ -1,19 +1,21 @@
 :root {
-  /* 背景色 */
-  --bg-primary: #faf9f5;
+  /* 背景色 — 主色 #f8f7f2 */
+  --bg-primary: #f8f7f2;
   --bg-sidebar: #f8f7f2;
   --bg-card: #ffffff;
+  /* 主区内略深一档，与侧栏区分层次 */
+  --bg-canvas: #f3f2ec;
 
-  /* 边框 */
-  --border-color: #e8e8e8;
+  /* 边框（偏暖灰，与米色底协调） */
+  --border-color: #e6e3d9;
 
   /* 文字 */
-  --text-primary: #1a1a1a;
-  --text-secondary: #6b6b6b;
+  --text-primary: #1c1917;
+  --text-secondary: #57534e;
 
   /* 悬停/选中 */
-  --hover-bg: #e8e6dd;
-  --selected-bg: #e8e6dd;
+  --hover-bg: #ece8de;
+  --selected-bg: #e8e4d8;
 
   /* 语义色 */
   --color-success: #22c55e;
@@ -27,12 +29,13 @@
   --radius-lg: 20px;
 
   /* 阴影 */
-  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-card: 0 2px 12px rgba(28, 25, 23, 0.06);
+  --accent-soft: #292524;
 
   /* 侧边栏 */
-  --sidebar-width: 260px;
-  --sidebar-item-height: 40px;
-  --sidebar-padding: 12px;
+  --sidebar-width: 200px;
+  --sidebar-item-height: 32px;
+  --sidebar-padding: 8px;
 
   /* 字体 */
   --font-family: "Inter", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;

@@ -28,10 +28,6 @@ export const Header: React.FC<HeaderProps> = ({ sidebarCollapsed, onToggleSideba
         </button>
       </div>
 
-      <div className="header-center">
-        <span className="plan-badge">AI Client</span>
-      </div>
-
       <div className="header-right">
         <button className="header-btn" onClick={handleMinimize}>
           <Minus size={18} />

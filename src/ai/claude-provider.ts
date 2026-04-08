@@ -1,5 +1,6 @@
 import type { ChatMessage } from '../shared/types';
 import { PROMPTS } from './prompts';
+import { formatFetchFailureError } from './fetch-errors';
 import { AIProvider, CommandExplanation, CompletionContext, ErrorContext, Suggestion } from './provider';
 
 export interface ClaudeConfig {
@@ -39,7 +40,8 @@ export class ClaudeProvider implements AIProvider {
         signal: AbortSignal.timeout(5000)
       });
       return response.ok;
-    } catch {
+    } catch (e) {
+      console.warn(`[AI:${this.name}] isAvailable fetch failed`, formatFetchFailureError(e));
       return false;
     }
   }
@@ -66,15 +68,20 @@ export class ClaudeProvider implements AIProvider {
       hasSystemPrompt: Boolean(body.system)
     });
 
-    const response = await fetch(`${this.baseUrl}/v1/messages`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': this.config.apiKey,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify(body)
-    });
+    let response: Response;
+    try {
+      response = await fetch(`${this.baseUrl}/v1/messages`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': this.config.apiKey,
+          'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify(body)
+      });
+    } catch (e) {
+      throw new Error(`${this.name} ${formatFetchFailureError(e)}`);
+    }
 
     if (!response.ok) {
       const text = await response.text();
@@ -129,15 +136,20 @@ export class ClaudeProvider implements AIProvider {
       stream
     });
 
-    const response = await fetch(`${this.baseUrl}/v1/messages`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': this.config.apiKey,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify(requestBody)
-    });
+    let response: Response;
+    try {
+      response = await fetch(`${this.baseUrl}/v1/messages`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': this.config.apiKey,
+          'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify(requestBody)
+      });
+    } catch (e) {
+      throw new Error(`${this.name} ${formatFetchFailureError(e)}`);
+    }
 
     const rawText = await response.text();
     if (!response.ok) {

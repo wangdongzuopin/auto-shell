@@ -16,7 +16,7 @@ function createWindow() {
     minWidth: 800,
     minHeight: 600,
     backgroundColor: canUseTransparentWindow ? '#00000000' : '#ffffff',
-    icon: path.join(__dirname, '../../logo.png'),
+    icon: path.join(__dirname, '../../logo.jpg'),
     frame: isMac,
     titleBarStyle: isMac ? 'hiddenInset' : 'default',
     trafficLightPosition: isMac ? { x: 14, y: 14 } : undefined,

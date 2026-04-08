@@ -2,6 +2,7 @@ import type { ProviderType } from '../shared/types';
 import type { AIProvider } from './provider';
 import { ClaudeProvider } from './claude-provider';
 import { OllamaProvider } from './ollama-provider';
+import { MiniMaxProvider } from './minimax-provider';
 import { OpenAIProvider } from './openai-provider';
 import { MODEL_PRESETS, getModelPreset } from './models';
 
@@ -37,9 +38,9 @@ export function createProvider(config: ProviderConfig): AIProvider {
 
   switch (finalConfig.type) {
     case 'minimax':
-      return new ClaudeProvider({
+      return new MiniMaxProvider({
         apiKey: finalConfig.apiKey ?? '',
-        baseUrl: finalConfig.baseUrl ?? 'https://api.minimaxi.com/anthropic',
+        baseUrl: finalConfig.baseUrl ?? 'https://api.minimaxi.com/v1',
         model: finalConfig.model ?? 'MiniMax-M2.7'
       });
     case 'glm':

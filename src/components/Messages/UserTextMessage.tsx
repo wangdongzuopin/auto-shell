@@ -2,7 +2,7 @@
 
 import React from 'react'
 import type { TextBlock } from '../../types/message'
-import './messages.css'
+import './Messages.css'
 
 interface UserTextMessageProps {
   text: string

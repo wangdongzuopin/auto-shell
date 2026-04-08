@@ -13,22 +13,6 @@
   width: 60px;
 }
 
-.sidebar-header {
-  padding: var(--sidebar-padding);
-  border-bottom: 1px solid var(--border-color);
-}
-
-.sidebar-logo {
-  display: flex;
-  align-items: center;
-}
-
-.logo-text {
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
 .sidebar-actions {
   padding: var(--sidebar-padding);
   display: flex;
@@ -45,7 +29,7 @@
   padding: 0 12px;
   border-radius: var(--radius-sm);
   color: var(--text-primary);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   transition: background-color 0.15s ease;
 }

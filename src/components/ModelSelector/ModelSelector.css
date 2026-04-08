@@ -1,0 +1,108 @@
+/* src/components/ModelSelector/ModelSelector.css */
+
+.model-selector-container {
+  position: relative;
+}
+
+.model-selector-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 5px 2px 6px;
+  min-height: 0;
+  height: 20px;
+  max-width: 136px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  font-size: 10px;
+  line-height: 1.25;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  color: #78716c;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+.model-selector-trigger:hover {
+  background: rgba(120, 113, 108, 0.06);
+  border-color: rgba(120, 113, 108, 0.12);
+  color: #57534e;
+}
+
+.model-selector-trigger:focus {
+  outline: none;
+  background: rgba(120, 113, 108, 0.08);
+  border-color: rgba(120, 113, 108, 0.18);
+  color: #44403c;
+}
+
+.model-name {
+  font-size: 10px;
+  line-height: 1.25;
+  font-weight: 400;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chevron {
+  flex-shrink: 0;
+  opacity: 0.75;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+  color: currentColor;
+}
+
+.chevron.open {
+  transform: rotate(180deg);
+}
+
+.model-selector-dropdown {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  margin-bottom: 4px;
+  min-width: 160px;
+  max-height: 280px;
+  overflow-y: auto;
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border-color, #e6e3d9);
+  border-radius: 10px;
+  box-shadow: var(--shadow-card, 0 2px 12px rgba(28, 25, 23, 0.06));
+  z-index: 100;
+}
+
+.model-option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  width: 100%;
+  padding: 6px 10px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.1s ease;
+}
+
+.model-option:hover {
+  background: var(--hover-bg, #ece8de);
+}
+
+.model-option.active {
+  background: var(--selected-bg, #e8e4d8);
+}
+
+.model-option-name {
+  font-size: 10px;
+  line-height: 1.35;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.model-option-brand {
+  font-size: 10px;
+  line-height: 1.3;
+  color: var(--text-secondary);
+}

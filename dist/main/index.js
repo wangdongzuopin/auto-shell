@@ -98,6 +98,35 @@ function buildSystemPrompt(skills) {
   return prompt;
 }
 buildSystemPrompt([]);
+function formatFetchFailureError(err) {
+  if (!(err instanceof Error)) {
+    return String(err);
+  }
+  const base = err.message;
+  const cause = err.cause;
+  let detail = "";
+  if (cause instanceof Error) {
+    const ne = cause;
+    if (ne.message) {
+      detail = ` — ${ne.message}`;
+    }
+    const code = ne.code;
+    if (code === "ECONNREFUSED") {
+      detail += "（连接被拒绝：若使用 Ollama 请先启动本机服务；第三方 API 请核对 Base URL 与端口。）";
+    } else if (code === "ENOTFOUND") {
+      detail += "（域名无法解析：请检查 Base URL 与当前网络/DNS。）";
+    } else if (code === "CERT_HAS_EXPIRED" || code === "UNABLE_TO_VERIFY_LEAF_SIGNATURE") {
+      detail += "（TLS/证书异常：可检查系统时间、公司代理或网关证书。）";
+    } else if (code === "ETIMEDOUT" || code === "UND_ERR_CONNECT_TIMEOUT") {
+      detail += "（连接超时：请检查网络、防火墙或代理。）";
+    }
+  }
+  const isGenericFetch = /^fetch failed$/i.test(base.trim());
+  if (isGenericFetch) {
+    return `无法连接到接口${detail || "，请检查网络与 Base URL"}`;
+  }
+  return `${base}${detail}`;
+}
 class ClaudeProvider {
   constructor(config) {
     this.config = config;
@@ -127,7 +156,8 @@ class ClaudeProvider {
         signal: AbortSignal.timeout(5e3)
       });
       return response.ok;
-    } catch {
+    } catch (e) {
+      console.warn(`[AI:${this.name}] isAvailable fetch failed`, formatFetchFailureError(e));
       return false;
     }
   }
@@ -150,15 +180,20 @@ class ClaudeProvider {
       messageCount: body.messages.length,
       hasSystemPrompt: Boolean(body.system)
     });
-    const response = await fetch(`${this.baseUrl}/v1/messages`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": this.config.apiKey,
-        "anthropic-version": "2023-06-01"
-      },
-      body: JSON.stringify(body)
-    });
+    let response;
+    try {
+      response = await fetch(`${this.baseUrl}/v1/messages`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": this.config.apiKey,
+          "anthropic-version": "2023-06-01"
+        },
+        body: JSON.stringify(body)
+      });
+    } catch (e) {
+      throw new Error(`${this.name} ${formatFetchFailureError(e)}`);
+    }
     if (!response.ok) {
       const text = await response.text();
       console.error(`[AI:${this.name}] stream request failed`, {
@@ -202,15 +237,20 @@ class ClaudeProvider {
       hasSystemPrompt: Boolean(requestBody.system),
       stream
     });
-    const response = await fetch(`${this.baseUrl}/v1/messages`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": this.config.apiKey,
-        "anthropic-version": "2023-06-01"
-      },
-      body: JSON.stringify(requestBody)
-    });
+    let response;
+    try {
+      response = await fetch(`${this.baseUrl}/v1/messages`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": this.config.apiKey,
+          "anthropic-version": "2023-06-01"
+        },
+        body: JSON.stringify(requestBody)
+      });
+    } catch (e) {
+      throw new Error(`${this.name} ${formatFetchFailureError(e)}`);
+    }
     const rawText = await response.text();
     if (!response.ok) {
       console.error(`[AI:${this.name}] request failed`, {
@@ -297,22 +337,28 @@ class OllamaProvider {
         signal: AbortSignal.timeout(2e3)
       });
       return response.ok;
-    } catch {
+    } catch (e) {
+      console.warn("[AI:Ollama] isAvailable fetch failed", formatFetchFailureError(e));
       return false;
     }
   }
   async chat(messages) {
-    const response = await fetch(`${this.baseUrl}/api/chat`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        model: this.model,
-        stream: false,
-        messages
-      })
-    });
+    let response;
+    try {
+      response = await fetch(`${this.baseUrl}/api/chat`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          model: this.model,
+          stream: false,
+          messages
+        })
+      });
+    } catch (e) {
+      throw new Error(`Ollama ${formatFetchFailureError(e)}`);
+    }
     if (!response.ok) {
       const text2 = await response.text();
       throw new Error(`Ollama 请求失败: ${response.status} ${text2}`);
@@ -325,17 +371,22 @@ class OllamaProvider {
     return text;
   }
   async streamChat(messages, onChunk) {
-    const response = await fetch(`${this.baseUrl}/api/chat`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        model: this.model,
-        stream: true,
-        messages
-      })
-    });
+    let response;
+    try {
+      response = await fetch(`${this.baseUrl}/api/chat`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          model: this.model,
+          stream: true,
+          messages
+        })
+      });
+    } catch (e) {
+      throw new Error(`Ollama ${formatFetchFailureError(e)}`);
+    }
     if (!response.ok) {
       const text = await response.text();
       throw new Error(`Ollama 请求失败: ${response.status} ${text}`);
@@ -387,6 +438,22 @@ class OllamaProvider {
     return [];
   }
 }
+function normalizeOpenAiCompatBaseUrl(raw) {
+  const trimmed = raw.trim().replace(/\/+$/, "");
+  if (!trimmed) {
+    return "https://api.openai.com/v1";
+  }
+  try {
+    const parsed = new URL(trimmed);
+    const path2 = parsed.pathname.replace(/\/+$/, "") || "";
+    if (path2 === "") {
+      return `${parsed.origin}/v1`;
+    }
+    return `${parsed.origin}${path2}`;
+  } catch {
+    return trimmed;
+  }
+}
 class OpenAIProvider {
   constructor(config) {
     this.config = config;
@@ -394,7 +461,7 @@ class OpenAIProvider {
   }
   name;
   get baseUrl() {
-    return this.config.baseUrl ?? "https://api.openai.com/v1";
+    return normalizeOpenAiCompatBaseUrl(this.config.baseUrl ?? "https://api.openai.com/v1");
   }
   get model() {
     return this.config.model ?? "gpt-4o-mini";
@@ -409,7 +476,8 @@ class OpenAIProvider {
         signal: AbortSignal.timeout(5e3)
       });
       return response.ok;
-    } catch {
+    } catch (e) {
+      console.warn(`[AI:${this.name}] isAvailable fetch failed`, formatFetchFailureError(e));
       return false;
     }
   }
@@ -430,18 +498,23 @@ class OpenAIProvider {
       model: this.model,
       messageCount: messages.length
     });
-    const response = await fetch(`${this.baseUrl}/chat/completions`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${this.config.apiKey}`
-      },
-      body: JSON.stringify({
-        model: this.model,
-        messages,
-        stream: true
-      })
-    });
+    let response;
+    try {
+      response = await fetch(`${this.baseUrl}/chat/completions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${this.config.apiKey}`
+        },
+        body: JSON.stringify({
+          model: this.model,
+          messages,
+          stream: true
+        })
+      });
+    } catch (e) {
+      throw new Error(`${this.name} ${formatFetchFailureError(e)}`);
+    }
     if (!response.ok) {
       const text = await response.text();
       console.error(`[AI:${this.name}] stream request failed`, {
@@ -450,8 +523,32 @@ class OpenAIProvider {
       });
       throw new Error(`${this.name} 请求失败: ${response.status} ${text}`);
     }
+    const contentType = response.headers.get("content-type") ?? "";
+    if (contentType.includes("application/json")) {
+      const raw = await response.text();
+      let data;
+      try {
+        data = JSON.parse(raw);
+      } catch {
+        throw new Error(`${this.name} 返回了无法解析的 JSON，请检查 Base URL 是否指向 chat/completions。`);
+      }
+      const errMsg = formatOpenAIErrorPayload(data);
+      if (errMsg) {
+        throw new Error(`${this.name}: ${errMsg}`);
+      }
+      const textOut = extractOpenAIText(data);
+      if (!textOut?.trim()) {
+        throw new Error(`${this.name} 已调用成功，但返回内容为空。请检查模型名称是否与接口一致。`);
+      }
+      onChunk(textOut);
+      return textOut.trim();
+    }
     let output = "";
-    await readSseStream(response, (payload) => {
+    await readSseStream(this.name, response, (payload) => {
+      const errMsg = formatOpenAIErrorPayload(payload);
+      if (errMsg) {
+        throw new Error(`${this.name}: ${errMsg}`);
+      }
       const chunk = extractOpenAIStreamChunk(payload);
       if (chunk) {
         output += chunk;
@@ -459,7 +556,9 @@ class OpenAIProvider {
       }
     });
     if (!output.trim()) {
-      throw new Error(`${this.name} 已调用成功，但流式内容为空。请检查模型响应格式。`);
+      throw new Error(
+        `${this.name} 已调用成功，但流式内容为空。请确认接口支持 SSE（text/event-stream），且模型 ID 正确。`
+      );
     }
     return output.trim();
   }
@@ -483,18 +582,23 @@ class OpenAIProvider {
       messageCount: messages.length,
       stream
     });
-    const response = await fetch(`${this.baseUrl}/chat/completions`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${this.config.apiKey}`
-      },
-      body: JSON.stringify({
-        model: this.model,
-        messages,
-        stream
-      })
-    });
+    let response;
+    try {
+      response = await fetch(`${this.baseUrl}/chat/completions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${this.config.apiKey}`
+        },
+        body: JSON.stringify({
+          model: this.model,
+          messages,
+          stream
+        })
+      });
+    } catch (e) {
+      throw new Error(`${this.name} ${formatFetchFailureError(e)}`);
+    }
     const rawText = await response.text();
     if (!response.ok) {
       console.error(`[AI:${this.name}] request failed`, {
@@ -526,7 +630,27 @@ function extractOpenAIStreamChunk(payload) {
   }
   return "";
 }
-async function readSseStream(response, onPayload) {
+function formatOpenAIErrorPayload(data) {
+  if (!data || typeof data !== "object") {
+    return null;
+  }
+  const err = data.error;
+  if (err == null) {
+    return null;
+  }
+  if (typeof err === "string") {
+    return err;
+  }
+  if (typeof err === "object" && err !== null && "message" in err && typeof err.message === "string") {
+    return err.message;
+  }
+  try {
+    return JSON.stringify(err);
+  } catch {
+    return String(err);
+  }
+}
+async function readSseStream(providerName, response, onPayload) {
   const reader = response.body?.getReader();
   if (!reader) {
     throw new Error("模型响应不支持流式读取。");
@@ -539,6 +663,7 @@ async function readSseStream(response, onPayload) {
       break;
     }
     buffer += decoder.decode(value, { stream: true });
+    buffer = buffer.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
     const segments = buffer.split("\n\n");
     buffer = segments.pop() ?? "";
     for (const segment of segments) {
@@ -551,8 +676,23 @@ async function readSseStream(response, onPayload) {
       if (!payloadText || payloadText === "[DONE]") {
         continue;
       }
-      onPayload(JSON.parse(payloadText));
+      try {
+        onPayload(JSON.parse(payloadText));
+      } catch (e) {
+        console.warn(`[AI:${providerName}] 跳过无法解析的 SSE 片段`, {
+          preview: payloadText.slice(0, 160),
+          error: e instanceof Error ? e.message : e
+        });
+      }
     }
+  }
+}
+class MiniMaxProvider extends OpenAIProvider {
+  constructor(config) {
+    super({
+      ...config,
+      name: "MiniMax"
+    });
   }
 }
 const MODEL_PRESETS = {
@@ -578,7 +718,7 @@ const MODEL_PRESETS = {
     id: "gpt-4o",
     name: "GPT-4o",
     brand: "OpenAI",
-    baseUrl: "https://api.openai.com",
+    baseUrl: "https://api.openai.com/v1",
     apiPath: "/v1/chat/completions",
     defaultTemperature: 0.7,
     defaultMaxTokens: 4096
@@ -587,7 +727,7 @@ const MODEL_PRESETS = {
     id: "gpt-4o-mini",
     name: "GPT-4o Mini",
     brand: "OpenAI",
-    baseUrl: "https://api.openai.com",
+    baseUrl: "https://api.openai.com/v1",
     apiPath: "/v1/chat/completions",
     defaultTemperature: 0.7,
     defaultMaxTokens: 4096
@@ -596,8 +736,8 @@ const MODEL_PRESETS = {
     id: "MiniMax-M2.7",
     name: "MiniMax M2.7",
     brand: "MiniMax",
-    baseUrl: "https://api.minimaxi.com/anthropic",
-    apiPath: "/v1/messages",
+    baseUrl: "https://api.minimaxi.com/v1",
+    apiPath: "/chat/completions",
     defaultTemperature: 0.7,
     defaultMaxTokens: 4096
   },
@@ -640,9 +780,9 @@ function createProvider(config) {
   }
   switch (finalConfig.type) {
     case "minimax":
-      return new ClaudeProvider({
+      return new MiniMaxProvider({
         apiKey: finalConfig.apiKey ?? "",
-        baseUrl: finalConfig.baseUrl ?? "https://api.minimaxi.com/anthropic",
+        baseUrl: finalConfig.baseUrl ?? "https://api.minimaxi.com/v1",
         model: finalConfig.model ?? "MiniMax-M2.7"
       });
     case "glm":
@@ -744,7 +884,7 @@ const CONFIG_PATH = path__namespace.join(CONFIG_DIR, "config.json");
 const MAX_HISTORY_PER_DIRECTORY = 20;
 const defaultProviderConfigs = {
   minimax: {
-    baseUrl: "https://api.minimaxi.com/anthropic",
+    baseUrl: "https://api.minimaxi.com/v1",
     model: "MiniMax-M2.7"
   },
   glm: {
@@ -800,10 +940,10 @@ const defaultConfig = {
   }
 };
 function normalizeProviderConfig(provider, config) {
-  if (provider === "minimax" && config.baseUrl === "https://api.minimaxi.com/v1") {
+  if (provider === "minimax" && config.baseUrl === "https://api.minimaxi.com/anthropic") {
     return {
       ...config,
-      baseUrl: "https://api.minimaxi.com/anthropic"
+      baseUrl: "https://api.minimaxi.com/v1"
     };
   }
   return config;
@@ -1958,7 +2098,7 @@ function createWindow() {
     minWidth: 800,
     minHeight: 600,
     backgroundColor: canUseTransparentWindow ? "#00000000" : "#ffffff",
-    icon: path__namespace.join(__dirname, "../../logo.png"),
+    icon: path__namespace.join(__dirname, "../../logo.jpg"),
     frame: isMac,
     titleBarStyle: isMac ? "hiddenInset" : "default",
     trafficLightPosition: isMac ? { x: 14, y: 14 } : void 0,

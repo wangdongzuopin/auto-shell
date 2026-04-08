@@ -40,7 +40,7 @@ export const MessageRow: React.FC<MessageRowProps> = ({ message }) => {
         const blocks = message.message?.content
         if (!blocks || blocks.length === 0) {
           // Loading state
-          return <AssistantThinkingMessage thinking="..." />
+          return <AssistantThinkingMessage />
         }
         return blocks.map((block, i) => {
           switch (block.type) {
@@ -60,7 +60,7 @@ export const MessageRow: React.FC<MessageRowProps> = ({ message }) => {
         return <SystemTextMessage message={message as any} />
 
       case 'progress':
-        return <AssistantThinkingMessage thinking="加载中..." />
+        return <AssistantThinkingMessage />
 
       default:
         return null

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Settings } from 'lucide-react';
+import { Plus, Settings } from 'lucide-react';
 import { SidebarMenu } from './SidebarMenu';
 import { RecentThreads } from './RecentThreads';
 import { useChatStore } from '../../stores/chatStore';
@@ -21,12 +21,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
 
   return (
     <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
-      <div className="sidebar-header">
-        <div className="sidebar-logo">
-          {!collapsed && <span className="logo-text">AI Client</span>}
-        </div>
-      </div>
-
       <div className="sidebar-actions">
         <button
           className="sidebar-action-btn"
@@ -35,14 +29,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
         >
           <Plus size={18} />
           {!collapsed && <span>新建对话</span>}
-        </button>
-
-        <button
-          className="sidebar-action-btn"
-          title={collapsed ? '搜索' : undefined}
-        >
-          <Search size={18} />
-          {!collapsed && <span>搜索</span>}
         </button>
 
         <button

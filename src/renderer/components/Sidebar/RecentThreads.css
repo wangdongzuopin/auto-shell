@@ -7,10 +7,9 @@
 .recent-header {
   padding: 8px 12px;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.04em;
 }
 
 .recent-list {
@@ -54,7 +53,7 @@
 }
 
 .recent-time {
-  font-size: 11px;
+  font-size: 13px;
   color: var(--text-secondary);
   flex-shrink: 0;
 }
@@ -133,7 +132,7 @@
 
 .recent-edit-input:focus {
   outline: none;
-  border-color: var(--color-primary);
+  border-color: var(--color-info);
 }
 
 .recent-empty {

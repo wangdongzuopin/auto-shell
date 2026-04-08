@@ -9,6 +9,11 @@
   background-color: var(--bg-primary);
 }
 
+.settings-page {
+  width: 100%;
+  overflow-y: auto;
+}
+
 .page-content {
   flex: 1;
   padding: 24px;
@@ -39,15 +44,18 @@
 
 .skills-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
 }
 
 .skill-card {
-  padding: 24px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
   background-color: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   box-shadow: var(--shadow-card);
   cursor: pointer;
   transition: all 0.15s ease;
@@ -58,26 +66,48 @@
 }
 
 .skill-icon {
-  font-size: 32px;
-  margin-bottom: 12px;
+  flex-shrink: 0;
+  font-size: 20px;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.skill-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.skill-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
 }
 
 .skill-card h3 {
-  font-size: 16px;
+  font-size: 13px;
   font-weight: 600;
-  margin-bottom: 8px;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .skill-card p {
-  font-size: 14px;
+  font-size: 12px;
   color: var(--text-secondary);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
-  line-height: 1.5;
-  max-height: 3em;
+  line-height: 1.4;
+  margin: 0;
+  max-height: 2.8em;
 }
 
 .skills-header {
@@ -179,16 +209,10 @@
   color: var(--bg-card);
 }
 
-.skill-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 12px;
-}
-
-.skill-header .delete-btn {
-  width: 24px;
-  height: 24px;
+.skill-title-row .delete-btn {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
   border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
@@ -202,24 +226,28 @@
   opacity: 1;
 }
 
-.skill-header .delete-btn:hover {
+.skill-title-row .delete-btn:hover {
   background-color: var(--hover-bg);
   color: var(--color-error);
 }
 
 .skill-mode {
-  margin-top: 12px;
-  font-size: 11px;
-  padding: 2px 8px;
+  margin-top: 2px;
+  font-size: 10px;
+  padding: 1px 6px;
   background-color: var(--bg-primary);
   color: var(--text-secondary);
-  border-radius: 10px;
+  border-radius: 8px;
   display: inline-block;
+  align-self: flex-start;
 }
 
 .settings-content {
-  padding: 24px;
+  width: 100%;
   max-width: 600px;
+  margin-inline: auto;
+  padding: 24px;
+  box-sizing: border-box;
 }
 
 .settings-section {

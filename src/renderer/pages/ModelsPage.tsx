@@ -4,6 +4,18 @@ import { Plus, Trash2, Star, Edit2, X, Check } from 'lucide-react';
 import './ModelsPage.css';
 import './page.css';
 
+const DEFAULT_BASE_URL_BY_PROVIDER: Partial<Record<AIModel['provider'], string>> = {
+  minimax: 'https://api.minimaxi.com/v1',
+  glm: 'https://open.bigmodel.cn/api/paas/v4',
+  openai: 'https://api.openai.com/v1',
+  anthropic: 'https://api.anthropic.com',
+  ollama: 'http://localhost:11434',
+};
+
+function baseUrlPlaceholder(provider: AIModel['provider']): string {
+  return DEFAULT_BASE_URL_BY_PROVIDER[provider] ?? 'https://api.example.com/v1';
+}
+
 export const ModelsPage: React.FC = () => {
   const { models, addModel, updateModel, deleteModel, setDefaultModel } = useModelStore();
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -18,12 +30,17 @@ export const ModelsPage: React.FC = () => {
 
   const handleAdd = () => {
     if (formData.name && formData.modelName) {
+      const provider = formData.provider || 'openai';
+      const trimmedBase = formData.baseUrl?.trim();
+      const baseUrl =
+        trimmedBase ||
+        (provider === 'custom' ? undefined : DEFAULT_BASE_URL_BY_PROVIDER[provider]);
       addModel({
         name: formData.name,
-        provider: formData.provider || 'openai',
+        provider,
         modelName: formData.modelName,
         apiKey: formData.apiKey,
-        baseUrl: formData.baseUrl,
+        baseUrl,
         isDefault: false,
       });
       setIsAdding(false);
@@ -105,19 +122,17 @@ export const ModelsPage: React.FC = () => {
                 />
               </label>
             </div>
-            {(formData.provider === 'custom' || formData.provider === 'ollama') && (
-              <div className="form-row">
-                <label>
-                  <span>API 地址</span>
-                  <input
-                    type="text"
-                    placeholder="例如：http://localhost:11434"
-                    value={formData.baseUrl}
-                    onChange={(e) => setFormData({ ...formData, baseUrl: e.target.value })}
-                  />
-                </label>
-              </div>
-            )}
+            <div className="form-row">
+              <label>
+                <span>调用地址</span>
+                <input
+                  type="text"
+                  placeholder={baseUrlPlaceholder(formData.provider || 'openai')}
+                  value={formData.baseUrl ?? ''}
+                  onChange={(e) => setFormData({ ...formData, baseUrl: e.target.value })}
+                />
+              </label>
+            </div>
             {formData.provider !== 'anthropic' && formData.provider !== 'ollama' && (
               <div className="form-row">
                 <label>

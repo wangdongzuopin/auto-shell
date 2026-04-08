@@ -11,7 +11,7 @@ const PROVIDERS: Array<{
   desc: string;
   apiKeyRequired: boolean;
 }> = [
-  { id: 'minimax', name: 'MiniMax', desc: 'Anthropic 兼容接入', apiKeyRequired: true },
+  { id: 'minimax', name: 'MiniMax', desc: 'OpenAI 兼容，官方 https://api.minimaxi.com/v1', apiKeyRequired: true },
   { id: 'glm', name: 'GLM', desc: '智谱开放平台', apiKeyRequired: true },
   { id: 'claude', name: 'Claude', desc: 'Anthropic', apiKeyRequired: true },
   { id: 'openai', name: 'OpenAI', desc: '官方接口', apiKeyRequired: true },

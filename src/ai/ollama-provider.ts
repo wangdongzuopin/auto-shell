@@ -1,5 +1,6 @@
 import type { ChatMessage } from '../shared/types';
 import { PROMPTS } from './prompts';
+import { formatFetchFailureError } from './fetch-errors';
 import { AIProvider, CommandExplanation, CompletionContext, ErrorContext, Suggestion } from './provider';
 
 export interface OllamaConfig {
@@ -26,13 +27,16 @@ export class OllamaProvider implements AIProvider {
         signal: AbortSignal.timeout(2000)
       });
       return response.ok;
-    } catch {
+    } catch (e) {
+      console.warn('[AI:Ollama] isAvailable fetch failed', formatFetchFailureError(e));
       return false;
     }
   }
 
   async chat(messages: ChatMessage[]): Promise<string> {
-    const response = await fetch(`${this.baseUrl}/api/chat`, {
+    let response: Response;
+    try {
+      response = await fetch(`${this.baseUrl}/api/chat`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -43,6 +47,9 @@ export class OllamaProvider implements AIProvider {
         messages
       })
     });
+    } catch (e) {
+      throw new Error(`Ollama ${formatFetchFailureError(e)}`);
+    }
 
     if (!response.ok) {
       const text = await response.text();
@@ -58,17 +65,22 @@ export class OllamaProvider implements AIProvider {
   }
 
   async streamChat(messages: ChatMessage[], onChunk: (chunk: string) => void): Promise<string> {
-    const response = await fetch(`${this.baseUrl}/api/chat`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: this.model,
-        stream: true,
-        messages
-      })
-    });
+    let response: Response;
+    try {
+      response = await fetch(`${this.baseUrl}/api/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: this.model,
+          stream: true,
+          messages
+        })
+      });
+    } catch (e) {
+      throw new Error(`Ollama ${formatFetchFailureError(e)}`);
+    }
 
     if (!response.ok) {
       const text = await response.text();

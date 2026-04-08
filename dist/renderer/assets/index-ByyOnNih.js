@@ -7788,6 +7788,11 @@ function useNavigateUnstable() {
   return navigate;
 }
 reactExports.createContext(null);
+function useParams() {
+  let { matches } = reactExports.useContext(RouteContext);
+  let routeMatch = matches[matches.length - 1];
+  return routeMatch ? routeMatch.params : {};
+}
 function useResolvedPath(to, { relative } = {}) {
   let { matches } = reactExports.useContext(RouteContext);
   let { pathname: locationPathname } = useLocation();
@@ -9462,28 +9467,16 @@ const createLucideIcon = (iconName, iconNode) => {
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$j = [["path", { d: "M20 6 9 17l-5-5", key: "1gmf2c" }]];
-const Check = createLucideIcon("check", __iconNode$j);
+const __iconNode$i = [["path", { d: "M20 6 9 17l-5-5", key: "1gmf2c" }]];
+const Check = createLucideIcon("check", __iconNode$i);
 /**
  * @license lucide-react v1.7.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$i = [["path", { d: "m9 18 6-6-6-6", key: "mthhwq" }]];
-const ChevronRight = createLucideIcon("chevron-right", __iconNode$i);
-/**
- * @license lucide-react v1.7.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$h = [
-  ["circle", { cx: "12", cy: "12", r: "1", key: "41hilf" }],
-  ["circle", { cx: "12", cy: "5", r: "1", key: "gxeob9" }],
-  ["circle", { cx: "12", cy: "19", r: "1", key: "lyex9k" }]
-];
-const EllipsisVertical = createLucideIcon("ellipsis-vertical", __iconNode$h);
+const __iconNode$h = [["path", { d: "m9 18 6-6-6-6", key: "mthhwq" }]];
+const ChevronRight = createLucideIcon("chevron-right", __iconNode$h);
 /**
  * @license lucide-react v1.7.0 - ISC
  *
@@ -9491,6 +9484,18 @@ const EllipsisVertical = createLucideIcon("ellipsis-vertical", __iconNode$h);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$g = [
+  ["circle", { cx: "12", cy: "12", r: "1", key: "41hilf" }],
+  ["circle", { cx: "12", cy: "5", r: "1", key: "gxeob9" }],
+  ["circle", { cx: "12", cy: "19", r: "1", key: "lyex9k" }]
+];
+const EllipsisVertical = createLucideIcon("ellipsis-vertical", __iconNode$g);
+/**
+ * @license lucide-react v1.7.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$f = [
   [
     "path",
     {
@@ -9503,23 +9508,7 @@ const __iconNode$g = [
   ["path", { d: "M16 13H8", key: "t4e002" }],
   ["path", { d: "M16 17H8", key: "z1uh3a" }]
 ];
-const FileText = createLucideIcon("file-text", __iconNode$g);
-/**
- * @license lucide-react v1.7.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$f = [
-  [
-    "path",
-    {
-      d: "m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2",
-      key: "usdka0"
-    }
-  ]
-];
-const FolderOpen = createLucideIcon("folder-open", __iconNode$f);
+const FileText = createLucideIcon("file-text", __iconNode$f);
 /**
  * @license lucide-react v1.7.0 - ISC
  *
@@ -9530,32 +9519,36 @@ const __iconNode$e = [
   [
     "path",
     {
+      d: "m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2",
+      key: "usdka0"
+    }
+  ]
+];
+const FolderOpen = createLucideIcon("folder-open", __iconNode$e);
+/**
+ * @license lucide-react v1.7.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$d = [
+  [
+    "path",
+    {
       d: "M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z",
       key: "1kt360"
     }
   ]
 ];
-const Folder = createLucideIcon("folder", __iconNode$e);
+const Folder = createLucideIcon("folder", __iconNode$d);
 /**
  * @license lucide-react v1.7.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$d = [["path", { d: "M21 12a9 9 0 1 1-6.219-8.56", key: "13zald" }]];
-const LoaderCircle = createLucideIcon("loader-circle", __iconNode$d);
-/**
- * @license lucide-react v1.7.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$c = [
-  ["path", { d: "M4 5h16", key: "1tepv9" }],
-  ["path", { d: "M4 12h16", key: "1lakjw" }],
-  ["path", { d: "M4 19h16", key: "1djgab" }]
-];
-const Menu = createLucideIcon("menu", __iconNode$c);
+const __iconNode$c = [["path", { d: "M21 12a9 9 0 1 1-6.219-8.56", key: "13zald" }]];
+const LoaderCircle = createLucideIcon("loader-circle", __iconNode$c);
 /**
  * @license lucide-react v1.7.0 - ISC
  *
@@ -9563,6 +9556,18 @@ const Menu = createLucideIcon("menu", __iconNode$c);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$b = [
+  ["path", { d: "M4 5h16", key: "1tepv9" }],
+  ["path", { d: "M4 12h16", key: "1lakjw" }],
+  ["path", { d: "M4 19h16", key: "1djgab" }]
+];
+const Menu = createLucideIcon("menu", __iconNode$b);
+/**
+ * @license lucide-react v1.7.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$a = [
   [
     "path",
     {
@@ -9571,22 +9576,22 @@ const __iconNode$b = [
     }
   ]
 ];
-const MessageSquare = createLucideIcon("message-square", __iconNode$b);
+const MessageSquare = createLucideIcon("message-square", __iconNode$a);
 /**
  * @license lucide-react v1.7.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$a = [["path", { d: "M5 12h14", key: "1ays0h" }]];
-const Minus = createLucideIcon("minus", __iconNode$a);
+const __iconNode$9 = [["path", { d: "M5 12h14", key: "1ays0h" }]];
+const Minus = createLucideIcon("minus", __iconNode$9);
 /**
  * @license lucide-react v1.7.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$9 = [
+const __iconNode$8 = [
   [
     "path",
     {
@@ -9596,18 +9601,7 @@ const __iconNode$9 = [
   ],
   ["path", { d: "m15 5 4 4", key: "1mk7zo" }]
 ];
-const Pencil = createLucideIcon("pencil", __iconNode$9);
-/**
- * @license lucide-react v1.7.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$8 = [
-  ["path", { d: "M5 12h14", key: "1ays0h" }],
-  ["path", { d: "M12 5v14", key: "s699le" }]
-];
-const Plus = createLucideIcon("plus", __iconNode$8);
+const Pencil = createLucideIcon("pencil", __iconNode$8);
 /**
  * @license lucide-react v1.7.0 - ISC
  *
@@ -9615,10 +9609,10 @@ const Plus = createLucideIcon("plus", __iconNode$8);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$7 = [
-  ["path", { d: "m21 21-4.34-4.34", key: "14j7rj" }],
-  ["circle", { cx: "11", cy: "11", r: "8", key: "4ej97u" }]
+  ["path", { d: "M5 12h14", key: "1ays0h" }],
+  ["path", { d: "M12 5v14", key: "s699le" }]
 ];
-const Search = createLucideIcon("search", __iconNode$7);
+const Plus = createLucideIcon("plus", __iconNode$7);
 /**
  * @license lucide-react v1.7.0 - ISC
  *
@@ -10343,7 +10337,6 @@ const Sidebar = ({ collapsed }) => {
     navigate(`/chat/${thread.id}`);
   };
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("aside", { className: `sidebar ${collapsed ? "collapsed" : ""}`, children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "sidebar-header", children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "sidebar-logo", children: !collapsed && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "logo-text", children: "AI Client" }) }) }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sidebar-actions", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs(
         "button",
@@ -10354,17 +10347,6 @@ const Sidebar = ({ collapsed }) => {
           children: [
             /* @__PURE__ */ jsxRuntimeExports.jsx(Plus, { size: 18 }),
             !collapsed && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "新建对话" })
-          ]
-        }
-      ),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs(
-        "button",
-        {
-          className: "sidebar-action-btn",
-          title: collapsed ? "搜索" : void 0,
-          children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx(Search, { size: 18 }),
-            !collapsed && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "搜索" })
           ]
         }
       ),
@@ -10399,7 +10381,6 @@ const Header = ({ sidebarCollapsed, onToggleSidebar }) => {
   };
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("header", { className: "app-header", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "header-left", children: /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "header-btn", onClick: onToggleSidebar, title: sidebarCollapsed ? "展开侧边栏" : "收起侧边栏", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Menu, { size: 18 }) }) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "header-center", children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "plan-badge", children: "AI Client" }) }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "header-right", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "header-btn", onClick: handleMinimize, children: /* @__PURE__ */ jsxRuntimeExports.jsx(Minus, { size: 18 }) }),
       /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "header-btn", onClick: handleMaximize, children: /* @__PURE__ */ jsxRuntimeExports.jsx(Square, { size: 16 }) }),
@@ -23115,12 +23096,13 @@ const AssistantTextMessage = ({ text: text2, timestamp }) => {
 const AssistantThinkingMessage = ({ thinking }) => {
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "message-bubble thinking", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "thinking-indicator", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "thinking-dot" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "thinking-dot" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "thinking-dot" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "thinking-text", children: "思考中..." })
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "thinking-spinner", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { viewBox: "0 0 24 24", fill: "none", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "12", cy: "12", r: "10", stroke: "currentColor", strokeWidth: "2", opacity: "0.2" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M12 2a10 10 0 0 1 10 10", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round" })
+      ] }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "thinking-text", children: "思考中" })
     ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "thinking-content", children: thinking })
+    thinking && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "thinking-content", children: thinking })
   ] });
 };
 const AssistantToolUseMessage = ({
@@ -23185,7 +23167,7 @@ const MessageRow = ({ message }) => {
       case "assistant": {
         const blocks = message.message?.content;
         if (!blocks || blocks.length === 0) {
-          return /* @__PURE__ */ jsxRuntimeExports.jsx(AssistantThinkingMessage, { thinking: "..." });
+          return /* @__PURE__ */ jsxRuntimeExports.jsx(AssistantThinkingMessage, {});
         }
         return blocks.map((block, i) => {
           switch (block.type) {
@@ -23203,7 +23185,7 @@ const MessageRow = ({ message }) => {
       case "system":
         return /* @__PURE__ */ jsxRuntimeExports.jsx(SystemTextMessage, { message });
       case "progress":
-        return /* @__PURE__ */ jsxRuntimeExports.jsx(AssistantThinkingMessage, { thinking: "加载中..." });
+        return /* @__PURE__ */ jsxRuntimeExports.jsx(AssistantThinkingMessage, {});
       default:
         return null;
     }
@@ -23213,6 +23195,34 @@ const MessageRow = ({ message }) => {
     /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "message-body", children: renderContent() })
   ] });
 };
+function generateUUID() {
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r2 = Math.random() * 16 | 0;
+    const v2 = c === "x" ? r2 : r2 & 3 | 8;
+    return v2.toString(16);
+  });
+}
+function createAssistantMessage(content2, options) {
+  return {
+    type: "assistant",
+    uuid: generateUUID(),
+    timestamp: (/* @__PURE__ */ new Date()).toISOString(),
+    message: {
+      content: content2
+    }
+  };
+}
+function createUserMessage(content2, options) {
+  return {
+    type: "user",
+    uuid: generateUUID(),
+    timestamp: (/* @__PURE__ */ new Date()).toISOString(),
+    isMeta: options?.isMeta,
+    message: {
+      content: content2
+    }
+  };
+}
 const defaultTheme = {
   name: "Auto Shell Dark",
   background: "#0f1115",
@@ -23226,7 +23236,7 @@ const defaultAppearance = {
 };
 const defaultConfigs = {
   minimax: {
-    baseUrl: "https://api.minimaxi.com/anthropic",
+    baseUrl: "https://api.minimaxi.com/v1",
     model: "MiniMax-M2.7"
   },
   glm: {
@@ -23413,34 +23423,6 @@ function hexToRgb(hex) {
 function clamp(value) {
   return Math.max(0, Math.min(255, value));
 }
-function generateUUID() {
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
-    const r2 = Math.random() * 16 | 0;
-    const v2 = c === "x" ? r2 : r2 & 3 | 8;
-    return v2.toString(16);
-  });
-}
-function createAssistantMessage(content2, options) {
-  return {
-    type: "assistant",
-    uuid: generateUUID(),
-    timestamp: (/* @__PURE__ */ new Date()).toISOString(),
-    message: {
-      content: content2
-    }
-  };
-}
-function createUserMessage(content2, options) {
-  return {
-    type: "user",
-    uuid: generateUUID(),
-    timestamp: (/* @__PURE__ */ new Date()).toISOString(),
-    isMeta: options?.isMeta,
-    message: {
-      content: content2
-    }
-  };
-}
 const MODEL_PRESETS = {
   "claude-3-5-sonnet": {
     id: "claude-3-5-sonnet",
@@ -23482,8 +23464,8 @@ const MODEL_PRESETS = {
     id: "MiniMax-M2.7",
     name: "MiniMax M2.7",
     brand: "MiniMax",
-    baseUrl: "https://api.minimaxi.com/anthropic",
-    apiPath: "/v1/messages",
+    baseUrl: "https://api.minimaxi.com/v1",
+    apiPath: "/chat/completions",
     defaultTemperature: 0.7,
     defaultMaxTokens: 4096
   },
@@ -23509,98 +23491,307 @@ const MODEL_PRESETS = {
 function getAllModelPresets() {
   return Object.values(MODEL_PRESETS);
 }
+const ModelSelector = ({ onModelChange }) => {
+  const [isOpen, setIsOpen] = reactExports.useState(false);
+  const dropdownRef = reactExports.useRef(null);
+  const aiSettings = useSettingsStore((s) => s.aiSettings);
+  const setProvider = useSettingsStore((s) => s.setProvider);
+  const setProviderConfig = useSettingsStore((s) => s.setProviderConfig);
+  const currentModel = aiSettings.configs[aiSettings.provider]?.model || "MiniMax-M2.7";
+  const currentPreset = MODEL_PRESETS[currentModel];
+  const models = getAllModelPresets();
+  const getDisplayName = () => {
+    if (currentPreset) {
+      return currentPreset.name.replace(/Claude /i, "");
+    }
+    return currentModel;
+  };
+  reactExports.useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+  const handleModelSelect = async (modelId) => {
+    const preset = MODEL_PRESETS[modelId];
+    if (!preset) return;
+    const brandToProvider = {
+      "Anthropic": "claude",
+      "OpenAI": "openai",
+      "MiniMax": "minimax",
+      "Zhipu": "glm",
+      "Ollama": "ollama"
+    };
+    const providerType = brandToProvider[preset.brand] || aiSettings.provider;
+    await setProvider(providerType);
+    await setProviderConfig(providerType, {
+      baseUrl: preset.baseUrl,
+      model: preset.id
+    });
+    onModelChange?.(modelId);
+    setIsOpen(false);
+  };
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "model-selector-container", ref: dropdownRef, children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { className: "model-selector-trigger", onClick: () => setIsOpen(!isOpen), children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "model-name", children: getDisplayName() }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { className: `chevron ${isOpen ? "open" : ""}`, width: "8", height: "8", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.5", children: /* @__PURE__ */ jsxRuntimeExports.jsx("polyline", { points: "6 9 12 15 18 9" }) })
+    ] }),
+    isOpen && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "model-selector-dropdown", children: models.map((model) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+      "button",
+      {
+        className: `model-option ${model.id === currentModel ? "active" : ""}`,
+        onClick: () => handleModelSelect(model.id),
+        children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "model-option-name", children: model.name }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "model-option-brand", children: model.brand })
+        ]
+      },
+      model.id
+    )) })
+  ] });
+};
+const TAG_COLOR = "#da7351";
 const PromptInput = () => {
   const [input, setInput] = reactExports.useState("");
+  const [tags, setTags] = reactExports.useState([]);
+  const [showTagMenu, setShowTagMenu] = reactExports.useState(false);
+  const [tagSearch, setTagSearch] = reactExports.useState("");
+  const [selectedIndex, setSelectedIndex] = reactExports.useState(0);
   const isLoading = useAppState((s) => s.isLoading);
   const setState = useSetAppState();
-  const messagesRef = reactExports.useRef(null);
-  const aiSettings = useSettingsStore((s) => s.aiSettings);
-  const currentModel = aiSettings.configs[aiSettings.provider]?.model || "MiniMax-M2.7";
-  const models = getAllModelPresets();
+  const abortRef = reactExports.useRef(null);
+  const inputRef = reactExports.useRef(null);
+  const tagMenuRef = reactExports.useRef(null);
+  const allTags = [
+    { id: "skill-1", name: "写代码", type: "skill" },
+    { id: "skill-2", name: "代码审查", type: "skill" },
+    { id: "skill-3", name: "解释错误", type: "skill" },
+    { id: "mcp-1", name: "文件系统", type: "mcp" },
+    { id: "mcp-2", name: "Git操作", type: "mcp" },
+    { id: "mcp-3", name: "终端命令", type: "mcp" },
+    { id: "kb-1", name: "项目文档", type: "knowledge" },
+    { id: "kb-2", name: "技术笔记", type: "knowledge" }
+  ];
+  const filteredTags = allTags.filter(
+    (tag) => tag.name.toLowerCase().includes(tagSearch.toLowerCase())
+  );
+  const handleInputChange = (e) => {
+    const value = e.target.value;
+    setInput(value);
+    if (value.endsWith("/") && !showTagMenu) {
+      setShowTagMenu(true);
+      setTagSearch("");
+      setSelectedIndex(0);
+    } else if (showTagMenu) {
+      if (value.endsWith(" ")) {
+        setShowTagMenu(false);
+        setTagSearch("");
+      } else {
+        setTagSearch(value.slice(value.lastIndexOf("/") + 1));
+        setSelectedIndex(0);
+      }
+    }
+  };
+  const handleSelectTag = (tag) => {
+    const lastSlashIndex = input.lastIndexOf("/");
+    const newInput = input.slice(0, lastSlashIndex) + "";
+    setInput(newInput);
+    setTags([...tags, tag]);
+    setShowTagMenu(false);
+    setTagSearch("");
+    setSelectedIndex(0);
+    inputRef.current?.focus();
+  };
+  const handleRemoveTag = (tagId) => {
+    setTags(tags.filter((t2) => t2.id !== tagId));
+  };
   const handleSubmit = reactExports.useCallback(async () => {
-    if (!input.trim() || isLoading) return;
-    const userMsg = createUserMessage(input.trim());
+    if (!input.trim() && tags.length === 0) return;
+    if (isLoading) return;
+    let fullContent = "";
+    if (tags.length > 0) {
+      const tagStrings = tags.map((t2) => `[${t2.type}:${t2.name}]`).join(" ");
+      fullContent = `${tagStrings} ${input.trim()}`.trim();
+    } else {
+      fullContent = input.trim();
+    }
+    const userMsg = createUserMessage(fullContent);
+    const assistantMsg = createAssistantMessage([]);
     setState((prev) => ({
       ...prev,
-      messages: [...prev.messages, userMsg],
+      messages: [...prev.messages, userMsg, assistantMsg],
       isLoading: true
     }));
     setInput("");
+    setTags([]);
+    const messages = [
+      { role: "user", content: fullContent }
+    ];
+    let assistantContent = "";
+    const handleChunk = (chunk) => {
+      assistantContent += chunk;
+      setState((prev) => {
+        const messages2 = [...prev.messages];
+        const lastMsg = messages2[messages2.length - 1];
+        if (lastMsg && lastMsg.type === "assistant") {
+          messages2[messages2.length - 1] = {
+            ...lastMsg,
+            message: {
+              ...lastMsg.message,
+              content: [{ type: "text", text: assistantContent }]
+            }
+          };
+        }
+        return { ...prev, messages: messages2 };
+      });
+    };
+    const handleDone = () => {
+      setState((prev) => ({ ...prev, isLoading: false }));
+      abortRef.current = null;
+    };
+    const handleError = (error) => {
+      console.error("Chat error:", error);
+      setState((prev) => {
+        const messages2 = [...prev.messages];
+        const lastMsg = messages2[messages2.length - 1];
+        if (lastMsg && lastMsg.type === "assistant") {
+          messages2[messages2.length - 1] = {
+            ...lastMsg,
+            message: {
+              ...lastMsg.message,
+              content: [{ type: "text", text: `错误: ${error}` }]
+            }
+          };
+        }
+        return { ...prev, isLoading: false };
+      });
+      abortRef.current = null;
+    };
+    const requestId = `chat-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const cleanup = window.api.streamChatWithAI(requestId, messages, {
+      onChunk: handleChunk,
+      onDone: handleDone,
+      onError: handleError
+    });
+    abortRef.current = cleanup;
     setTimeout(() => {
-      const assistantMsg = createAssistantMessage([
-        { type: "text", text: `收到: ${userMsg.message.content}` }
-      ]);
-      setState((prev) => ({
-        ...prev,
-        messages: [...prev.messages, assistantMsg],
-        isLoading: false
-      }));
-    }, 1e3);
-  }, [input, isLoading, setState]);
+      setState((prev) => {
+        if (prev.isLoading) {
+          const messages2 = [...prev.messages];
+          const lastMsg = messages2[messages2.length - 1];
+          if (lastMsg && lastMsg.type === "assistant" && !assistantContent) {
+            messages2[messages2.length - 1] = {
+              ...lastMsg,
+              message: {
+                ...lastMsg.message,
+                content: [{ type: "text", text: "错误: AI 服务响应超时，请检查网络和 API 配置" }]
+              }
+            };
+            return { ...prev, isLoading: false };
+          }
+        }
+        return prev;
+      });
+    }, 1e4);
+  }, [input, tags, isLoading, setState]);
   const handleKeyDown = reactExports.useCallback((e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+    if (showTagMenu) {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setSelectedIndex((prev) => Math.min(prev + 1, filteredTags.length - 1));
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setSelectedIndex((prev) => Math.max(prev - 1, 0));
+      } else if (e.key === "Enter") {
+        e.preventDefault();
+        if (filteredTags[selectedIndex]) {
+          handleSelectTag(filteredTags[selectedIndex]);
+        }
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        setShowTagMenu(false);
+        setTagSearch("");
+      }
+    } else if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSubmit();
     }
-  }, [handleSubmit]);
+  }, [showTagMenu, filteredTags, selectedIndex, handleSubmit]);
   const handleStop = reactExports.useCallback(() => {
+    if (abortRef.current) {
+      abortRef.current();
+      abortRef.current = null;
+    }
     setState((prev) => ({ ...prev, isLoading: false }));
   }, [setState]);
-  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "prompt-input-container", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "prompt-input-wrapper", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
-      "textarea",
-      {
-        ref: messagesRef,
-        className: "prompt-input",
-        value: input,
-        onChange: (e) => setInput(e.target.value),
-        onKeyDown: handleKeyDown,
-        placeholder: "Reply...",
-        rows: 1
+  reactExports.useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (tagMenuRef.current && !tagMenuRef.current.contains(e.target) && !inputRef.current?.contains(e.target)) {
+        setShowTagMenu(false);
       }
-    ),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "prompt-input-footer", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "prompt-tool-btn", title: "Add attachment", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("line", { x1: "12", y1: "5", x2: "12", y2: "19" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("line", { x1: "5", y1: "12", x2: "19", y2: "12" })
-      ] }) }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "prompt-input-actions", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
-          "select",
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "prompt-input-container", children: [
+    tags.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "prompt-tags", children: tags.map((tag) => /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "prompt-tag", style: { backgroundColor: TAG_COLOR }, children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "tag-type", children: tag.type }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "tag-name", children: tag.name }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { type: "button", className: "tag-remove", onClick: () => handleRemoveTag(tag.id), children: "×" })
+    ] }, tag.id)) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "prompt-input-bar", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "textarea",
+        {
+          ref: inputRef,
+          className: "prompt-input prompt-input-bar-field",
+          value: input,
+          onChange: handleInputChange,
+          onKeyDown: handleKeyDown,
+          placeholder: "发送跟进...",
+          rows: 1
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "prompt-bar-trailing", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(ModelSelector, {}),
+        isLoading ? /* @__PURE__ */ jsxRuntimeExports.jsx("button", { type: "button", className: "prompt-send-fab prompt-send-fab-stop", onClick: handleStop, "aria-label": "停止生成", children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { className: "prompt-send-icon", viewBox: "0 0 24 24", fill: "currentColor", "aria-hidden": true, children: /* @__PURE__ */ jsxRuntimeExports.jsx("rect", { x: "7", y: "7", width: "10", height: "10", rx: "2" }) }) }) : /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "button",
           {
-            value: currentModel,
-            onChange: () => {
-            },
-            className: "model-select",
-            children: models.map((model) => /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: model.id, children: model.name }, model.id))
+            type: "button",
+            className: "prompt-send-fab",
+            onClick: handleSubmit,
+            disabled: !input.trim() && tags.length === 0,
+            "aria-label": "发送",
+            children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { className: "prompt-send-icon prompt-send-icon-plane", viewBox: "0 0 24 24", "aria-hidden": true, children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { fill: "currentColor", d: "M2.01 21 23 12 2.01 3 2 10l15 2-15 2z" }) })
           }
-        ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "prompt-tool-btn", title: "Voice input", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M19 10v2a7 7 0 0 1-14 0v-2" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("line", { x1: "12", y1: "19", x2: "12", y2: "23" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("line", { x1: "8", y1: "23", x2: "16", y2: "23" })
-        ] }) }),
-        isLoading ? /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "prompt-stop", onClick: handleStop, children: "停止" }) : /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "prompt-send", onClick: handleSubmit, disabled: !input.trim(), children: "发送" })
+        )
       ] })
+    ] }),
+    showTagMenu && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "tag-menu", ref: tagMenuRef, children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "tag-menu-header", children: "选择技能 / MCP / 知识库" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "tag-menu-list", children: filteredTags.map((tag, index2) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        "button",
+        {
+          className: `tag-menu-item ${index2 === selectedIndex ? "selected" : ""}`,
+          onClick: () => handleSelectTag(tag),
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "tag-menu-type", style: { backgroundColor: TAG_COLOR }, children: tag.type }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "tag-menu-name", children: tag.name })
+          ]
+        },
+        tag.id
+      )) })
     ] })
-  ] }) });
-};
-const getGreeting = () => {
-  const hour = (/* @__PURE__ */ new Date()).getHours();
-  if (hour < 12) return "Morning";
-  if (hour < 18) return "Afternoon";
-  return "Evening";
+  ] });
 };
 const Messages = () => {
   const messages = useAppState((s) => s.messages);
-  useAppState((s) => s.isLoading);
-  useAppState((s) => s)?.setState;
   const messagesEndRef = reactExports.useRef(null);
   const messagesContainerRef = reactExports.useRef(null);
   const [showScrollButton, setShowScrollButton] = reactExports.useState(false);
-  const greeting = getGreeting();
-  const username = "jelly";
   reactExports.useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
@@ -23617,31 +23808,29 @@ const Messages = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     setShowScrollButton(false);
   }, []);
-  if (messages.length === 0) {
-    return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "messages-container", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "chat-empty", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "empty-state", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("h2", { className: "greeting-title", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "greeting-star", children: "✴" }),
-          " ",
-          greeting,
-          ", ",
-          username
-        ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "greeting-subtitle", children: "How can I help you today?" })
-      ] }) }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "messages-input-area", children: /* @__PURE__ */ jsxRuntimeExports.jsx(PromptInput, {}) })
-    ] });
-  }
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "messages-container", children: [
+  const body = messages.length === 0 ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "chat-empty", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "empty-state", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "empty-state-title", children: "开始对话" }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "empty-state-hint", children: "在下方输入问题，我会尽力协助你。" })
+  ] }) }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-messages", ref: messagesContainerRef, onScroll: handleScroll, children: [
       messages.map((message, index2) => /* @__PURE__ */ jsxRuntimeExports.jsx(MessageRow, { message }, message.uuid ?? index2)),
       /* @__PURE__ */ jsxRuntimeExports.jsx("div", { ref: messagesEndRef })
     ] }),
-    showScrollButton && /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "scroll-to-bottom", onClick: scrollToBottom, children: "↓" }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "messages-input-area", children: /* @__PURE__ */ jsxRuntimeExports.jsx(PromptInput, {}) })
+    showScrollButton && /* @__PURE__ */ jsxRuntimeExports.jsx("button", { type: "button", className: "scroll-to-bottom", onClick: scrollToBottom, "aria-label": "回到底部", children: "↓" })
   ] });
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "chat-surface", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "messages-container", children: [
+    body,
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "messages-input-area", children: /* @__PURE__ */ jsxRuntimeExports.jsx(PromptInput, {}) })
+  ] }) });
 };
 const ChatPage = () => {
+  const { threadId } = useParams();
+  const setCurrentThread = useChatStore((state) => state.setCurrentThread);
+  reactExports.useEffect(() => {
+    if (threadId) {
+      setCurrentThread(threadId);
+    }
+  }, [threadId, setCurrentThread]);
   return /* @__PURE__ */ jsxRuntimeExports.jsx(Messages, {});
 };
 const KnowledgePage = () => {
@@ -24348,13 +24537,24 @@ const SkillsPage = () => {
       ] })
     ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "skills-grid", children: skills.map((skill) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "skill-card", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "skill-header", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "skill-icon", children: skill.icon }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "delete-btn", onClick: () => handleDelete2(skill.id), children: /* @__PURE__ */ jsxRuntimeExports.jsx(Trash2, { size: 14 }) })
-      ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { children: skill.name }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { title: skill.description, children: skill.description }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "skill-mode", children: skill.mode })
+      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "skill-icon", "aria-hidden": true, children: skill.icon }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "skill-body", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "skill-title-row", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { children: skill.name }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "button",
+            {
+              type: "button",
+              className: "delete-btn",
+              onClick: () => handleDelete2(skill.id),
+              "aria-label": "删除技能",
+              children: /* @__PURE__ */ jsxRuntimeExports.jsx(Trash2, { size: 12 })
+            }
+          )
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { title: skill.description, children: skill.description }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "skill-mode", children: skill.mode })
+      ] })
     ] }, skill.id)) })
   ] }) });
 };
@@ -24487,6 +24687,7 @@ const useModelStore = create$1()(
           name: "MiniMax",
           provider: "minimax",
           modelName: "MiniMax-Text-01",
+          baseUrl: "https://api.minimaxi.com/v1",
           isDefault: false
         }
       ],
@@ -24533,6 +24734,16 @@ const useModelStore = create$1()(
     }
   )
 );
+const DEFAULT_BASE_URL_BY_PROVIDER = {
+  minimax: "https://api.minimaxi.com/v1",
+  glm: "https://open.bigmodel.cn/api/paas/v4",
+  openai: "https://api.openai.com/v1",
+  anthropic: "https://api.anthropic.com",
+  ollama: "http://localhost:11434"
+};
+function baseUrlPlaceholder(provider) {
+  return DEFAULT_BASE_URL_BY_PROVIDER[provider] ?? "https://api.example.com/v1";
+}
 const ModelsPage = () => {
   const { models, addModel, updateModel, deleteModel, setDefaultModel } = useModelStore();
   const [editingId, setEditingId] = reactExports.useState(null);
@@ -24546,12 +24757,15 @@ const ModelsPage = () => {
   });
   const handleAdd = () => {
     if (formData.name && formData.modelName) {
+      const provider = formData.provider || "openai";
+      const trimmedBase = formData.baseUrl?.trim();
+      const baseUrl = trimmedBase || (provider === "custom" ? void 0 : DEFAULT_BASE_URL_BY_PROVIDER[provider]);
       addModel({
         name: formData.name,
-        provider: formData.provider || "openai",
+        provider,
         modelName: formData.modelName,
         apiKey: formData.apiKey,
-        baseUrl: formData.baseUrl,
+        baseUrl,
         isDefault: false
       });
       setIsAdding(false);
@@ -24633,14 +24847,14 @@ const ModelsPage = () => {
           }
         )
       ] }) }),
-      (formData.provider === "custom" || formData.provider === "ollama") && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "form-row", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("label", { children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "API 地址" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "form-row", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("label", { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "调用地址" }),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
           "input",
           {
             type: "text",
-            placeholder: "例如：http://localhost:11434",
-            value: formData.baseUrl,
+            placeholder: baseUrlPlaceholder(formData.provider || "openai"),
+            value: formData.baseUrl ?? "",
             onChange: (e) => setFormData({ ...formData, baseUrl: e.target.value })
           }
         )

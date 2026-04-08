@@ -2,7 +2,7 @@
 
 import React from 'react'
 import type { ToolResultBlock } from '../../types/message'
-import './messages.css'
+import './Messages.css'
 
 interface UserToolResultMessageProps {
   toolResult: ToolResultBlock

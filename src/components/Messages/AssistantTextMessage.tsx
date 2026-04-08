@@ -4,7 +4,7 @@ import React from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import type { TextBlock } from '../../types/message'
-import './messages.css'
+import './Messages.css'
 
 interface AssistantTextMessageProps {
   text: string

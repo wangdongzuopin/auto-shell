@@ -35,7 +35,7 @@ const defaultAppearance: AppearanceSettings = {
 
 const defaultConfigs: ProviderConfigs = {
   minimax: {
-    baseUrl: 'https://api.minimaxi.com/anthropic',
+    baseUrl: 'https://api.minimaxi.com/v1',
     model: 'MiniMax-M2.7'
   },
   glm: {

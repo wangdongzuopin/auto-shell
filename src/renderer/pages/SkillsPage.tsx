@@ -193,15 +193,24 @@ export const SkillsPage: React.FC = () => {
         <div className="skills-grid">
           {skills.map((skill) => (
             <div key={skill.id} className="skill-card">
-              <div className="skill-header">
-                <span className="skill-icon">{skill.icon}</span>
-                <button className="delete-btn" onClick={() => handleDelete(skill.id)}>
-                  <Trash2 size={14} />
-                </button>
+              <span className="skill-icon" aria-hidden>
+                {skill.icon}
+              </span>
+              <div className="skill-body">
+                <div className="skill-title-row">
+                  <h3>{skill.name}</h3>
+                  <button
+                    type="button"
+                    className="delete-btn"
+                    onClick={() => handleDelete(skill.id)}
+                    aria-label="删除技能"
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                </div>
+                <p title={skill.description}>{skill.description}</p>
+                <div className="skill-mode">{skill.mode}</div>
               </div>
-              <h3>{skill.name}</h3>
-              <p title={skill.description}>{skill.description}</p>
-              <div className="skill-mode">{skill.mode}</div>
             </div>
           ))}
         </div>

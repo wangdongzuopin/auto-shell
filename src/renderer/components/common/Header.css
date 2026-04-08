@@ -4,13 +4,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background-color: var(--bg-primary);
+  background-color: var(--bg-sidebar, #f8f7f2);
   border-bottom: 1px solid var(--border-color);
   -webkit-app-region: drag;
 }
 
 .header-left,
-.header-center,
 .header-right {
   display: flex;
   align-items: center;
@@ -41,13 +40,4 @@
 .header-btn.close:hover {
   background-color: var(--color-error);
   color: white;
-}
-
-.plan-badge {
-  padding: 4px 12px;
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  font-size: 12px;
-  color: var(--text-secondary);
 }

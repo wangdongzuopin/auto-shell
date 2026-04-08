@@ -32,7 +32,7 @@ const MAX_HISTORY_PER_DIRECTORY = 20;
 
 const defaultProviderConfigs: ProviderConfigs = {
   minimax: {
-    baseUrl: 'https://api.minimaxi.com/anthropic',
+    baseUrl: 'https://api.minimaxi.com/v1',
     model: 'MiniMax-M2.7'
   },
   glm: {
@@ -92,10 +92,10 @@ const defaultConfig: PersistedConfig = {
 };
 
 function normalizeProviderConfig(provider: ProviderType, config: ProviderSettings): ProviderSettings {
-  if (provider === 'minimax' && config.baseUrl === 'https://api.minimaxi.com/v1') {
+  if (provider === 'minimax' && config.baseUrl === 'https://api.minimaxi.com/anthropic') {
     return {
       ...config,
-      baseUrl: 'https://api.minimaxi.com/anthropic'
+      baseUrl: 'https://api.minimaxi.com/v1'
     };
   }
 

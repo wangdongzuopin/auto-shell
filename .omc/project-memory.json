@@ -1,0 +1,281 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1775623525593,
+  "projectRoot": "D:\\Agent\\auto-shell",
+  "techStack": {
+    "languages": [
+      {
+        "name": "JavaScript/TypeScript",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "package.json"
+        ]
+      },
+      {
+        "name": "TypeScript",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "tsconfig.json"
+        ]
+      }
+    ],
+    "frameworks": [
+      {
+        "name": "react",
+        "version": "18.2.0",
+        "category": "frontend"
+      },
+      {
+        "name": "react-dom",
+        "version": "18.2.0",
+        "category": "frontend"
+      },
+      {
+        "name": "vite",
+        "version": "5.0.0",
+        "category": "build"
+      }
+    ],
+    "packageManager": "npm",
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": "npm run build",
+    "testCommand": null,
+    "lintCommand": null,
+    "devCommand": "npm run dev",
+    "scripts": {
+      "dev": "electron-vite dev",
+      "build": "electron-vite build",
+      "preview": "electron-vite preview"
+    }
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": "ES modules",
+    "testPattern": null,
+    "fileOrganization": "type-based"
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [
+      "docs",
+      "src"
+    ],
+    "gitBranches": {
+      "defaultBranch": "main",
+      "branchingStrategy": null
+    }
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "dist": {
+      "path": "dist",
+      "purpose": "Distribution/build output",
+      "fileCount": 0,
+      "lastAccessed": 1775623525545,
+      "keyFiles": []
+    },
+    "docs": {
+      "path": "docs",
+      "purpose": "Documentation",
+      "fileCount": 1,
+      "lastAccessed": 1775623525576,
+      "keyFiles": [
+        "open-source-product.md"
+      ]
+    },
+    "files": {
+      "path": "files",
+      "purpose": null,
+      "fileCount": 3,
+      "lastAccessed": 1775623525578,
+      "keyFiles": [
+        "index.html",
+        "NexTerm-PRD.md",
+        "NexTerm-TDD.md"
+      ]
+    },
+    "out": {
+      "path": "out",
+      "purpose": "Build output",
+      "fileCount": 0,
+      "lastAccessed": 1775623525579,
+      "keyFiles": []
+    },
+    "release": {
+      "path": "release",
+      "purpose": null,
+      "fileCount": 4,
+      "lastAccessed": 1775623525580,
+      "keyFiles": [
+        "Auto Shell Setup 0.2.0.exe",
+        "Auto Shell Setup 0.2.0.exe.blockmap",
+        "builder-debug.yml",
+        "latest.yml"
+      ]
+    },
+    "src": {
+      "path": "src",
+      "purpose": "Source code",
+      "fileCount": 1,
+      "lastAccessed": 1775623525580,
+      "keyFiles": [
+        "preload.ts"
+      ]
+    },
+    "src\\components": {
+      "path": "src\\components",
+      "purpose": "UI components",
+      "fileCount": 0,
+      "lastAccessed": 1775623525584,
+      "keyFiles": []
+    },
+    "src\\types": {
+      "path": "src\\types",
+      "purpose": "Type definitions",
+      "fileCount": 1,
+      "lastAccessed": 1775623525584,
+      "keyFiles": [
+        "message.ts"
+      ]
+    },
+    "src\\utils": {
+      "path": "src\\utils",
+      "purpose": "Utility functions",
+      "fileCount": 3,
+      "lastAccessed": 1775623525585,
+      "keyFiles": [
+        "chat.ts",
+        "messages.ts",
+        "permissions.ts"
+      ]
+    }
+  },
+  "hotPaths": [
+    {
+      "path": "src\\components\\Messages\\Messages.css",
+      "accessCount": 9,
+      "lastAccessed": 1775624034638,
+      "type": "file"
+    },
+    {
+      "path": "src\\components\\Messages\\MessageRow.css",
+      "accessCount": 6,
+      "lastAccessed": 1775624040188,
+      "type": "file"
+    },
+    {
+      "path": "src\\components\\ModelSelector\\ModelSelector.css",
+      "accessCount": 6,
+      "lastAccessed": 1775624044201,
+      "type": "file"
+    },
+    {
+      "path": "src\\components\\PromptInput\\PromptInput.css",
+      "accessCount": 5,
+      "lastAccessed": 1775624027207,
+      "type": "file"
+    },
+    {
+      "path": "src\\renderer\\styles\\global.css",
+      "accessCount": 3,
+      "lastAccessed": 1775624007416,
+      "type": "file"
+    },
+    {
+      "path": "src\\renderer\\styles\\variables.css",
+      "accessCount": 3,
+      "lastAccessed": 1775624008071,
+      "type": "file"
+    },
+    {
+      "path": "src\\renderer\\components\\Sidebar\\Sidebar.css",
+      "accessCount": 3,
+      "lastAccessed": 1775624014980,
+      "type": "file"
+    },
+    {
+      "path": "src\\main\\ipc-handlers.ts",
+      "accessCount": 2,
+      "lastAccessed": 1775623836529,
+      "type": "directory"
+    },
+    {
+      "path": "src\\components\\PromptInput\\PromptInput.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1775623580062,
+      "type": "file"
+    },
+    {
+      "path": "src\\preload.ts",
+      "accessCount": 1,
+      "lastAccessed": 1775623590554,
+      "type": "directory"
+    },
+    {
+      "path": "src\\ai\\provider.ts",
+      "accessCount": 1,
+      "lastAccessed": 1775623610419,
+      "type": "file"
+    },
+    {
+      "path": "src\\ai\\minimax-provider.ts",
+      "accessCount": 1,
+      "lastAccessed": 1775623616823,
+      "type": "file"
+    },
+    {
+      "path": "src\\ai\\openai-provider.ts",
+      "accessCount": 1,
+      "lastAccessed": 1775623620775,
+      "type": "file"
+    },
+    {
+      "path": "src\\components\\ModelSelector\\ModelSelector.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1775623636987,
+      "type": "file"
+    },
+    {
+      "path": "src\\main",
+      "accessCount": 1,
+      "lastAccessed": 1775623812220,
+      "type": "directory"
+    },
+    {
+      "path": "src\\main\\session-store.ts",
+      "accessCount": 1,
+      "lastAccessed": 1775623816159,
+      "type": "directory"
+    },
+    {
+      "path": "src\\ai\\models.ts",
+      "accessCount": 1,
+      "lastAccessed": 1775623819703,
+      "type": "file"
+    },
+    {
+      "path": "src\\ai\\index.ts",
+      "accessCount": 1,
+      "lastAccessed": 1775623839983,
+      "type": "file"
+    },
+    {
+      "path": "src\\ai\\claude-provider.ts",
+      "accessCount": 1,
+      "lastAccessed": 1775623844376,
+      "type": "file"
+    },
+    {
+      "path": "src\\renderer\\pages\\ChatPage.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1775623859431,
+      "type": "file"
+    }
+  ],
+  "userDirectives": []
+}

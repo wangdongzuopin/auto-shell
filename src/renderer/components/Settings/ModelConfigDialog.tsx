@@ -8,13 +8,22 @@ interface ModelConfigDialogProps {
   onClose: () => void;
 }
 
+const PROVIDER_BASE_URL_PLACEHOLDER: Partial<Record<ProviderType, string>> = {
+  minimax: 'https://api.minimaxi.com/v1',
+  glm: 'https://open.bigmodel.cn/api/paas/v4',
+  claude: 'https://api.anthropic.com',
+  openai: 'https://api.openai.com/v1',
+  ollama: 'http://localhost:11434',
+  openaiCompatible: 'https://api.openai.com/v1'
+};
+
 const PROVIDERS: Array<{
   id: ProviderType;
   name: string;
   helper: string;
   apiKeyRequired: boolean;
 }> = [
-  { id: 'minimax', name: 'MiniMax', helper: 'Anthropic 兼容接入', apiKeyRequired: true },
+  { id: 'minimax', name: 'MiniMax', helper: 'OpenAI 兼容（官方 https://api.minimaxi.com/v1）', apiKeyRequired: true },
   { id: 'glm', name: 'GLM', helper: '智谱开放平台', apiKeyRequired: true },
   { id: 'claude', name: 'Claude', helper: 'Anthropic 官方接口', apiKeyRequired: true },
   { id: 'openai', name: 'OpenAI', helper: 'OpenAI 官方接口', apiKeyRequired: true },
@@ -101,11 +110,13 @@ export function ModelConfigDialog({ open, onClose }: ModelConfigDialogProps) {
 
           <div className="provider-config">
             <div className="config-block">
-              <label>API Base URL</label>
+              <label>调用地址（API Base URL）</label>
               <input
                 value={config.baseUrl}
                 onChange={(event) => void updateConfig({ baseUrl: event.target.value })}
-                placeholder="https://api.example.com/v1"
+                placeholder={
+                  PROVIDER_BASE_URL_PLACEHOLDER[selectedProvider] ?? 'https://api.example.com/v1'
+                }
               />
             </div>
 
