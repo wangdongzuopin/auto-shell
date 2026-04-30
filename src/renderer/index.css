@@ -2,7 +2,7 @@
 
 @custom-variant dark (&:is(.dark, .dark *));
 
-@theme inline {
+@theme {
   --color-sidebar: #0a0e13;
   --color-canvas: #0d1117;
   --color-surface: #111820;
@@ -23,9 +23,43 @@
   --font-mono: "Cascadia Code", "JetBrains Mono", "Fira Code", ui-monospace, monospace;
 }
 
+/* Backward-compatible aliases for existing component CSS */
+:root {
+  --bg-primary: var(--color-canvas);
+  --bg-sidebar: var(--color-sidebar);
+  --bg-card: var(--color-surface);
+  --bg-canvas: var(--color-canvas);
+  --border-color: var(--color-border);
+  --text-primary: var(--color-foreground);
+  --text-secondary: var(--color-muted-foreground);
+  --hover-bg: rgba(255, 255, 255, 0.04);
+  --selected-bg: rgba(255, 255, 255, 0.07);
+  --accent: var(--color-accent);
+  --accent-soft: rgba(88, 214, 141, 0.12);
+  --color-success: var(--color-accent);
+  --color-error: var(--color-destructive);
+  --tool-read: var(--color-tool-read);
+  --tool-write: var(--color-tool-write);
+  --tool-bash: var(--color-tool-bash);
+  --tool-glob: var(--color-tool-glob);
+  --tool-grep: var(--color-tool-grep);
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 4px);
+  --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.4);
+  --shadow-overlay: 0 8px 32px rgba(0, 0, 0, 0.6);
+  --sidebar-width: 220px;
+  --sidebar-item-height: 34px;
+  --sidebar-padding: 8px;
+  --font-family: var(--font-mono);
+  --bg: var(--color-canvas);
+  --text: var(--color-foreground);
+}
+
 @layer base {
   * {
     border-color: var(--color-border);
+    box-sizing: border-box;
   }
   html {
     background-color: var(--color-canvas);
@@ -49,6 +83,10 @@
     font-family: inherit;
     border: none;
     outline: none;
+  }
+  input:focus-visible, textarea:focus-visible {
+    outline: 1px solid var(--color-accent);
+    outline-offset: 1px;
   }
   ::-webkit-scrollbar {
     width: 6px;
