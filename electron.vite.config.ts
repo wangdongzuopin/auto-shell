@@ -1,5 +1,6 @@
 import { defineConfig } from 'electron-vite';
 import { resolve } from 'path';
+import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
   main: {
@@ -32,6 +33,13 @@ export default defineConfig({
   },
   renderer: {
     root: 'src/renderer',
+    plugins: [tailwindcss()],
+    resolve: {
+      alias: {
+        '@': resolve(__dirname, 'src/renderer'),
+        '@shared': resolve(__dirname, 'src/shared')
+      }
+    },
     build: {
       outDir: 'dist/renderer',
       rollupOptions: {
