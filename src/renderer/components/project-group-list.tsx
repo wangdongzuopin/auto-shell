@@ -9,6 +9,7 @@ import { ThreadItem } from "./thread-item";
 
 export function ProjectGroupList() {
   const threads = useChatStore((s) => s.threads);
+  const sessionStatus = useChatStore((s) => s.sessionStatus);
   const sessionProject = useChatStore((s) => s.sessionProject);
   const activeProjectId = useProjectStore((s) => s.activeProjectId);
   const projects = useProjectStore((s) => s.projects);
@@ -82,7 +83,7 @@ export function ProjectGroupList() {
                     <ThreadItem
                       key={thread.id}
                       thread={thread}
-                      status={useChatStore.getState().sessionStatus[thread.id]}
+                      status={sessionStatus[thread.id]}
                     />
                   ))}
                 </div>
@@ -95,7 +96,7 @@ export function ProjectGroupList() {
             <ThreadItem
               key={thread.id}
               thread={thread}
-              status={useChatStore.getState().sessionStatus[thread.id]}
+              status={sessionStatus[thread.id]}
             />
           ))}
 
