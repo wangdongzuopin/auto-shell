@@ -1,0 +1,267 @@
+@import "tailwindcss";
+
+/* ===== Design Tokens (dark defaults) ===== */
+@theme {
+  --color-bg-base: var(--tk-bg-base);
+  --color-bg-surface: var(--tk-bg-surface);
+  --color-bg-elevated: var(--tk-bg-elevated);
+  --color-bg-hover: var(--tk-bg-hover);
+  --color-border-default: var(--tk-border-default);
+  --color-border-subtle: var(--tk-border-subtle);
+  --color-text-primary: var(--tk-text-primary);
+  --color-text-secondary: var(--tk-text-secondary);
+  --color-text-tertiary: var(--tk-text-tertiary);
+  --color-accent-dev: var(--tk-accent-dev);
+  --color-accent-dev-soft: var(--tk-accent-dev-soft);
+  --color-accent-dev-glow: var(--tk-accent-dev-glow);
+  --color-accent-pm: var(--tk-accent-pm);
+  --color-accent-pm-soft: var(--tk-accent-pm-soft);
+  --color-accent-pm-glow: var(--tk-accent-pm-glow);
+  --color-success: var(--tk-success);
+  --color-warning: var(--tk-warning);
+  --color-danger: var(--tk-danger);
+  --color-glass-bg: var(--tk-glass-bg);
+  --color-glass-border: var(--tk-glass-border);
+  --color-glass-bg-strong: var(--tk-glass-bg-strong);
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+}
+
+/* ===== Light Theme ===== */
+:root {
+  /* Backgrounds */
+  --tk-bg-base: oklch(0.96 0.002 260);
+  --tk-bg-surface: oklch(0.92 0.004 260);
+  --tk-bg-elevated: oklch(0.88 0.006 260);
+  --tk-bg-hover: oklch(0.84 0.008 260);
+  /* Borders */
+  --tk-border-default: oklch(0.78 0.01 260 / 0.6);
+  --tk-border-subtle: oklch(0.82 0.01 260 / 0.3);
+  /* Text */
+  --tk-text-primary: oklch(0.14 0.01 260);
+  --tk-text-secondary: oklch(0.38 0.01 260);
+  --tk-text-tertiary: oklch(0.55 0.01 260);
+  /* Accents */
+  --tk-accent-dev: oklch(0.55 0.19 250);
+  --tk-accent-dev-soft: oklch(0.55 0.19 250 / 0.1);
+  --tk-accent-dev-glow: oklch(0.55 0.19 250 / 0.2);
+  --tk-accent-pm: oklch(0.6 0.16 75);
+  --tk-accent-pm-soft: oklch(0.6 0.16 75 / 0.1);
+  --tk-accent-pm-glow: oklch(0.6 0.16 75 / 0.2);
+  /* Semantic */
+  --tk-success: oklch(0.55 0.16 145);
+  --tk-warning: oklch(0.6 0.16 75);
+  --tk-danger: oklch(0.52 0.19 25);
+  /* Glass */
+  --tk-glass-bg: oklch(0.94 0.003 260 / 0.65);
+  --tk-glass-border: oklch(0.75 0.01 260 / 0.15);
+  --tk-glass-bg-strong: oklch(0.96 0.002 260 / 0.92);
+
+  /* shadcn/ui light */
+  --background: 260 5% 96%;
+  --foreground: 260 8% 6%;
+  --card: 0 0% 100%;
+  --card-foreground: 260 8% 6%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 260 8% 6%;
+  --primary: 217 100% 55%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 260 5% 90%;
+  --secondary-foreground: 260 6% 10%;
+  --muted: 260 5% 92%;
+  --muted-foreground: 260 4% 42%;
+  --accent: 217 100% 55%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 78% 54%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 260 5% 84%;
+  --input: 260 5% 84%;
+  --ring: 217 100% 55%;
+  --radius: 0.5rem;
+}
+
+/* ===== Dark Theme ===== */
+.dark {
+  --tk-bg-base: oklch(0.09 0.006 260);
+  --tk-bg-surface: oklch(0.13 0.008 260);
+  --tk-bg-elevated: oklch(0.17 0.01 260);
+  --tk-bg-hover: oklch(0.21 0.012 260);
+  --tk-border-default: oklch(0.28 0.015 260 / 0.4);
+  --tk-border-subtle: oklch(0.35 0.015 260 / 0.15);
+  --tk-text-primary: oklch(0.94 0.003 260);
+  --tk-text-secondary: oklch(0.68 0.008 260);
+  --tk-text-tertiary: oklch(0.48 0.01 260);
+  --tk-accent-dev: oklch(0.7 0.2 250);
+  --tk-accent-dev-soft: oklch(0.7 0.2 250 / 0.1);
+  --tk-accent-dev-glow: oklch(0.7 0.2 250 / 0.25);
+  --tk-accent-pm: oklch(0.75 0.18 75);
+  --tk-accent-pm-soft: oklch(0.75 0.18 75 / 0.1);
+  --tk-accent-pm-glow: oklch(0.75 0.18 75 / 0.25);
+  --tk-success: oklch(0.65 0.18 145);
+  --tk-warning: oklch(0.7 0.18 75);
+  --tk-danger: oklch(0.58 0.2 25);
+  --tk-glass-bg: oklch(0.15 0.008 260 / 0.6);
+  --tk-glass-border: oklch(0.42 0.015 260 / 0.1);
+  --tk-glass-bg-strong: oklch(0.12 0.006 260 / 0.88);
+
+  --background: 260 8% 3%;
+  --foreground: 260 5% 90%;
+  --card: 260 8% 6%;
+  --card-foreground: 260 5% 90%;
+  --popover: 260 8% 6%;
+  --popover-foreground: 260 5% 90%;
+  --primary: 217 100% 65%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 260 5% 12%;
+  --secondary-foreground: 260 5% 82%;
+  --muted: 260 5% 12%;
+  --muted-foreground: 260 4% 48%;
+  --accent: 217 100% 65%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 70% 50%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 260 5% 15%;
+  --input: 260 5% 15%;
+  --ring: 217 100% 65%;
+}
+
+/* ===== Role Overrides ===== */
+.dark[data-role="developer"] {
+  --primary: 217 100% 65%;
+  --accent: 217 100% 65%;
+  --ring: 217 100% 65%;
+}
+.dark[data-role="product"] {
+  --primary: 38 92% 50%;
+  --accent: 38 92% 50%;
+  --ring: 38 92% 50%;
+}
+:root[data-role="developer"] {
+  --primary: 217 100% 55%;
+  --accent: 217 100% 55%;
+  --ring: 217 100% 55%;
+}
+:root[data-role="product"] {
+  --primary: 38 92% 45%;
+  --accent: 38 92% 45%;
+  --ring: 38 92% 45%;
+}
+
+/* ===== Background Patterns ===== */
+.bg-grid {
+  background-image:
+    linear-gradient(var(--tk-border-subtle) 1px, transparent 1px),
+    linear-gradient(90deg, var(--tk-border-subtle) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+.bg-glow {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% 0%, var(--tk-accent-dev-glow) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 100%, oklch(0.7 0.2 250 / 0.025) 0%, transparent 50%);
+}
+
+.bg-glow-pm {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% 0%, var(--tk-accent-pm-glow) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 100%, oklch(0.75 0.18 75 / 0.025) 0%, transparent 50%);
+}
+
+/* ===== Glass Utilities ===== */
+@utility glass {
+  background: var(--tk-glass-bg);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid var(--tk-glass-border);
+}
+
+@utility glass-strong {
+  background: var(--tk-glass-bg-strong);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: 1px solid var(--tk-glass-border);
+}
+
+@utility glass-card {
+  background: var(--tk-glass-bg);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--tk-glass-border);
+  box-shadow: 0 2px 8px oklch(0 0 0 / 0.12);
+}
+
+/* ===== Glow Effects ===== */
+@utility glow-dev {
+  box-shadow:
+    0 0 20px var(--tk-accent-dev-glow),
+    0 0 60px oklch(0.7 0.2 250 / 0.03);
+}
+
+@utility glow-pm {
+  box-shadow:
+    0 0 20px var(--tk-accent-pm-glow),
+    0 0 60px oklch(0.75 0.18 75 / 0.03);
+}
+
+/* ===== Base Styles ===== */
+body {
+  font-family:
+    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    "PingFang SC", "Microsoft YaHei", "Helvetica Neue",
+    Arial, sans-serif;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+  background-color: var(--tk-bg-base);
+  color: var(--tk-text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.font-display {
+  font-family: "Space Grotesk", "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.font-mono {
+  font-family: "JetBrains Mono", "Fira Code", "Cascadia Code", monospace;
+}
+
+/* ===== Tauri Drag Region ===== */
+[data-tauri-drag-region] {
+  -webkit-app-region: drag;
+  cursor: grab;
+}
+[data-tauri-drag-region] button,
+[data-tauri-drag-region] input,
+[data-tauri-drag-region] a,
+[data-tauri-drag-region] [role="button"] {
+  -webkit-app-region: no-drag;
+}
+
+/* ===== Custom Scrollbar ===== */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--tk-border-default); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: var(--tk-text-tertiary); }
+
+/* ===== Animations ===== */
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slide-up { from { transform: translateY(12px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes slide-down { from { transform: translateY(-6px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes scale-in { from { transform: scale(0.96); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+@utility animate-fade-in { animation: fade-in 0.3s ease-out; }
+@utility animate-slide-up { animation: slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+@utility animate-slide-down { animation: slide-down 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
+@utility animate-scale-in { animation: scale-in 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
+
+/* ===== shadcn/ui Base Layer ===== */
+@layer base {
+  * { border-color: hsl(var(--border)); }
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
+}

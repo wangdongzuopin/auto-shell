@@ -1,279 +1,110 @@
-// Shared types for auto-shell
-// This file contains types used across main, preload, and renderer processes
+// ===== Shared Types for pizz =====
 
-// Provider Types
-export type ProviderType =
-  | 'minimax'
-  | 'glm'
-  | 'claude'
-  | 'openai'
-  | 'ollama'
-  | 'openaiCompatible';
+// --- Role System ---
+export type AppRole = 'developer' | 'product'
 
-export interface Theme {
-  name: string;
-  background: string;
-  foreground: string;
-  accent: string;
-}
-
-export interface FeatureToggles {
-  errorCard: boolean;
-  naturalCommand: boolean;
-  explainCommand: boolean;
-  completion: boolean;
-}
-
-export interface ProviderSettings {
-  baseUrl: string;
-  model: string;
-}
-
-export type ProviderConfigs = Record<ProviderType, ProviderSettings>;
-
-export interface ModelConfig {
-  baseUrl?: string;
-  temperature?: number;
-  maxTokens?: number;
-}
-
-export interface AppConfig {
-  provider: ProviderType;
-  providerConfig: ProviderSettings;
-  providerConfigs: ProviderConfigs;
-  aiFeatures: FeatureToggles;
-  theme: Theme;
-  currentModel: string;
-  modelConfig: ModelConfig;
-}
-
-export interface ChatMessage {
-  role: 'system' | 'user' | 'assistant';
-  content: string;
-}
-
-export interface TerminalTabState {
-  id: string;
-  name: string;
-  shell: string;
-  cwd: string;
-}
-
-export interface TerminalSession {
-  tabs: TerminalTabState[];
-  activeTabId: string | null;
-  commandHistoryByCwd: Record<string, string[]>;
-}
-
-export interface AppearanceSettings {
-  terminalTransparency: boolean;
-  terminalOpacity: number;      // 0.3–1.0
-  terminalBackdrop: boolean;
-}
-
-// ============ NEW MESSAGE TYPES (aligned with claude-code-rev) ============
-
-// Message Origin
-export interface MessageOrigin {
-  kind?: string
-  [key: string]: unknown
-}
-
-// Message Base
-export interface MessageBase {
-  uuid?: string
-  parentUuid?: string
-  timestamp?: string
-  createdAt?: string
-  isMeta?: boolean
-  isVirtual?: boolean
-  isCompactSummary?: boolean
-  toolUseResult?: unknown
-  origin?: MessageOrigin
-  [key: string]: unknown
-}
-
-// Content Block types
-export interface TextBlock {
-  type: 'text'
-  text: string
-  citations?: unknown
-}
-
-export interface ToolUseBlock {
-  type: 'tool_use'
+export interface AppUser {
   id: string
   name: string
-  input: unknown
+  role: AppRole
+  isEnterprise: boolean
 }
 
-export interface ThinkingBlock {
-  type: 'thinking'
-  thinking: string
-}
-
-export interface RedactedThinkingBlock {
-  type: 'redacted_thinking'
-}
-
-export interface ToolResultBlock {
-  type: 'tool_result'
-  tool_use_id: string
-  content: unknown
-  is_error?: boolean
-}
-
-export interface ImageBlock {
-  type: 'image'
-  source: {
-    type: 'base64' | 'url'
-    media_type: string
-    data: string
-  }
-}
-
-export type ContentBlock =
-  | TextBlock
-  | ToolUseBlock
-  | ThinkingBlock
-  | RedactedThinkingBlock
-
-export type ContentBlockParam =
-  | { type: 'text'; text: string }
-  | { type: 'image'; source: { type: 'base64' | 'url'; media_type: string; data: string } }
-  | ToolResultBlock
-
-// Message types
-export interface UserMessage extends MessageBase {
-  type: 'user'
-  message: {
-    content: string | ContentBlockParam[]
-    [key: string]: unknown
-  }
-}
-
-export interface AssistantMessage extends MessageBase {
-  type: 'assistant'
-  message?: {
-    content?: ContentBlock[]
-    [key: string]: unknown
-  }
-}
-
-export interface ProgressMessage extends MessageBase {
-  type: 'progress'
-  progress?: unknown
-}
-
-export type SystemMessageLevel = 'info' | 'warning' | 'error' | string
-
-export interface SystemMessage extends MessageBase {
-  type: 'system'
-  subtype?: string
-  level?: SystemMessageLevel
-  message?: string
-}
-
-export interface AttachmentMessage extends MessageBase {
-  type: 'attachment'
-  path?: string
-}
-
-export interface HookResultMessage extends MessageBase {
-  type: 'hook_result'
-}
-
-export interface ToolUseSummaryMessage extends MessageBase {
-  type: 'tool_use_summary'
-}
-
-export interface TombstoneMessage extends MessageBase {
-  type: 'tombstone'
-}
-
-export interface GroupedToolUseMessage extends MessageBase {
-  type: 'grouped_tool_use'
-}
-
-export type Message =
-  | UserMessage
-  | AssistantMessage
-  | ProgressMessage
-  | SystemMessage
-  | AttachmentMessage
-  | HookResultMessage
-  | ToolUseSummaryMessage
-  | TombstoneMessage
-  | GroupedToolUseMessage
-
-export type NormalizedMessage = Message
-
-// Permission Mode
-export type PermissionMode =
-  | 'acceptEdits'
-  | 'bypassPermissions'
-  | 'default'
-  | 'dontAsk'
-  | 'plan'
-
-// Legacy types for backward compatibility
-export interface Thread {
-  id: string;
-  title: string;
-  messages: Message[];
-  createdAt: number;
-  updatedAt: number;
-  model?: string;
-  knowledgeIds?: string[];
-}
-
-export interface Artifact {
-  id: string;
-  type: 'code' | 'document' | 'image';
-  title: string;
-  content: string;
-  language?: string;
-  createdAt: number;
-}
-
-export interface Knowledge {
-  id: string;
-  name: string;
-  description?: string;
-  files: KnowledgeFile[];
-  createdAt: number;
-  updatedAt: number;
-}
-
-export interface KnowledgeFile {
-  id: string;
-  name: string;
-  type: string;
-  size: number;
-  content?: string;
-}
-
-export interface Skill {
-  id: string;
-  name: string;
-  description: string;
-  icon: string;
-  category: string;
-  enabled: boolean;
-}
-
+// --- Project ---
 export interface Project {
-  id: string;
-  name: string;
-  description?: string;
-  threadIds: string[];
-  knowledgeIds: string[];
-  createdAt: number;
-  updatedAt: number;
+  id: string
+  name: string
+  description: string
+  path: string
+  createdAt: number
+  updatedAt: number
+  conversations: Conversation[]
 }
 
-export interface User {
-  id: string;
-  name: string;
-  avatar?: string;
+// --- Conversation ---
+export type ChatMode = 'qa' | 'edit'
+
+export interface Conversation {
+  id: string
+  projectId: string
+  title: string
+  mode: ChatMode
+  messages: Message[]
+  createdAt: number
+  updatedAt: number
 }
+
+export type MessageRole = 'user' | 'assistant' | 'system'
+
+export interface Message {
+  id: string
+  role: MessageRole
+  content: string
+  timestamp: number
+  metadata?: {
+    mode?: ChatMode
+    toolCalls?: ToolCall[]
+    diffContent?: string
+  }
+}
+
+export interface ToolCall {
+  id: string
+  name: string
+  input: Record<string, unknown>
+  result?: string
+}
+
+// --- Knowledge ---
+export interface KnowledgeEntry {
+  id: string
+  title: string
+  content: string
+  tags: string[]
+  source: 'manual' | 'ai' | 'import'
+  projectId?: string
+  createdAt: number
+  updatedAt: number
+}
+
+// --- Skill ---
+export interface Skill {
+  id: string
+  name: string
+  description: string
+  content: string
+  type: 'builtin' | 'imported' | 'ai-generated'
+  category: string
+  createdAt: number
+}
+
+// --- AI Provider ---
+export type AIProviderType = 'claude' | 'minimax' | 'openai' | 'ollama'
+
+export interface AIProviderConfig {
+  type: AIProviderType
+  apiKey?: string
+  baseUrl?: string
+  model?: string
+}
+
+// --- IPC Channels ---
+export const IPC_CHANNELS = {
+  PROJECT_IMPORT: 'project:import',
+  PROJECT_LIST: 'project:list',
+  PROJECT_DELETE: 'project:delete',
+  PROJECT_INDEX: 'project:index',
+  FILE_READ: 'file:read',
+  FILE_WRITE: 'file:write',
+  FILE_LIST: 'file:list',
+  KNOWLEDGE_SAVE: 'knowledge:save',
+  KNOWLEDGE_LIST: 'knowledge:list',
+  KNOWLEDGE_DELETE: 'knowledge:delete',
+  KNOWLEDGE_EXPORT: 'knowledge:export',
+  SKILL_LIST: 'skill:list',
+  SKILL_SAVE: 'skill:save',
+  SKILL_DELETE: 'skill:delete',
+  AI_CHAT: 'ai:chat',
+  AI_STREAM: 'ai:stream',
+  DIALOG_SELECT_DIR: 'dialog:selectDir',
+} as const
