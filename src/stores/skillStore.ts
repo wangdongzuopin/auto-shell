@@ -8,8 +8,8 @@ interface SkillState {
   error: string | null
 
   loadSkills: () => Promise<void>
-  addSkill: (name: string, description: string, content: string, skillType?: string, category?: string) => Promise<void>
-  updateSkill: (id: string, fields: { name?: string; description?: string; content?: string; category?: string }) => Promise<void>
+  addSkill: (name: string, description: string, content: string, skillType?: string, category?: string, role?: string) => Promise<void>
+  updateSkill: (id: string, fields: { name?: string; description?: string; content?: string; category?: string; role?: string }) => Promise<void>
   toggleSkill: (id: string) => Promise<void>
   removeSkill: (id: string) => Promise<void>
 }
@@ -29,13 +29,14 @@ export const useSkillStore = create<SkillState>((set, get) => ({
     }
   },
 
-  addSkill: async (name, description, content, skillType, category) => {
+  addSkill: async (name, description, content, skillType, category, role) => {
     const skill = await skillIpc.create({
       name,
       description,
       content,
       skill_type: skillType || "imported",
       category: category || "通用",
+      role: role || "both",
     })
     set((s) => ({ skills: [skill, ...s.skills] }))
   },

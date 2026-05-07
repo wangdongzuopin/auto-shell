@@ -10,12 +10,20 @@ use tauri::{AppHandle, Manager};
 use tauri_plugin_sql::{Migration, MigrationKind};
 
 pub fn get_migrations() -> Vec<Migration> {
-    vec![Migration {
-        version: 1,
-        description: "create initial tables",
-        sql: include_str!("../../migrations/001_initial.sql"),
-        kind: MigrationKind::Up,
-    }]
+    vec![
+        Migration {
+            version: 1,
+            description: "create initial tables",
+            sql: include_str!("../../migrations/001_initial.sql"),
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 2,
+            description: "add skill role and built-in skills",
+            sql: include_str!("../../migrations/002_skill_role.sql"),
+            kind: MigrationKind::Up,
+        },
+    ]
 }
 
 pub async fn init_database(app: &AppHandle) -> Result<SqlitePool, Box<dyn std::error::Error>> {
@@ -30,6 +38,11 @@ pub async fn init_database(app: &AppHandle) -> Result<SqlitePool, Box<dyn std::e
     sqlx::query(include_str!("../../migrations/001_initial.sql"))
         .execute(&pool)
         .await?;
+
+    // Run v2 migration (ALTER TABLE may fail if column exists — ignore)
+    let _ = sqlx::query(include_str!("../../migrations/002_skill_role.sql"))
+        .execute(&pool)
+        .await;
 
     println!("[AutoForge] Database initialized at {}", db_path.display());
     Ok(pool)

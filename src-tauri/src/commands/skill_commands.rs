@@ -15,6 +15,11 @@ pub async fn list_enabled_skills(state: State<'_, AppState>) -> Result<Vec<Skill
 }
 
 #[tauri::command]
+pub async fn list_skills_by_role(state: State<'_, AppState>, role: String) -> Result<Vec<Skill>, AppError> {
+    skill_repo::list_by_role(&state.pool, &role).await
+}
+
+#[tauri::command]
 pub async fn get_skill(state: State<'_, AppState>, id: String) -> Result<Skill, AppError> {
     skill_repo::get_by_id(&state.pool, &id).await
 }
@@ -22,12 +27,12 @@ pub async fn get_skill(state: State<'_, AppState>, id: String) -> Result<Skill, 
 #[tauri::command]
 pub async fn create_skill(state: State<'_, AppState>, payload: CreateSkillPayload) -> Result<Skill, AppError> {
     let id = uuid::Uuid::new_v4().to_string();
-    skill_repo::insert(&state.pool, &id, &payload.name, &payload.description, &payload.content, &payload.skill_type, &payload.category).await
+    skill_repo::insert(&state.pool, &id, &payload.name, &payload.description, &payload.content, &payload.skill_type, &payload.category, &payload.role).await
 }
 
 #[tauri::command]
 pub async fn update_skill(state: State<'_, AppState>, payload: UpdateSkillPayload) -> Result<Skill, AppError> {
-    skill_repo::update(&state.pool, &payload.id, payload.name.as_deref(), payload.description.as_deref(), payload.content.as_deref(), payload.category.as_deref()).await
+    skill_repo::update(&state.pool, &payload.id, payload.name.as_deref(), payload.description.as_deref(), payload.content.as_deref(), payload.category.as_deref(), payload.role.as_deref()).await
 }
 
 #[tauri::command]

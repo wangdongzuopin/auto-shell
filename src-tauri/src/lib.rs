@@ -81,6 +81,7 @@ pub fn run() {
             // Skill commands
             skill_commands::list_skills,
             skill_commands::list_enabled_skills,
+            skill_commands::list_skills_by_role,
             skill_commands::get_skill,
             skill_commands::create_skill,
             skill_commands::update_skill,

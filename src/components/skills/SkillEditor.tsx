@@ -16,6 +16,11 @@ const skillTypes = [
 ]
 
 const categories = ["开发", "产品", "安全", "测试", "架构", "数据库", "工具", "通用"]
+const roles = [
+  { value: "both", label: "通用" },
+  { value: "developer", label: "开发者" },
+  { value: "product", label: "产品经理" },
+]
 
 export function SkillEditor({ skill, onClose }: Props) {
   const { addSkill, updateSkill } = useSkillStore()
@@ -24,6 +29,7 @@ export function SkillEditor({ skill, onClose }: Props) {
   const [content, setContent] = useState(skill?.content || "")
   const [skillType, setSkillType] = useState(skill?.skill_type || "imported")
   const [category, setCategory] = useState(skill?.category || "通用")
+  const [role, setRole] = useState(skill?.role || "both")
   const [saving, setSaving] = useState(false)
 
   const handleSave = async () => {
@@ -36,9 +42,10 @@ export function SkillEditor({ skill, onClose }: Props) {
           description,
           content,
           category,
+          role,
         })
       } else {
-        await addSkill(name.trim(), description, content, skillType, category)
+        await addSkill(name.trim(), description, content, skillType, category, role)
       }
       onClose()
     } catch {
@@ -121,6 +128,26 @@ export function SkillEditor({ skill, onClose }: Props) {
               <option key={c} value={c}>{c}</option>
             ))}
           </select>
+        </div>
+      </div>
+
+      <div>
+        <label className="text-[10px] font-medium text-text-tertiary uppercase tracking-wider">适用角色</label>
+        <div className="flex gap-1 mt-1">
+          {roles.map((r) => (
+            <button
+              key={r.value}
+              onClick={() => setRole(r.value)}
+              className={cn(
+                "px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-all duration-200",
+                role === r.value
+                  ? "bg-accent-dev/10 text-accent-dev"
+                  : "text-text-tertiary hover:text-text-secondary bg-bg-elevated/30"
+              )}
+            >
+              {r.label}
+            </button>
+          ))}
         </div>
       </div>
 

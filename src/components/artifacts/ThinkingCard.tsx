@@ -1,4 +1,6 @@
 import { useState, useCallback } from "react"
+import ReactMarkdown from "react-markdown"
+import remarkGfm from "remark-gfm"
 import { cn } from "@/lib/utils"
 import { Brain, GitCompare, GitBranch, BarChart3, Lightbulb, Copy, Check, Download } from "lucide-react"
 
@@ -99,37 +101,76 @@ export function ThinkingCard({ content, className }: ThinkingCardProps) {
       </div>
 
       {/* Content */}
-      <div className="px-3 py-2.5 text-xs leading-relaxed text-text-secondary space-y-1.5">
-        {content.split(/\n\s*\n/).map((para, i) => {
-          const trimmed = para.trim()
-          if (!trimmed) return null
-
-          // Bold header line
-          if (/^\*\*.+\*\*/.test(trimmed)) {
-            return (
-              <div key={i} className="flex items-start gap-2">
-                <span className="mt-0.5 h-1.5 w-1.5 rounded-full bg-accent-pm/50 shrink-0" />
-                <span className="font-semibold text-text-primary">
-                  {trimmed.replace(/\*\*/g, "")}
-                </span>
-              </div>
-            )
-          }
-
-          // Numbered list item
-          if (/^\d+[\.\、\)]/.test(trimmed)) {
-            return (
-              <div key={i} className="flex items-start gap-2">
-                <span className="text-[10px] font-mono font-medium text-accent-pm/60 min-w-[16px]">
-                  {trimmed.match(/^(\d+[\.\、\)])/)![1]}
-                </span>
-                <span>{trimmed.replace(/^\d+[\.\、\)]\s*/, "")}</span>
-              </div>
-            )
-          }
-
-          return <p key={i}>{trimmed}</p>
-        })}
+      <div className="px-3 py-2.5 text-xs leading-relaxed text-text-secondary prose prose-sm prose-invert max-w-none">
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm]}
+          components={{
+            code({ className: codeClassName, children, ...props }) {
+              const match = /language-(\w+)/.exec(codeClassName || "");
+              if (!match) {
+                return (
+                  <code className="px-1 py-0.5 rounded bg-bg-hover/60 text-[10px] font-mono text-accent-dev" {...props}>
+                    {children}
+                  </code>
+                );
+              }
+              return <code className={codeClassName} {...props}>{children}</code>;
+            },
+            p({ children, ...props }) {
+              return <p className="text-xs leading-relaxed my-1" {...props}>{children}</p>;
+            },
+            strong({ children, ...props }) {
+              return <strong className="font-semibold text-text-primary" {...props}>{children}</strong>;
+            },
+            ul({ children, ...props }) {
+              return <ul className="list-disc list-inside space-y-0.5 my-1" {...props}>{children}</ul>;
+            },
+            ol({ children, ...props }) {
+              return <ol className="list-decimal list-inside space-y-0.5 my-1" {...props}>{children}</ol>;
+            },
+            li({ children, ...props }) {
+              return <li className="text-xs" {...props}>{children}</li>;
+            },
+            h1({ children, ...props }) {
+              return <h1 className="text-sm font-semibold text-text-primary mt-3 mb-1.5" {...props}>{children}</h1>;
+            },
+            h2({ children, ...props }) {
+              return <h2 className="text-[13px] font-semibold text-text-primary mt-2 mb-1" {...props}>{children}</h2>;
+            },
+            h3({ children, ...props }) {
+              return <h3 className="text-xs font-semibold text-text-primary mt-1.5 mb-1" {...props}>{children}</h3>;
+            },
+            table({ children, ...props }) {
+              return (
+                <div className="overflow-x-auto my-1.5">
+                  <table className="min-w-full text-[10px] border-collapse" {...props}>{children}</table>
+                </div>
+              );
+            },
+            th({ children, ...props }) {
+              return <th className="border border-border/50 px-2 py-1 bg-bg-elevated/50 font-medium text-text-primary text-left" {...props}>{children}</th>;
+            },
+            td({ children, ...props }) {
+              return <td className="border border-border/50 px-2 py-1 text-text-secondary" {...props}>{children}</td>;
+            },
+            blockquote({ children, ...props }) {
+              return (
+                <blockquote className="border-l-2 border-accent-pm/30 pl-3 my-1.5 text-text-tertiary italic" {...props}>
+                  {children}
+                </blockquote>
+              );
+            },
+            a({ href, children, ...props }) {
+              return (
+                <a href={href} target="_blank" rel="noopener noreferrer" className="text-accent-dev underline underline-offset-2 hover:opacity-80" {...props}>
+                  {children}
+                </a>
+              );
+            },
+          }}
+        >
+          {content}
+        </ReactMarkdown>
       </div>
     </div>
   )

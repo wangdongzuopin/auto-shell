@@ -108,11 +108,28 @@ export function MermaidDiagram({ code, className }: MermaidDiagramProps) {
     });
   }, [code]);
 
-  if (error) {
+  if (error && !code) {
     return (
       <div className={cn("rounded-xl border border-danger/30 bg-danger/5 p-3", className)}>
         <p className="text-xs text-danger">{error}</p>
-        <pre className="mt-2 text-[11px] text-text-secondary overflow-x-auto">{code}</pre>
+      </div>
+    );
+  }
+
+  if (error) {
+    // During streaming, mermaid may fail on incomplete syntax — show a subtle loading state instead
+    return (
+      <div className={cn("group relative my-3 rounded-xl border border-border/50 bg-bg-elevated/30 overflow-hidden", className)}>
+        <div className="flex items-center px-3 py-1.5 border-b border-border/30 bg-bg-elevated/50">
+          <span className="text-[10px] font-medium text-text-tertiary uppercase tracking-wider">流程图</span>
+        </div>
+        <div className="flex items-center justify-center p-4 min-h-[120px]">
+          <div className="flex items-center gap-2 text-text-tertiary">
+            <span className="w-1.5 h-1.5 rounded-full bg-accent-pm/60 animate-bounce" style={{ animationDelay: "0ms" }} />
+            <span className="w-1.5 h-1.5 rounded-full bg-accent-pm/60 animate-bounce" style={{ animationDelay: "150ms" }} />
+            <span className="w-1.5 h-1.5 rounded-full bg-accent-pm/60 animate-bounce" style={{ animationDelay: "300ms" }} />
+          </div>
+        </div>
       </div>
     );
   }

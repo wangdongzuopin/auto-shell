@@ -19,7 +19,7 @@ pub struct ToolCall {
 pub enum StreamEvent {
     TextDelta(String),
     ToolCallStarted { id: String, name: String, arguments: String },
-    ToolCallCompleted { id: String, result: String, success: bool },
+    ToolCallCompleted { id: String, name: String, result: String, success: bool },
     Error(String),
     Done,
 }

@@ -10,6 +10,7 @@ pub struct Skill {
     #[sqlx(rename = "type")]
     pub skill_type: String,
     pub category: String,
+    pub role: String,
     pub enabled: bool,
     pub created_at: i64,
 }
@@ -23,6 +24,8 @@ pub struct CreateSkillPayload {
     pub skill_type: String,
     #[serde(default = "default_category")]
     pub category: String,
+    #[serde(default = "default_role")]
+    pub role: String,
 }
 
 fn default_skill_type() -> String {
@@ -33,6 +36,10 @@ fn default_category() -> String {
     "通用".into()
 }
 
+fn default_role() -> String {
+    "both".into()
+}
+
 #[derive(Debug, Deserialize)]
 pub struct UpdateSkillPayload {
     pub id: String,
@@ -40,4 +47,5 @@ pub struct UpdateSkillPayload {
     pub description: Option<String>,
     pub content: Option<String>,
     pub category: Option<String>,
+    pub role: Option<String>,
 }

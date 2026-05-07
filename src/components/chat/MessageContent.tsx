@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
@@ -7,9 +7,8 @@ import { MermaidDiagram } from "@/components/artifacts/MermaidDiagram";
 import { PrototypePreview } from "@/components/artifacts/PrototypePreview";
 import { ThinkingCard, isThinkingContent } from "@/components/artifacts/ThinkingCard";
 import { cn } from "@/lib/utils";
-import { parseBlocks, type ContentBlock } from "@/lib/parseBlocks";
-import { Copy, Check, Brain, ChevronDown } from "lucide-react";
-import { useState } from "react";
+import { parseBlocks } from "@/lib/parseBlocks";
+import { Copy, Check, Brain, ChevronDown, Zap } from "lucide-react";
 
 interface MessageContentProps {
   content: string;
@@ -87,8 +86,37 @@ function ThinkBlock({ content }: { content: string }) {
       </button>
       {open && (
         <div className="px-3 pb-3 pt-0 border-t border-accent-product/10">
-          <div className="text-[11px] leading-relaxed text-text-tertiary whitespace-pre-wrap select-text">
-            {content}
+          <div className="text-[11px] leading-relaxed text-text-tertiary select-text prose prose-sm prose-invert max-w-none">
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              components={{
+                code({ className: codeClassName, children, ...props }) {
+                  const match = /language-(\w+)/.exec(codeClassName || "");
+                  if (!match) {
+                    return (
+                      <code className="px-1 py-0.5 rounded bg-bg-hover/60 text-[10px] font-mono text-accent-dev" {...props}>
+                        {children}
+                      </code>
+                    );
+                  }
+                  return <code className={codeClassName} {...props}>{children}</code>;
+                },
+                p({ children, ...props }) {
+                  return <p className="text-[11px] leading-relaxed my-1" {...props}>{children}</p>;
+                },
+                strong({ children, ...props }) {
+                  return <strong className="font-semibold text-text-secondary" {...props}>{children}</strong>;
+                },
+                ul({ children, ...props }) {
+                  return <ul className="list-disc list-inside space-y-0.5 my-1" {...props}>{children}</ul>;
+                },
+                ol({ children, ...props }) {
+                  return <ol className="list-decimal list-inside space-y-0.5 my-1" {...props}>{children}</ol>;
+                },
+              }}
+            >
+              {content}
+            </ReactMarkdown>
           </div>
         </div>
       )}
@@ -97,18 +125,72 @@ function ThinkBlock({ content }: { content: string }) {
 }
 
 export function MessageContent({ content, className }: MessageContentProps) {
-  const blocks = useMemo(() => parseBlocks(content), [content]);
+  // Extract <!-- skill:XXX --> markers from content
+  const { skillNames, cleanContent } = useMemo(() => {
+    const names: string[] = [];
+    const skillRe = /<!--\s*skill:\s*(.+?)\s*-->/g;
+    let m: RegExpExecArray | null;
+    while ((m = skillRe.exec(content)) !== null) {
+      const name = m[1].trim();
+      if (name && !names.includes(name)) {
+        names.push(name);
+      }
+    }
+    const cleaned = content.replace(skillRe, "").trim();
+    return { skillNames: names, cleanContent: cleaned };
+  }, [content]);
 
-  if (blocks.length === 0) {
+  const blocks = useMemo(() => parseBlocks(cleanContent), [cleanContent]);
+
+  if (blocks.length === 0 && skillNames.length === 0) {
     return (
-      <div className={cn("text-xs leading-relaxed whitespace-pre-wrap break-words", className)}>
-        {content}
+      <div className={cn("text-xs leading-relaxed text-text-secondary prose prose-sm prose-invert max-w-none", className)}>
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm]}
+          components={{
+            code({ className: codeClassName, children, ...props }) {
+              const match = /language-(\w+)/.exec(codeClassName || "");
+              if (!match) {
+                return <code className="px-1 py-0.5 rounded bg-bg-hover/60 text-[10px] font-mono text-accent-dev" {...props}>{children}</code>;
+              }
+              return <code className={codeClassName} {...props}>{children}</code>;
+            },
+            p({ children, ...props }) {
+              return <p className="text-xs leading-relaxed my-1" {...props}>{children}</p>;
+            },
+            strong({ children, ...props }) {
+              return <strong className="font-semibold text-text-primary" {...props}>{children}</strong>;
+            },
+            ul({ children, ...props }) {
+              return <ul className="list-disc list-inside space-y-0.5 my-1" {...props}>{children}</ul>;
+            },
+            ol({ children, ...props }) {
+              return <ol className="list-decimal list-inside space-y-0.5 my-1" {...props}>{children}</ol>;
+            },
+          }}
+        >
+          {cleanContent || content}
+        </ReactMarkdown>
       </div>
     );
   }
 
   return (
     <div className={cn("space-y-2", className)}>
+      {/* Skill invocation badges */}
+      {skillNames.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mb-1">
+          {skillNames.map((name) => (
+            <span
+              key={name}
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium bg-accent-pm/10 text-accent-pm border border-accent-pm/20"
+            >
+              <Zap className="h-2.5 w-2.5" />
+              {name}
+            </span>
+          ))}
+        </div>
+      )}
       {blocks.map((block, i) => {
         switch (block.type) {
           case "think":

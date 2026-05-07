@@ -2,8 +2,11 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useAppStore } from "@/stores/appStore";
 import { useProjectStore } from "@/stores/projectStore";
 import { useSettingsStore } from "@/stores/settingsStore";
+import { useSkillStore } from "@/stores/skillStore";
+import { useDiffStore } from "@/stores/diffStore";
 import { Button } from "@/components/ui/button";
 import { MessageContent } from "@/components/chat/MessageContent";
+import { DiffCard } from "@/components/chat/DiffCard";
 import { cn } from "@/lib/utils";
 import { streamChat, buildSystemPrompt } from "@/services/ai";
 import { fileIpc } from "@/lib/ipc";
@@ -35,6 +38,23 @@ const devSuggestions = [
   { text: "添加新功能：用户登录", icon: PenSquare },
 ];
 
+const toolLabels: Record<string, string> = {
+  read_file: "读取文件",
+  write_file: "写入文件",
+  list_directory: "列出目录",
+  search_code: "搜索代码",
+  search_knowledge: "搜索知识库",
+  get_knowledge: "获取知识",
+  create_knowledge: "创建知识",
+  list_skills: "查询技能",
+};
+
+function getSkillLabel(name: string): string {
+  // Check if the name matches an enabled skill
+  if (toolLabels[name]) return `调用工具：${toolLabels[name]}`;
+  return `调用技能：${name}`;
+}
+
 const pmSuggestions = [
   { text: "帮我设计一个用户积分系统的产品原型", icon: Image },
   { text: "画出用户登录注册的完整流程图", icon: GitBranch },
@@ -63,12 +83,19 @@ export function ChatPage() {
   const [attachedFiles, setAttachedFiles] = useState<{ name: string; content: string; type: string; size: number }[]>([]);
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [projectContext, setProjectContext] = useState("");
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [toolCallBadges, setToolCallBadges] = useState<{id: string, name: string, status: "running"|"done", success?: boolean}[]>([]);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const tokenBufferRef = useRef("");
+  const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const toolCallArgsRef = useRef<Map<string, { name: string; arguments: string }>>(new Map());
 
   const isDev = role === "developer";
+  const conversationDiffs = useDiffStore(
+    (s) => currentConversationId ? s.diffs.filter((d) => d.conversationId === currentConversationId) : []
+  );
   const suggestions = isDev ? devSuggestions : pmSuggestions;
 
   const currentProject = projects.find((p) => p.id === currentProjectId);
@@ -86,9 +113,12 @@ export function ChatPage() {
     }
   }, [currentConversationId]);
 
+  // Scroll to bottom when a new message is added (user send or AI response complete)
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, streamingContent]);
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
+  }, [messages]);
 
   // Load project directory context when current project changes
   useEffect(() => {
@@ -136,7 +166,8 @@ export function ChatPage() {
       return;
     }
 
-    const systemPrompt = buildSystemPrompt(role, mode) + projectContext;
+    const enabledSkills = useSkillStore.getState().skills.filter((s) => s.enabled);
+    const systemPrompt = buildSystemPrompt(role, mode, enabledSkills) + projectContext;
     const conversationMessages = getMessages(currentConversationId);
     const chatMessages = [
       { role: "system" as const, content: systemPrompt },
@@ -147,24 +178,51 @@ export function ChatPage() {
     const abort = new AbortController();
     abortRef.current = abort;
     setStreamingContent("");
+    setToolCallBadges([]);
+    toolCallArgsRef.current.clear();
+
+    const { addDiff } = useDiffStore.getState();
 
     streamChat(
       chatMessages,
       config,
       {
         onToken: (_token) => {
-          setStreamingContent((prev) => {
-            const raw = prev + _token;
-            // Strip think tags so they don't leak during streaming
-            // Remove closed think blocks, and hide unclosed ones
-            return raw.replace(/<think>[\s\S]*?(?:<\/think>|$)/gi, "");
-          });
+          tokenBufferRef.current += _token;
+          // Start a steady tick to leak clean tokens from buffer to display
+          if (!tickRef.current) {
+            tickRef.current = setInterval(() => {
+              let buf = tokenBufferRef.current;
+              if (!buf) return;
+              // Strip <think> blocks and bare </think> from buffer before display
+              buf = buf.replace(/<think>[\s\S]*?(?:<\/think>|$)/gi, "").replace(/<\/think>/gi, "");
+              tokenBufferRef.current = buf;
+              if (!buf) return;
+              const chunk = buf.slice(0, 3);
+              tokenBufferRef.current = buf.slice(3);
+              setStreamingContent((prev) => prev + chunk);
+            }, 20);
+          }
         },
         onDone: (fullText) => {
-          addMessage(currentConversationId, "assistant", fullText);
-          setStreamingContent("");
-          setSending(false);
-          abortRef.current = null;
+          // Stop the tick timer
+          if (tickRef.current) {
+            clearInterval(tickRef.current);
+            tickRef.current = null;
+          }
+          // Flush remaining buffered tokens immediately (buffer already clean)
+          if (tokenBufferRef.current) {
+            const remaining = tokenBufferRef.current;
+            tokenBufferRef.current = "";
+            setStreamingContent((prev) => prev + remaining);
+          }
+          // Let the final render settle before adding to messages
+          setTimeout(() => {
+            addMessage(currentConversationId, "assistant", fullText);
+            setStreamingContent("");
+            setSending(false);
+            abortRef.current = null;
+          }, 80);
         },
         onError: (err) => {
           addMessage(currentConversationId, "assistant", `❌ ${err.message}`);
@@ -172,8 +230,38 @@ export function ChatPage() {
           setSending(false);
           abortRef.current = null;
         },
+        onToolCallStarted: (data) => {
+          toolCallArgsRef.current.set(data.id, { name: data.name, arguments: data.arguments });
+          setToolCallBadges((prev) => [...prev, { id: data.id, name: data.name, status: "running" }]);
+        },
+        onToolCallCompleted: (data) => {
+          const stored = toolCallArgsRef.current.get(data.id);
+          if (!stored) return;
+          toolCallArgsRef.current.delete(data.id);
+
+          setToolCallBadges((prev) => prev.map((b) =>
+            b.id === data.id ? { ...b, status: "done", success: data.success } : b
+          ));
+
+          if (stored.name === "write_file" && data.success) {
+            try {
+              const args = JSON.parse(stored.arguments);
+              const filePath = args.path || "";
+              const content = args.content || "";
+              if (filePath && content) {
+                addDiff({
+                  path: filePath,
+                  content,
+                  operation: "add",
+                  conversationId: currentConversationId,
+                });
+              }
+            } catch { /* ignore parse errors */ }
+          }
+        },
       },
-      abort.signal
+      abort.signal,
+      isDev && mode === "edit"
     );
   }, [input, currentConversationId, sending, role, mode, getMessages, addMessage, attachedFiles]);
 
@@ -434,7 +522,7 @@ export function ChatPage() {
       </div>
 
       {/* Messages */}
-      <div className="relative flex-1 overflow-y-auto">
+      <div ref={scrollRef} className="relative flex-1 overflow-y-auto">
         <div className="px-5 py-4 space-y-4">
           {showWelcome && (
             <div className="animate-slide-up">
@@ -572,7 +660,43 @@ export function ChatPage() {
             </div>
           )}
 
-          <div ref={messagesEndRef} />
+          {/* Diff cards for current conversation */}
+          {conversationDiffs.length > 0 && (
+            <div className="flex flex-col gap-2 px-1 mt-2">
+              {conversationDiffs.map((d) => (
+                <DiffCard key={d.id} diff={d} />
+              ))}
+            </div>
+          )}
+
+          {/* Tool call badges */}
+          {toolCallBadges.length > 0 && (
+            <div className="flex flex-col gap-1.5 px-1 mt-2">
+              {toolCallBadges.map((badge) => {
+                const skillLabel = getSkillLabel(badge.name);
+                return (
+                  <div
+                    key={badge.id}
+                    className={cn(
+                      "flex items-center gap-2 py-1.5 px-2.5 rounded-lg text-[11px] transition-all",
+                      badge.status === "running"
+                        ? "bg-accent-dev/5 border border-accent-dev/20 text-accent-dev"
+                        : badge.success === false
+                          ? "bg-danger/5 border border-danger/20 text-danger"
+                          : "bg-success/5 border border-success/20 text-success"
+                    )}
+                  >
+                    <span className={cn(
+                      "w-1.5 h-1.5 rounded-full",
+                      badge.status === "running" ? "bg-accent-dev animate-pulse" : "bg-success"
+                    )} />
+                    <span className="text-text-secondary">{skillLabel}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
         </div>
       </div>
 
@@ -653,6 +777,14 @@ export function ChatPage() {
               <Button
                 onClick={() => {
                   abortRef.current?.abort();
+                  if (tickRef.current) {
+                    clearInterval(tickRef.current);
+                    tickRef.current = null;
+                  }
+                  // Flush remaining buffer on stop
+                  if (tokenBufferRef.current) {
+                    tokenBufferRef.current = "";
+                  }
                   setSending(false);
                   if (streamingContent) {
                     addMessage(currentConversationId!, "assistant", streamingContent);

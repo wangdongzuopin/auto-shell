@@ -110,6 +110,7 @@ export interface Skill {
   content: string
   skill_type: string
   category: string
+  role: string
   enabled: boolean
   created_at: number
 }
@@ -120,6 +121,7 @@ export interface CreateSkillPayload {
   content: string
   skill_type?: string
   category?: string
+  role?: string
 }
 
 export interface UpdateSkillPayload {
@@ -146,6 +148,6 @@ export interface ToolCall {
 export type StreamEvent =
   | { type: 'TextDelta'; data: string }
   | { type: 'ToolCallStarted'; data: { id: string; name: string; arguments: string } }
-  | { type: 'ToolCallCompleted'; data: { id: string; result: string; success: boolean } }
+  | { type: 'ToolCallCompleted'; data: { id: string; name: string; result: string; success: boolean } }
   | { type: 'Error'; data: string }
   | { type: 'Done' }

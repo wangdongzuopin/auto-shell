@@ -64,13 +64,21 @@ function splitCodeBlocks(mdContent: string): ContentBlock[] {
     const text = mdContent.slice(lastIndex).trim();
     if (text) {
       // Check for unclosed ```html (streaming) — show as live prototype preview
-      const unclosedHtml = /```(html|htm)\n([\s\S]*)$/i.exec(text);
+      const unclosedHtml = /```(html|htm)\s*\n?([\s\S]*)$/i.exec(text);
       if (unclosedHtml) {
         const prefix = text.slice(0, unclosedHtml.index).trim();
         if (prefix) blocks.push({ type: "markdown", content: prefix });
         blocks.push({ type: "prototype", content: unclosedHtml[2].trim(), language: "html" });
       } else {
-        blocks.push({ type: "markdown", content: text });
+        // Check for unclosed ```mermaid (streaming) — show as live diagram
+        const unclosedMermaid = /```mermaid\s*\n?([\s\S]*)$/i.exec(text);
+        if (unclosedMermaid) {
+          const prefix = text.slice(0, unclosedMermaid.index).trim();
+          if (prefix) blocks.push({ type: "markdown", content: prefix });
+          blocks.push({ type: "mermaid", content: unclosedMermaid[1].trim() });
+        } else {
+          blocks.push({ type: "markdown", content: text });
+        }
       }
     }
   }

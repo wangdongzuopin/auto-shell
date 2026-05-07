@@ -1,20 +1,15 @@
-import { useState } from "react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
 import { FileDiff, RotateCcw, Eye } from "lucide-react"
-
-interface DiffEntry {
-  id: string
-  path: string
-  diff: string
-  type: "add" | "modify" | "delete"
-}
+import { useDiffStore, type DiffEntry } from "@/stores/diffStore"
+import { useProjectStore } from "@/stores/projectStore"
 
 export function DiffView() {
-  // In a full implementation, these would come from tool call results
-  const [diffs] = useState<DiffEntry[]>([])
+  const { getByConversation } = useDiffStore()
+  const currentConversationId = useProjectStore((s) => s.currentConversationId)
+  const diffs = currentConversationId ? getByConversation(currentConversationId) : []
 
-  const getTypeStyle = (type: DiffEntry["type"]) => {
+  const getTypeStyle = (type: DiffEntry["operation"]) => {
     switch (type) {
       case "add": return "text-success"
       case "modify": return "text-warning"
@@ -22,7 +17,7 @@ export function DiffView() {
     }
   }
 
-  const getTypeLabel = (type: DiffEntry["type"]) => {
+  const getTypeLabel = (type: DiffEntry["operation"]) => {
     switch (type) {
       case "add": return "A"
       case "modify": return "M"
@@ -52,8 +47,8 @@ export function DiffView() {
           >
             <div className="flex items-center justify-between mb-1.5">
               <div className="flex items-center gap-2 min-w-0">
-                <span className={cn("text-[10px] font-mono font-bold", getTypeStyle(diff.type))}>
-                  {getTypeLabel(diff.type)}
+                <span className={cn("text-[10px] font-mono font-bold", getTypeStyle(diff.operation))}>
+                  {getTypeLabel(diff.operation)}
                 </span>
                 <span className="text-[11px] text-text-primary font-mono truncate">{diff.path}</span>
               </div>
@@ -67,7 +62,7 @@ export function DiffView() {
               </div>
             </div>
             <pre className="text-[10px] text-text-secondary font-mono leading-relaxed max-h-32 overflow-hidden opacity-70">
-              {diff.diff}
+              {diff.content}
             </pre>
           </div>
         ))}
