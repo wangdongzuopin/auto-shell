@@ -5,3 +5,7 @@ pub mod skill_commands;
 pub mod chat_commands;
 pub mod settings_commands;
 pub mod ai_commands;
+pub mod mcp_commands;
+pub mod terminal_commands;
+pub mod git_commands;
+pub mod undo_commands;

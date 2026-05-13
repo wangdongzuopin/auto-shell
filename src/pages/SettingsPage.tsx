@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useAppStore } from "@/stores/appStore";
 import { useSettingsStore, type AIProvider } from "@/stores/settingsStore";
 import { Button } from "@/components/ui/button";
@@ -13,19 +14,33 @@ import {
   Database,
   BookOpen,
   Cpu,
+  Settings2,
+  Plug,
+  Plus,
+  Play,
+  Square,
+  Trash2,
+  Loader2,
 } from "lucide-react";
+import { useMcpStore } from "@/stores/mcpStore";
+import type { McpServerConfig } from "@/types/commands";
 
-type SettingsTab = "ai" | "knowledge" | "skills";
+type SettingsTab = "ai" | "general" | "knowledge" | "skills" | "mcp";
 
 export function SettingsPage() {
+  const { t } = useTranslation();
   const { role, setMainView } = useAppStore();
-  const { settings, saveAIConfig } = useSettingsStore();
+  const { settings, saveAIConfig, setLanguage } = useSettingsStore();
   const [tab, setTab] = useState<SettingsTab>("ai");
   const [showKey, setShowKey] = useState(false);
 
-  // AI draft state — changes don't persist until saved
   const [draft, setDraft] = useState(settings.ai);
   const [saved, setSaved] = useState(true);
+
+  // MCP state
+  const { servers, addServer, removeServer, startServer, stopServer, loadServers } = useMcpStore();
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [mcpForm, setMcpForm] = useState({ name: "", command: "", args: "" });
 
   const ai = draft;
   const isDev = role === "developer";
@@ -40,6 +55,37 @@ export function SettingsPage() {
     setSaved(true);
   };
 
+  useEffect(() => {
+    if (tab === "mcp") loadServers()
+  }, [tab, loadServers])
+
+  const handleAddServer = async () => {
+    const args = mcpForm.args
+      .split("\n")
+      .map((s) => s.trim())
+      .filter(Boolean)
+    const config: McpServerConfig = {
+      id: "",
+      name: mcpForm.name,
+      command: mcpForm.command,
+      args,
+      enabled: true,
+      transport_type: "stdio",
+    }
+    await addServer(config)
+    setMcpForm({ name: "", command: "", args: "" })
+    setShowAddDialog(false)
+  }
+
+  const statusIcon = (status: string) => {
+    switch (status) {
+      case "Connected": return <span className="h-2 w-2 rounded-full bg-success" />
+      case "Connecting": return <Loader2 className="h-3 w-3 animate-spin text-amber-500" />
+      case "Error": return <span className="h-2 w-2 rounded-full bg-danger" />
+      default: return <span className="h-2 w-2 rounded-full bg-text-tertiary" />
+    }
+  }
+
   const providers = [
     { id: "deepseek" as AIProvider,    label: "DeepSeek",       desc: "DeepSeek V4 / R1 系列",          model: "deepseek-chat",              baseUrl: "https://api.deepseek.com/v1" },
     { id: "zhipu" as AIProvider,       label: "智谱 GLM",       desc: "GLM-5 系列",                     model: "glm-4-flash",                baseUrl: "https://open.bigmodel.cn/api/paas/v4" },
@@ -52,9 +98,11 @@ export function SettingsPage() {
   ];
 
   const tabs: { id: SettingsTab; label: string; icon: typeof Cpu }[] = [
-    { id: "ai", label: "AI 服务", icon: Cpu },
-    { id: "knowledge", label: "知识库", icon: Database },
-    { id: "skills", label: "技能库", icon: BookOpen },
+    { id: "general", label: t("settings.general"), icon: Settings2 },
+    { id: "ai", label: t("settings.ai"), icon: Cpu },
+    { id: "knowledge", label: t("knowledge.title"), icon: Database },
+    { id: "skills", label: t("skills.title"), icon: BookOpen },
+    { id: "mcp", label: t("mcp.title"), icon: Plug },
   ];
 
   return (
@@ -69,7 +117,7 @@ export function SettingsPage() {
         >
           <ArrowLeft className="h-4 w-4" />
         </button>
-        <h2 className="text-sm font-semibold text-text-primary">设置</h2>
+        <h2 className="text-sm font-semibold text-text-primary">{t("settings.title")}</h2>
       </div>
 
       {/* Tab bar */}
@@ -97,6 +145,31 @@ export function SettingsPage() {
       {/* Content */}
       <div className="relative flex-1 overflow-y-auto px-5 py-4">
         <div className="max-w-2xl mx-auto space-y-6">
+
+          {/* ===== General Settings ===== */}
+          {tab === "general" && (
+            <section className="space-y-6">
+              <div>
+                <h4 className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-3">{t("settings.language")}</h4>
+                <div className="flex gap-2">
+                  {(["zh", "en"] as const).map((lang) => (
+                    <button
+                      key={lang}
+                      onClick={() => setLanguage(lang)}
+                      className={cn(
+                        "px-4 py-2 rounded-lg border text-xs font-medium transition-all duration-200",
+                        settings.language === lang
+                          ? "border-accent-dev/40 bg-accent-dev/10 text-accent-dev"
+                          : "border-border/50 text-text-secondary hover:border-border"
+                      )}
+                    >
+                      {t(`common.${lang}`)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </section>
+          )}
 
           {/* ===== AI Settings ===== */}
           {tab === "ai" && (
@@ -128,7 +201,7 @@ export function SettingsPage() {
 
               <section className="space-y-3">
                 <div>
-                  <label className="text-[10px] font-medium text-text-tertiary uppercase tracking-wider">API Key</label>
+                  <label className="text-[10px] font-medium text-text-tertiary uppercase tracking-wider">{t("settings.apiKey")}</label>
                   <div className="relative mt-1">
                     <input
                       type={showKey ? "text" : "password"}
@@ -152,7 +225,7 @@ export function SettingsPage() {
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-medium text-text-tertiary uppercase tracking-wider">API 地址</label>
+                  <label className="text-[10px] font-medium text-text-tertiary uppercase tracking-wider">{t("settings.baseUrl")}</label>
                   <input
                     type="text"
                     value={ai.baseUrl}
@@ -167,7 +240,7 @@ export function SettingsPage() {
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-medium text-text-tertiary uppercase tracking-wider">模型</label>
+                  <label className="text-[10px] font-medium text-text-tertiary uppercase tracking-wider">{t("settings.model")}</label>
                   <input
                     type="text"
                     value={ai.model}
@@ -204,13 +277,13 @@ export function SettingsPage() {
                   onClick={handleSave}
                   className="gap-1.5 h-8 text-xs"
                 >
-                  保存
+                  {t("settings.save")}
                 </Button>
                 {saved && (
-                  <span className="text-[10px] text-success">已保存</span>
+                  <span className="text-[10px] text-success">{t("settings.saved")}</span>
                 )}
                 {!saved && (
-                  <span className="text-[10px] text-warning">有未保存的更改</span>
+                  <span className="text-[10px] text-amber-500">*</span>
                 )}
               </div>
             </>
@@ -222,9 +295,179 @@ export function SettingsPage() {
           {/* ===== Skills Library ===== */}
           {tab === "skills" && <SkillsPanel />}
 
+          {/* ===== MCP Servers ===== */}
+          {tab === "mcp" && (
+            <section className="space-y-4">
+              <div className="flex items-center justify-between">
+                <p className="text-[11px] text-text-tertiary">{t("mcp.noServersHint")}</p>
+                <button
+                  onClick={() => setShowAddDialog(true)}
+                  className={cn(
+                    "flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium",
+                    "bg-accent-dev/10 text-accent-dev hover:bg-accent-dev/20 transition-colors"
+                  )}
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  {t("mcp.addServer")}
+                </button>
+              </div>
+
+              {servers.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-text-tertiary">
+                  <Plug className="h-8 w-8 mb-2 opacity-30" />
+                  <p className="text-xs">{t("mcp.noServers")}</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {servers.map((s) => (
+                    <div
+                      key={s.config.id}
+                      className="p-4 rounded-xl border border-border/50 bg-bg-elevated/40"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          {statusIcon(s.status)}
+                          <span className="text-sm font-semibold text-text-primary">{s.config.name}</span>
+                          <span className="text-[10px] text-text-tertiary font-mono">{s.config.command}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          {s.status === "Connected" ? (
+                            <button
+                              onClick={() => stopServer(s.config.id)}
+                              className="p-1.5 rounded text-text-tertiary hover:text-amber-500 hover:bg-bg-hover/40 transition-colors"
+                              title={t("mcp.stop")}
+                            >
+                              <Square className="h-3.5 w-3.5" />
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => startServer(s.config.id)}
+                              className="p-1.5 rounded text-text-tertiary hover:text-success hover:bg-bg-hover/40 transition-colors"
+                              title={t("mcp.start")}
+                            >
+                              <Play className="h-3.5 w-3.5" />
+                            </button>
+                          )}
+                          <button
+                            onClick={() => {
+                              if (confirm(t("mcp.removeConfirm", { name: s.config.name }))) {
+                                removeServer(s.config.id)
+                              }
+                            }}
+                            className="p-1.5 rounded text-text-tertiary hover:text-danger hover:bg-bg-hover/40 transition-colors"
+                            title={t("mcp.remove")}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4 text-[10px] text-text-tertiary">
+                        <span>
+                          {t("mcp.status")}: {t(`mcp.${s.status === "Connected" ? "connected" : s.status === "Connecting" ? "connecting" : s.status === "Error" ? "error" : "disconnected"}`)}
+                        </span>
+                        <span>
+                          {t("mcp.tools")}: {s.tools.length}
+                        </span>
+                      </div>
+                      {s.tools.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {s.tools.map((tool) => (
+                            <span
+                              key={tool.name}
+                              className="px-2 py-0.5 rounded text-[10px] bg-bg-hover/60 text-text-secondary font-mono"
+                            >
+                              {tool.name}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+          )}
+
+          {/* ===== Add MCP Server Dialog ===== */}
+          {showAddDialog && (
+            <>
+              <div className="fixed inset-0 bg-black/30 z-40" onClick={() => setShowAddDialog(false)} />
+              <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
+                <div className="pointer-events-auto w-[420px] p-6 rounded-2xl border border-border/50 bg-bg-base shadow-xl">
+                  <h3 className="text-sm font-semibold text-text-primary mb-4">{t("mcp.addDialogTitle")}</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-[10px] font-medium text-text-tertiary uppercase tracking-wider">{t("mcp.serverName")}</label>
+                      <input
+                        type="text"
+                        value={mcpForm.name}
+                        onChange={(e) => setMcpForm((f) => ({ ...f, name: e.target.value }))}
+                        placeholder={t("mcp.serverNamePlaceholder")}
+                        className={cn(
+                          "w-full mt-1 px-3 py-2 rounded-lg border text-xs",
+                          "bg-bg-elevated/60 text-text-primary placeholder:text-text-tertiary",
+                          "border-border/50 focus:border-accent-dev/30 focus:outline-none focus:ring-1 focus:ring-accent-dev/20"
+                        )}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-medium text-text-tertiary uppercase tracking-wider">{t("mcp.serverCommand")}</label>
+                      <input
+                        type="text"
+                        value={mcpForm.command}
+                        onChange={(e) => setMcpForm((f) => ({ ...f, command: e.target.value }))}
+                        placeholder={t("mcp.serverCommandPlaceholder")}
+                        className={cn(
+                          "w-full mt-1 px-3 py-2 rounded-lg border text-xs font-mono",
+                          "bg-bg-elevated/60 text-text-primary placeholder:text-text-tertiary",
+                          "border-border/50 focus:border-accent-dev/30 focus:outline-none focus:ring-1 focus:ring-accent-dev/20"
+                        )}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-medium text-text-tertiary uppercase tracking-wider">{t("mcp.serverArgs")}</label>
+                      <textarea
+                        value={mcpForm.args}
+                        onChange={(e) => setMcpForm((f) => ({ ...f, args: e.target.value }))}
+                        placeholder={t("mcp.serverArgsPlaceholder")}
+                        rows={4}
+                        className={cn(
+                          "w-full mt-1 px-3 py-2 rounded-lg border text-xs font-mono resize-none",
+                          "bg-bg-elevated/60 text-text-primary placeholder:text-text-tertiary",
+                          "border-border/50 focus:border-accent-dev/30 focus:outline-none focus:ring-1 focus:ring-accent-dev/20"
+                        )}
+                      />
+                      <p className="text-[9px] text-text-tertiary mt-1">{t("mcp.argsHint")}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-end gap-2 mt-4">
+                    <button
+                      onClick={() => setShowAddDialog(false)}
+                      className="px-3 py-1.5 rounded-lg text-xs text-text-tertiary hover:text-text-primary hover:bg-bg-hover/40 transition-colors"
+                    >
+                      {t("common.cancel")}
+                    </button>
+                    <button
+                      onClick={handleAddServer}
+                      disabled={!mcpForm.name || !mcpForm.command}
+                      className={cn(
+                        "px-4 py-1.5 rounded-lg text-xs font-medium transition-colors",
+                        mcpForm.name && mcpForm.command
+                          ? "bg-accent-dev/10 text-accent-dev hover:bg-accent-dev/20"
+                          : "bg-bg-hover/40 text-text-tertiary cursor-not-allowed"
+                      )}
+                    >
+                      {t("mcp.saveServer")}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
           {/* About */}
           <section className="pt-4 border-t border-border/50">
-            <h4 className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">关于</h4>
+            <h4 className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">pizz v0.1.0</h4>
             <div className="text-[11px] text-text-tertiary space-y-1">
               <p>pizz v0.1.0</p>
               <p>个人全栈开发者的 AI 工作站</p>

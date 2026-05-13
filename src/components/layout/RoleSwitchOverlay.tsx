@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { useAppStore } from "@/stores/appStore";
 import { cn } from "@/lib/utils";
 import { Code2, PenSquare } from "lucide-react";
 
 export function RoleSwitchOverlay() {
+  const { t } = useTranslation();
   const { pendingRole, isTransitioning, confirmRoleSwitch, cancelRoleSwitch } =
     useAppStore();
   const [progress, setProgress] = useState(0);
@@ -74,20 +76,19 @@ export function RoleSwitchOverlay() {
             </div>
           </div>
           <h3 className="text-base font-semibold text-text-primary text-center mb-1.5">
-            切换角色
+            {t("roles.switchTitle")}
           </h3>
           <p className="text-sm text-text-secondary text-center mb-5">
-            确定要切换到{isDev ? "「开发者」" : "「产品经理」"}模式吗？
             {isDev
-              ? " 开发者模式提供代码分析、编辑和架构工具。"
-              : " 产品模式提供原型设计、流程图和需求分析工具。"}
+              ? t("roles.switchConfirm", { role: "「开发者」" }) + " " + t("roles.devDesc")
+              : t("roles.switchConfirm", { role: "「产品经理」" }) + " " + t("roles.pmDesc")}
           </p>
           <div className="flex items-center gap-2.5">
             <button
               onClick={cancelRoleSwitch}
               className="flex-1 px-4 py-2 rounded-lg text-xs font-medium text-text-secondary hover:text-text-primary hover:bg-bg-hover/40 border border-border/50 transition-all duration-200"
             >
-              取消
+              {t("roles.cancel")}
             </button>
             <button
               onClick={confirmRoleSwitch}
@@ -96,7 +97,7 @@ export function RoleSwitchOverlay() {
                 isDev ? "bg-accent-dev hover:brightness-110" : "bg-accent-pm hover:brightness-110"
               )}
             >
-              确认切换
+              {t("roles.confirmSwitch")}
             </button>
           </div>
         </div>
@@ -120,7 +121,9 @@ export function RoleSwitchOverlay() {
             </div>
           </div>
           <p className="text-sm font-medium text-text-primary text-center mb-4">
-            正在切换到{isDev ? "开发者" : "产品经理"}模式...
+            {isDev
+              ? t("roles.switchingTo", { role: "开发者" })
+              : t("roles.switchingTo", { role: "产品经理" })}
           </p>
           <div className="relative h-1.5 rounded-full bg-bg-elevated overflow-hidden">
             <div
@@ -132,7 +135,9 @@ export function RoleSwitchOverlay() {
             />
           </div>
           <p className="mt-2 text-[10px] text-text-tertiary text-center">
-            正在加载{isDev ? "开发" : "产品"}工具...
+            {isDev
+              ? t("roles.loadingTools", { role: "开发" })
+              : t("roles.loadingTools", { role: "产品" })}
           </p>
         </div>
       )}

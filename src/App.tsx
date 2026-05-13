@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useTheme } from "@/hooks/useTheme";
 import { useAppStore, type AppRole, type ThemeMode } from "@/stores/appStore";
 import { useProjectStore } from "@/stores/projectStore";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { useSkillStore } from "@/stores/skillStore";
+import { useMcpStore } from "@/stores/mcpStore";
 import { settingsIpc } from "@/lib/ipc";
 import { TitleBar } from "@/components/layout/TitleBar";
 import { Sidebar } from "@/components/layout/Sidebar";
@@ -21,6 +23,7 @@ type AppPhase = "loading" | "onboarding" | "ready";
 
 export default function App() {
   useTheme();
+  const { t, i18n } = useTranslation();
   const { mainView, role } = useAppStore();
   const [appPhase, setAppPhase] = useState<AppPhase>("loading");
 
@@ -31,6 +34,15 @@ export default function App() {
         useSettingsStore.getState().loadSettings(),
         useSkillStore.getState().loadSkills(),
       ]);
+
+      // Reconnect MCP servers in background (non-blocking)
+      useMcpStore.getState().reconnectAll();
+
+      // Sync language from settings
+      const lang = useSettingsStore.getState().settings.language;
+      if (lang !== i18n.language) {
+        i18n.changeLanguage(lang);
+      }
 
       // Restore persisted role/theme
       try {
@@ -56,6 +68,16 @@ export default function App() {
     init();
   }, []);
 
+  // Keep i18n in sync with settings
+  useEffect(() => {
+    const sub = useSettingsStore.subscribe((s) => {
+      if (s.settings.language !== i18n.language) {
+        i18n.changeLanguage(s.settings.language);
+      }
+    });
+    return sub;
+  }, [i18n]);
+
   if (appPhase === "loading") {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-bg-base">
@@ -63,7 +85,7 @@ export default function App() {
           <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-accent-dev/10 text-accent-dev">
             <Hammer className="h-8 w-8" />
           </div>
-          <span className="text-sm text-text-secondary">正在启动 pizz...</span>
+          <span className="text-sm text-text-secondary">{t("app.loading")}</span>
         </div>
       </div>
     );

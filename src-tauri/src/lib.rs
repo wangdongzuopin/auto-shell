@@ -1,7 +1,13 @@
+mod crypto;
 mod db;
 mod error;
 mod models;
 mod state;
+mod git;
+mod mcp;
+mod terminal;
+
+pub use terminal::TerminalEvent;
 
 mod commands;
 mod tools;
@@ -18,11 +24,10 @@ use commands::skill_commands;
 use commands::chat_commands;
 use commands::settings_commands;
 use commands::ai_commands;
-
-#[tauri::command]
-fn greet(name: &str) -> String {
-    format!("你好，{}！欢迎使用 AutoForge", name)
-}
+use commands::mcp_commands;
+use commands::terminal_commands;
+use commands::git_commands;
+use commands::undo_commands;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -34,26 +39,38 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(
             tauri_plugin_sql::Builder::default()
-                .add_migrations("sqlite:autoforge.db", migrations)
+                .add_migrations("sqlite:pizz.db", migrations)
                 .build(),
         )
         .setup(|app| {
             let handle = app.handle().clone();
+
+            // Load or generate encryption key
+            let key_path = app.path().app_data_dir().unwrap().join(".pizz_key");
+            let encryption_key = if key_path.exists() {
+                let bytes = std::fs::read(&key_path).expect("Failed to read encryption key");
+                bytes.try_into().expect("Invalid encryption key length")
+            } else {
+                let key = crate::crypto::generate_key();
+                std::fs::write(&key_path, key).expect("Failed to write encryption key");
+                println!("[pizz] Generated new encryption key");
+                key
+            };
+
             tauri::async_runtime::spawn(async move {
                 match db::init_database(&handle).await {
                     Ok(pool) => {
-                        handle.manage(AppState::new(pool));
-                        println!("[AutoForge] AppState initialized");
+                        handle.manage(AppState::new(pool, encryption_key));
+                        println!("[pizz] AppState initialized");
                     }
                     Err(e) => {
-                        eprintln!("[AutoForge] Database init failed: {}", e);
+                        eprintln!("[pizz] Database init failed: {}", e);
                     }
                 }
             });
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
-            greet,
             // Project commands
             project_commands::list_projects,
             project_commands::get_project,
@@ -92,7 +109,28 @@ pub fn run() {
             settings_commands::set_setting,
             // AI commands
             ai_commands::stream_ai_chat,
+            // MCP commands
+            mcp_commands::list_mcp_servers,
+            mcp_commands::add_mcp_server,
+            mcp_commands::remove_mcp_server,
+            mcp_commands::start_mcp_server,
+            mcp_commands::stop_mcp_server,
+            mcp_commands::get_mcp_tools,
+            mcp_commands::reconnect_mcp_servers,
+            // Terminal commands
+            terminal_commands::terminal_spawn,
+            terminal_commands::terminal_write,
+            terminal_commands::terminal_resize,
+            terminal_commands::terminal_kill,
+            // Git commands
+            git_commands::git_status,
+            git_commands::git_diff,
+            git_commands::git_log,
+            // Undo commands
+            undo_commands::undo_last_edit,
+            undo_commands::list_checkpoints,
+            undo_commands::clear_checkpoints,
         ])
         .run(tauri::generate_context!())
-        .expect("error while running AutoForge");
+        .expect("error while running pizz");
 }

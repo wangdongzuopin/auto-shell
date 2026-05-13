@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -95,6 +97,53 @@ pub fn all_tools() -> Vec<ToolDefinition> {
             parameters: serde_json::json!({
                 "type": "object",
                 "properties": {}
+            }),
+        },
+        ToolDefinition {
+            name: "run_command".into(),
+            description: "Run a shell command and return stdout/stderr output. Use for build, test, git, and other CLI operations. Timeout: 30s.".into(),
+            parameters: serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "command": { "type": "string", "description": "The shell command to run" },
+                    "cwd": { "type": "string", "description": "Working directory for the command (default: current project root)" }
+                },
+                "required": ["command"]
+            }),
+        },
+        ToolDefinition {
+            name: "git_status".into(),
+            description: "Get Git repository status: current branch, changed files, staged/unstaged, recent commits".into(),
+            parameters: serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "repo_path": { "type": "string", "description": "Path to the git repository (default: current project root)" }
+                },
+                "required": []
+            }),
+        },
+        ToolDefinition {
+            name: "git_diff".into(),
+            description: "Get Git diff (unified format) for unstaged or staged changes. Use before making commits to review changes.".into(),
+            parameters: serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "repo_path": { "type": "string", "description": "Path to the git repository (default: current project root)" },
+                    "staged": { "type": "boolean", "description": "If true, show staged changes; otherwise show unstaged" }
+                },
+                "required": []
+            }),
+        },
+        ToolDefinition {
+            name: "undo_last_edit".into(),
+            description: "Undo the last file edit in the current conversation. Restores a file to its state before the most recent write_file call.".into(),
+            parameters: serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "file_path": { "type": "string", "description": "Path to the file to undo" },
+                    "conversation_id": { "type": "string", "description": "Current conversation ID" }
+                },
+                "required": ["file_path", "conversation_id"]
             }),
         },
     ]

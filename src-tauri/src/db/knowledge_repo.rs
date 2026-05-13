@@ -7,6 +7,7 @@ pub async fn list_all(pool: &SqlitePool) -> Result<Vec<KnowledgeEntry>, AppError
         .fetch_all(pool).await.map_err(AppError::from)
 }
 
+#[allow(dead_code)]
 pub async fn list_by_project(pool: &SqlitePool, project_id: &str) -> Result<Vec<KnowledgeEntry>, AppError> {
     sqlx::query_as::<_, KnowledgeEntry>(
         "SELECT * FROM knowledge_entries WHERE project_id = ? ORDER BY updated_at DESC"

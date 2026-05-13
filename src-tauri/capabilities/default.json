@@ -1,6 +1,6 @@
 {
   "identifier": "default",
-  "description": "Default capabilities for AutoForge",
+  "description": "Default capabilities for pizz",
   "windows": ["main"],
   "permissions": [
     "core:default",

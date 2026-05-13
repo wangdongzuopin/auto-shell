@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react"
+import { useTranslation } from "react-i18next"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import { cn } from "@/lib/utils"
@@ -11,12 +12,12 @@ interface ThinkingCardProps {
 
 type CardType = "analysis" | "compare" | "decision" | "evaluate" | "general"
 
-const typeConfig: Record<CardType, { icon: typeof Brain; label: string; accent: string }> = {
-  analysis:  { icon: Brain,       label: "问题分析", accent: "border-l-forge-blue" },
-  compare:   { icon: GitCompare,  label: "方案对比", accent: "border-l-forge-green" },
-  decision:  { icon: GitBranch,   label: "决策框架", accent: "border-l-accent-pm" },
-  evaluate:  { icon: BarChart3,   label: "评估分析", accent: "border-l-forge-orange" },
-  general:   { icon: Lightbulb,   label: "思维整理", accent: "border-l-forge-purple" },
+const typeLabelKeys: Record<CardType, string> = {
+  analysis:  "artifacts.thinkingAnalysis",
+  compare:   "artifacts.thinkingCompare",
+  decision:  "artifacts.thinkingDecision",
+  evaluate:  "artifacts.thinkingEvaluate",
+  general:   "artifacts.thinkingGeneral",
 }
 
 function detectCardType(text: string): CardType {
@@ -45,9 +46,22 @@ export function isThinkingContent(text: string): boolean {
 }
 
 export function ThinkingCard({ content, className }: ThinkingCardProps) {
+  const { t } = useTranslation();
   const [copied, setCopied] = useState(false)
   const type = detectCardType(content)
-  const { icon: Icon, label, accent } = typeConfig[type]
+  const label = t(typeLabelKeys[type])
+  const accentMap: Record<CardType, string> = {
+    analysis: "border-l-forge-blue",
+    compare: "border-l-forge-green",
+    decision: "border-l-accent-pm",
+    evaluate: "border-l-forge-orange",
+    general: "border-l-forge-purple",
+  }
+  const accent = accentMap[type]
+  const iconMap: Record<CardType, typeof Brain> = {
+    analysis: Brain, compare: GitCompare, decision: GitBranch, evaluate: BarChart3, general: Lightbulb,
+  }
+  const Icon = iconMap[type]
 
   const handleCopy = useCallback(() => {
     navigator.clipboard.writeText(content).then(() => {
@@ -86,14 +100,14 @@ export function ThinkingCard({ content, className }: ThinkingCardProps) {
           <button
             onClick={handleCopy}
             className="p-1 rounded text-text-tertiary hover:text-text-primary hover:bg-bg-hover/40 transition-colors"
-            title="复制内容"
+            title={t("artifacts.copyContent")}
           >
             {copied ? <Check className="h-3 w-3 text-success" /> : <Copy className="h-3 w-3" />}
           </button>
           <button
             onClick={handleDownload}
             className="p-1 rounded text-text-tertiary hover:text-text-primary hover:bg-bg-hover/40 transition-colors"
-            title="下载 Markdown"
+            title={t("artifacts.downloadMarkdown")}
           >
             <Download className="h-3 w-3" />
           </button>

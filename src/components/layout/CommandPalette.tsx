@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react"
+import { useTranslation } from "react-i18next"
 import { useAppStore } from "@/stores/appStore"
 import { useProjectStore } from "@/stores/projectStore"
 import { useUIStore } from "@/stores/uiStore"
@@ -17,6 +18,7 @@ import {
 } from "lucide-react"
 
 export function CommandPalette() {
+  const { t } = useTranslation();
   const { commandPaletteOpen, setCommandPaletteOpen } = useUIStore()
   const { role, theme, toggleTheme, setMainView } = useAppStore()
   const { projects, conversations, setCurrentProject, setCurrentConversation, addConversation } = useProjectStore()
@@ -72,10 +74,10 @@ export function CommandPalette() {
           <CommandInput
             value={query}
             onValueChange={setQuery}
-            placeholder="搜索项目、对话、或执行操作..."
+            placeholder={t("commandPalette.placeholder")}
           />
           <CommandList>
-            <CommandGroup heading="导航">
+            <CommandGroup heading={t("commandPalette.navigation")}>
               {filteredProjects.slice(0, 5).map((p) => (
                 <CommandItem
                   key={p.id}
@@ -108,7 +110,7 @@ export function CommandPalette() {
               })}
             </CommandGroup>
 
-            <CommandGroup heading="操作">
+            <CommandGroup heading={t("commandPalette.actions")}>
               <CommandItem
                 onSelect={async () => {
                   if (projects.length > 0) {
@@ -118,7 +120,7 @@ export function CommandPalette() {
                 }}
               >
                 <Plus className="h-4 w-4 text-text-tertiary" />
-                <span>新建对话</span>
+                <span>{t("commandPalette.newConversation")}</span>
                 <CommandShortcut>Ctrl+N</CommandShortcut>
               </CommandItem>
               <CommandItem
@@ -128,7 +130,7 @@ export function CommandPalette() {
                 }}
               >
                 <PanelRight className="h-4 w-4 text-text-tertiary" />
-                <span>切换右侧面板</span>
+                <span>{t("commandPalette.toggleRightPanel")}</span>
                 <CommandShortcut>Ctrl+Shift+P</CommandShortcut>
               </CommandItem>
               <CommandItem
@@ -138,12 +140,12 @@ export function CommandPalette() {
                 }}
               >
                 <Terminal className="h-4 w-4 text-text-tertiary" />
-                <span>切换终端</span>
+                <span>{t("commandPalette.toggleTerminal")}</span>
                 <CommandShortcut>Ctrl+`</CommandShortcut>
               </CommandItem>
             </CommandGroup>
 
-            <CommandGroup heading="视图">
+            <CommandGroup heading={t("commandPalette.view")}>
               <CommandItem
                 onSelect={() => {
                   toggleTheme()
@@ -155,7 +157,7 @@ export function CommandPalette() {
                 ) : (
                   <Moon className="h-4 w-4 text-text-tertiary" />
                 )}
-                <span>切换主题</span>
+                <span>{t("commandPalette.toggleTheme")}</span>
                 <CommandShortcut>Ctrl+T</CommandShortcut>
               </CommandItem>
               <CommandItem
@@ -165,7 +167,7 @@ export function CommandPalette() {
                 }}
               >
                 <Settings className="h-4 w-4 text-text-tertiary" />
-                <span>打开设置</span>
+                <span>{t("commandPalette.openSettings")}</span>
               </CommandItem>
               <CommandItem
                 onSelect={() => {
@@ -178,7 +180,7 @@ export function CommandPalette() {
                 ) : (
                   <Code2 className="h-4 w-4 text-text-tertiary" />
                 )}
-                <span>切换角色: {isDev ? "产品" : "开发者"}</span>
+                <span>{t("commandPalette.switchRole", { role: isDev ? t("sidebar.rolePm") : t("sidebar.roleDev") })}</span>
               </CommandItem>
             </CommandGroup>
           </CommandList>

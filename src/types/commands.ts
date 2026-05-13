@@ -149,5 +149,69 @@ export type StreamEvent =
   | { type: 'TextDelta'; data: string }
   | { type: 'ToolCallStarted'; data: { id: string; name: string; arguments: string } }
   | { type: 'ToolCallCompleted'; data: { id: string; name: string; result: string; success: boolean } }
+  | { type: 'ConversationCompressed'; data: { summary: string; dropped_count: number } }
   | { type: 'Error'; data: string }
   | { type: 'Done' }
+
+// --- Git ---
+export interface GitStatus {
+  branch: string
+  clean: boolean
+  files: GitFileStatus[]
+  ahead: number
+  behind: number
+  recent_commits: GitCommit[]
+}
+
+export interface GitFileStatus {
+  path: string
+  status: string
+  staged: boolean
+}
+
+export interface GitCommit {
+  hash: string
+  message: string
+  author: string
+  date: string
+}
+
+// --- Checkpoint ---
+export interface FileCheckpoint {
+  id: string
+  file_path: string
+  old_hash: string
+  old_content: string
+  conversation_id: string
+  created_at: string
+}
+
+// --- Terminal ---
+export type TerminalEvent =
+  | { type: 'Output'; data: string }
+  | { type: 'Exit'; data: number }
+
+// --- MCP ---
+export type McpServerStatus = 'Disconnected' | 'Connecting' | 'Connected' | 'Error'
+
+export interface McpServerConfig {
+  id: string
+  name: string
+  command: string
+  args: string[]
+  enabled: boolean
+  transport_type: string
+}
+
+export interface McpTool {
+  name: string
+  description: string
+  input_schema: Record<string, unknown>
+}
+
+export interface McpServerInfo {
+  config: McpServerConfig
+  status: McpServerStatus
+  tools: McpTool[]
+  error_message?: string | null
+}

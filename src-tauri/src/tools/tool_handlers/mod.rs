@@ -5,3 +5,6 @@ pub mod search_code;
 pub mod search_knowledge;
 pub mod manage_knowledge;
 pub mod manage_skills;
+pub mod run_command;
+pub mod git;
+pub mod undo;

@@ -10,4 +10,3 @@ pub use conversation::*;
 pub use message::*;
 pub use knowledge::*;
 pub use skill::*;
-pub use file_entry::*;

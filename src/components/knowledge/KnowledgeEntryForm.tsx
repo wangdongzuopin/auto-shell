@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 import { useKnowledgeStore } from "@/stores/knowledgeStore"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export function KnowledgeEntryForm({ entry, onClose }: Props) {
+  const { t } = useTranslation();
   const { addEntry, updateEntry } = useKnowledgeStore()
   const [title, setTitle] = useState(entry?.title || "")
   const [content, setContent] = useState(entry?.content || "")
@@ -54,12 +56,12 @@ export function KnowledgeEntryForm({ entry, onClose }: Props) {
   return (
     <div className="space-y-4">
       <div>
-        <label className="text-[10px] font-medium text-text-tertiary uppercase tracking-wider">标题</label>
+        <label className="text-[10px] font-medium text-text-tertiary uppercase tracking-wider">{t("knowledge.entryTitle")}</label>
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="知识条目标题..."
+          placeholder={t("knowledge.titlePlaceholder")}
           className={cn(
             "w-full mt-1 px-3 py-2 rounded-lg border text-xs",
             "bg-bg-elevated/60 text-text-primary placeholder:text-text-tertiary",
@@ -70,11 +72,11 @@ export function KnowledgeEntryForm({ entry, onClose }: Props) {
       </div>
 
       <div>
-        <label className="text-[10px] font-medium text-text-tertiary uppercase tracking-wider">内容</label>
+        <label className="text-[10px] font-medium text-text-tertiary uppercase tracking-wider">{t("knowledge.entryContent")}</label>
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          placeholder="知识内容 (支持 Markdown)..."
+          placeholder={t("knowledge.contentPlaceholder")}
           rows={6}
           className={cn(
             "w-full mt-1 px-3 py-2 rounded-lg border text-xs resize-none",
@@ -86,14 +88,14 @@ export function KnowledgeEntryForm({ entry, onClose }: Props) {
       </div>
 
       <div>
-        <label className="text-[10px] font-medium text-text-tertiary uppercase tracking-wider">标签</label>
+        <label className="text-[10px] font-medium text-text-tertiary uppercase tracking-wider">{t("knowledge.tags")}</label>
         <div className="flex items-center gap-1.5 mt-1">
           <input
             type="text"
             value={tagInput}
             onChange={(e) => setTagInput(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAddTag() } }}
-            placeholder="输入标签，按 Enter 添加"
+            placeholder={t("knowledge.tagPlaceholder")}
             className={cn(
               "flex-1 px-3 py-2 rounded-lg border text-xs",
               "bg-bg-elevated/60 text-text-primary placeholder:text-text-tertiary",
@@ -121,10 +123,10 @@ export function KnowledgeEntryForm({ entry, onClose }: Props) {
 
       <div className="flex items-center justify-end gap-2 pt-2">
         <Button variant="ghost" size="sm" onClick={onClose} className="text-xs">
-          取消
+          {t("common.cancel")}
         </Button>
         <Button size="sm" onClick={handleSave} disabled={!title.trim() || saving} className="text-xs">
-          {saving ? "保存中..." : entry ? "更新" : "创建"}
+          {saving ? t("knowledge.saving") : entry ? t("knowledge.update") : t("knowledge.create")}
         </Button>
       </div>
     </div>

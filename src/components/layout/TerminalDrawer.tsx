@@ -1,6 +1,7 @@
 import { useCallback, useEffect } from "react"
 import { useUIStore } from "@/stores/uiStore"
 import { useTerminalStore } from "@/stores/terminalStore"
+import { TerminalTab } from "@/components/terminal/TerminalTab"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { X, Plus, Terminal, ChevronUp } from "lucide-react"
@@ -84,20 +85,19 @@ export function TerminalDrawer() {
       </div>
 
       {/* Terminal content */}
-      <div className="flex-1 p-3">
+      <div className="flex-1 overflow-hidden">
         {activeTabId && (
-          <div className="flex items-center gap-2 text-xs text-text-tertiary font-mono">
-            <span className="text-accent-dev">{">"}</span>
-            <span className="text-text-secondary">终端就绪</span>
-            <span className="text-text-tertiary/50">
-              — {tabs.find((t) => t.id === activeTabId)?.cwd || "~"}
-            </span>
-          </div>
+          (() => {
+            const activeTab = tabs.find((t) => t.id === activeTabId)
+            return activeTab ? <TerminalTab key={activeTab.id} tab={activeTab} /> : null
+          })()
         )}
         {!activeTabId && tabs.length === 0 && (
-          <p className="text-xs text-text-tertiary text-center mt-4">
-            点击 <Plus className="h-3 w-3 inline" /> 新建终端标签页
-          </p>
+          <div className="flex items-center justify-center h-full">
+            <p className="text-xs text-text-tertiary">
+              点击 <Plus className="h-3 w-3 inline" /> 新建终端标签页
+            </p>
+          </div>
         )}
       </div>
     </div>

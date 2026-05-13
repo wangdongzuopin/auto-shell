@@ -1,12 +1,12 @@
 [package]
-name = "auto-forge"
+name = "pizz"
 version = "0.1.0"
-description = "AutoForge — 个人全栈开发者的 AI 工作站"
+description = "pizz — 个人全栈开发者的 AI 工作站"
 authors = ["you"]
 edition = "2021"
 
 [lib]
-name = "auto_forge_lib"
+name = "pizz_lib"
 crate-type = ["lib", "cdylib", "staticlib"]
 
 [build-dependencies]
@@ -29,6 +29,8 @@ tokio = { version = "1", features = ["full"] }
 thiserror = "2"
 reqwest = { version = "0.12", features = ["json", "stream"] }
 futures-util = "0.3"
+ring = "0.17"
+base64 = "0.22"
 async-trait = "0.1"
 
 [package.metadata]

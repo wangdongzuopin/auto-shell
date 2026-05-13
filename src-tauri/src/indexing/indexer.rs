@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use crate::AppState;
 use crate::db::search_repo;
 use std::path::Path;
@@ -31,7 +33,7 @@ async fn walk_dir(state: &AppState, project_id: &str, dir: &Path, count: &mut us
                     .unwrap_or(0);
                 let hash = blake3::hash(content.as_bytes()).to_hex().to_string();
                 if let Err(e) = search_repo::index_file(&state.pool, project_id, &rel_path, &content, &hash, meta, modified).await {
-                    eprintln!("[AutoForge] Failed to index {}: {}", rel_path, e);
+                    eprintln!("[pizz] Failed to index {}: {}", rel_path, e);
                 } else {
                     *count += 1;
                 }

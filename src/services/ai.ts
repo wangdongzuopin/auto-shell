@@ -1,5 +1,6 @@
 import type { AISettings } from "@/stores/settingsStore";
-import type { Skill, StreamEvent } from "@/types/commands";
+import type { Skill, StreamEvent, McpTool } from "@/types/commands";
+import { useMcpStore } from "@/stores/mcpStore";
 
 export interface ChatMessage {
   role: "system" | "user" | "assistant";
@@ -25,6 +26,7 @@ export interface StreamCallbacks {
   onError: (err: Error) => void;
   onToolCallStarted?: (data: ToolCallStartedData) => void;
   onToolCallCompleted?: (data: ToolCallCompletedData) => void;
+  onConversationCompressed?: (data: { summary: string; dropped_count: number }) => void;
 }
 
 // Tool definitions for OpenAI function calling
@@ -120,12 +122,28 @@ const TOOL_DEFINITIONS = [
   },
 ];
 
+function getMergedTools(includeTools: boolean) {
+  if (!includeTools) return []
+  try {
+    const mcpTools = useMcpStore.getState().getActiveTools()
+    const mcpDefinitions = mcpTools.map((t: McpTool) => ({
+      name: t.name,
+      description: t.description,
+      parameters: t.input_schema,
+    }))
+    return [...TOOL_DEFINITIONS, ...mcpDefinitions]
+  } catch {
+    return TOOL_DEFINITIONS
+  }
+}
+
 export async function streamChat(
   messages: ChatMessage[],
   config: AISettings,
   callbacks: StreamCallbacks,
   abortSignal?: AbortSignal,
-  includeTools = false
+  includeTools = false,
+  conversationId?: string
 ) {
   const { apiKey, baseUrl, model, temperature } = config;
 
@@ -135,7 +153,7 @@ export async function streamChat(
   }
 
   const isAnthropic = false;
-  const tools = includeTools ? TOOL_DEFINITIONS : [];
+  const tools = getMergedTools(includeTools);
 
   const payload = {
     baseUrl,
@@ -145,6 +163,7 @@ export async function streamChat(
     isAnthropic,
     temperature,
     tools,
+    conversationId: conversationId ?? null,
   };
 
   // Try Tauri IPC channel first (no CORS)
@@ -164,6 +183,9 @@ export async function streamChat(
           break;
         case "ToolCallCompleted":
           callbacks.onToolCallCompleted?.(event.data);
+          break;
+        case "ConversationCompressed":
+          callbacks.onConversationCompressed?.(event.data);
           break;
         case "Done":
           callbacks.onDone(fullText);

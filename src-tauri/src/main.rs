@@ -2,5 +2,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-    auto_forge_lib::run()
+    pizz_lib::run()
 }

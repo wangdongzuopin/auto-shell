@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { Download, Maximize2, Minimize2, Copy, Check } from "lucide-react";
 
@@ -36,6 +37,7 @@ interface MermaidDiagramProps {
 }
 
 export function MermaidDiagram({ code, className }: MermaidDiagramProps) {
+  const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   const [svg, setSvg] = useState<string>("");
   const [error, setError] = useState<string>("");
@@ -46,7 +48,6 @@ export function MermaidDiagram({ code, className }: MermaidDiagramProps) {
   useEffect(() => {
     let cancelled = false;
     setError("");
-    setSvg("");
 
     getMermaid()
       .then((mermaid) => mermaid.render(idRef.current, code))
@@ -54,7 +55,7 @@ export function MermaidDiagram({ code, className }: MermaidDiagramProps) {
         if (!cancelled) setSvg(rendered);
       })
       .catch((err) => {
-        if (!cancelled) setError(`流程图渲染失败: ${err.message || "语法错误"}`);
+        if (!cancelled) setError(`${t("artifacts.renderError")}: ${err.message || t("artifacts.syntaxError")}`);
       });
 
     return () => { cancelled = true; };
@@ -121,7 +122,7 @@ export function MermaidDiagram({ code, className }: MermaidDiagramProps) {
     return (
       <div className={cn("group relative my-3 rounded-xl border border-border/50 bg-bg-elevated/30 overflow-hidden", className)}>
         <div className="flex items-center px-3 py-1.5 border-b border-border/30 bg-bg-elevated/50">
-          <span className="text-[10px] font-medium text-text-tertiary uppercase tracking-wider">流程图</span>
+          <span className="text-[10px] font-medium text-text-tertiary uppercase tracking-wider">{t("artifacts.flowchart")}</span>
         </div>
         <div className="flex items-center justify-center p-4 min-h-[120px]">
           <div className="flex items-center gap-2 text-text-tertiary">
@@ -139,34 +140,34 @@ export function MermaidDiagram({ code, className }: MermaidDiagramProps) {
       {/* Toolbar */}
       <div className="flex items-center justify-between px-3 py-1.5 border-b border-border/30 bg-bg-elevated/50">
         <span className="text-[10px] font-medium text-text-tertiary uppercase tracking-wider">
-          流程图
+          {t("artifacts.flowchart")}
         </span>
         <div className="flex items-center gap-0.5">
           <button
             onClick={copyCode}
             className="p-1 rounded text-text-tertiary hover:text-text-primary hover:bg-bg-hover/40 transition-colors"
-            title="复制代码"
+            title={t("artifacts.copyCode")}
           >
             {copied ? <Check className="h-3 w-3 text-success" /> : <Copy className="h-3 w-3" />}
           </button>
           <button
             onClick={downloadSVG}
             className="p-1 rounded text-text-tertiary hover:text-text-primary hover:bg-bg-hover/40 transition-colors"
-            title="下载 SVG"
+            title={t("artifacts.downloadSVG")}
           >
             <Download className="h-3 w-3" />
           </button>
           <button
             onClick={downloadPNG}
             className="p-1 rounded text-text-tertiary hover:text-text-primary hover:bg-bg-hover/40 transition-colors"
-            title="下载 PNG"
+            title={t("artifacts.downloadPNG")}
           >
             <span className="text-[9px] font-medium">PNG</span>
           </button>
           <button
             onClick={() => setExpanded(!expanded)}
             className="p-1 rounded text-text-tertiary hover:text-text-primary hover:bg-bg-hover/40 transition-colors"
-            title={expanded ? "收起" : "放大"}
+            title={expanded ? t("artifacts.collapse") : t("artifacts.expand")}
           >
             {expanded ? <Minimize2 className="h-3 w-3" /> : <Maximize2 className="h-3 w-3" />}
           </button>

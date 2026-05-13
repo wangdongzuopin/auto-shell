@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react"
+import { useTranslation } from "react-i18next"
 import { useProjectStore } from "@/stores/projectStore"
 import { parseBlocks, type ContentBlock } from "@/lib/parseBlocks"
 import { MermaidDiagram } from "@/components/artifacts/MermaidDiagram"
@@ -16,6 +17,7 @@ interface ArtifactEntry {
 }
 
 export function ArtifactsSidebar() {
+  const { t } = useTranslation();
   const { currentConversationId, getMessages, messages } = useProjectStore()
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
 
@@ -70,9 +72,9 @@ export function ArtifactsSidebar() {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center px-4">
         <PackageOpen className="h-8 w-8 text-text-tertiary/40 mb-2" />
-        <p className="text-xs text-text-tertiary">暂无产物</p>
+        <p className="text-xs text-text-tertiary">{t("artifacts.noArtifacts")}</p>
         <p className="text-[10px] text-text-tertiary/50 mt-1">
-          AI 生成的流程图和原型图将在此汇总
+          {t("artifacts.noArtifactsHint")}
         </p>
       </div>
     )
@@ -87,7 +89,7 @@ export function ArtifactsSidebar() {
           className="flex items-center gap-1.5 w-full justify-center px-3 py-1.5 rounded-lg text-[11px] font-medium text-text-secondary hover:text-text-primary bg-bg-elevated/40 hover:bg-bg-elevated/60 border border-border/30 transition-all"
         >
           <Download className="h-3 w-3" />
-          全部下载 ({artifacts.length})
+          {t("artifacts.downloadAll")} ({artifacts.length})
         </button>
       </div>
 
@@ -115,7 +117,7 @@ export function ArtifactsSidebar() {
                     <Layout className="h-3.5 w-3.5 text-accent-pm shrink-0" />
                   )}
                   <span className="text-[11px] text-text-primary font-medium truncate flex-1">
-                    {isMermaid ? "流程图" : "原型图"}
+                    {isMermaid ? t("artifacts.flowchart") : t("artifacts.prototype")}
                   </span>
                   <span className="text-[10px] text-text-tertiary/50 font-mono">
                     {new Date(a.timestamp).toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" })}

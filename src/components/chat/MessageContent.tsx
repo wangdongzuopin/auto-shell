@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
@@ -17,6 +18,7 @@ interface MessageContentProps {
 
 // Code block with copy button
 function CodeBlock({ code, language }: { code: string; language: string }) {
+  const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
@@ -41,7 +43,7 @@ function CodeBlock({ code, language }: { code: string; language: string }) {
           ) : (
             <Copy className="h-3 w-3" />
           )}
-          <span className="text-[10px]">{copied ? "已复制" : "复制"}</span>
+          <span className="text-[10px]">{copied ? t("chat.copied") : t("chat.copy")}</span>
         </button>
       </div>
       <SyntaxHighlighter
@@ -67,6 +69,7 @@ function CodeBlock({ code, language }: { code: string; language: string }) {
 
 // Collapsible think block for AI reasoning
 function ThinkBlock({ content }: { content: string }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
 
   return (
@@ -76,7 +79,7 @@ function ThinkBlock({ content }: { content: string }) {
         className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-bg-hover/30 transition-colors"
       >
         <Brain className="h-3.5 w-3.5 text-accent-product/60 shrink-0" />
-        <span className="text-[11px] font-medium text-text-secondary">思考过程</span>
+        <span className="text-[11px] font-medium text-text-secondary">{t("chat.thinkingProcess")}</span>
         <ChevronDown
           className={cn(
             "h-3 w-3 text-text-tertiary ml-auto transition-transform duration-200",

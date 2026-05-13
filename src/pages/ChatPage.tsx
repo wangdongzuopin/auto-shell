@@ -84,6 +84,7 @@ export function ChatPage() {
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [projectContext, setProjectContext] = useState("");
   const [toolCallBadges, setToolCallBadges] = useState<{id: string, name: string, status: "running"|"done", success?: boolean}[]>([]);
+  const [compressionSummary, setCompressionSummary] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const tokenBufferRef = useRef("");
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -179,6 +180,7 @@ export function ChatPage() {
     abortRef.current = abort;
     setStreamingContent("");
     setToolCallBadges([]);
+    setCompressionSummary(null);
     toolCallArgsRef.current.clear();
 
     const { addDiff } = useDiffStore.getState();
@@ -259,9 +261,13 @@ export function ChatPage() {
             } catch { /* ignore parse errors */ }
           }
         },
+        onConversationCompressed: (data) => {
+          setCompressionSummary(data.summary);
+        },
       },
       abort.signal,
-      isDev && mode === "edit"
+      isDev && mode === "edit",
+      currentConversationId
     );
   }, [input, currentConversationId, sending, role, mode, getMessages, addMessage, attachedFiles]);
 
@@ -582,6 +588,18 @@ export function ChatPage() {
                   })}
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* Compression divider */}
+          {compressionSummary && (
+            <div className="flex items-center gap-3 py-2 animate-fade-in">
+              <div className="flex-1 h-px bg-border/30" />
+              <div className="flex items-center gap-1.5 text-[10px] text-text-tertiary bg-bg-elevated/60 px-2.5 py-1 rounded-full border border-border/30">
+                <Zap className="h-2.5 w-2.5 text-accent-dev/60" />
+                {compressionSummary}
+              </div>
+              <div className="flex-1 h-px bg-border/30" />
             </div>
           )}
 

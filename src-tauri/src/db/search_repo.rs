@@ -40,6 +40,7 @@ pub async fn search_files(pool: &SqlitePool, query: &str, _project_id: Option<&s
     Ok(results)
 }
 
+#[allow(dead_code)]
 pub async fn index_file(pool: &SqlitePool, project_id: &str, path: &str, content: &str, hash: &str, size: i64, modified_at: i64) -> Result<(), AppError> {
     let now = chrono::Utc::now().timestamp_millis();
     // Upsert file entry

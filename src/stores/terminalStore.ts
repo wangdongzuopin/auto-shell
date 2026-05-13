@@ -1,18 +1,27 @@
 import { create } from 'zustand'
 
+export type ProcessState = 'running' | 'exited'
+
 export interface TerminalTab {
   id: string
   title: string
   cwd: string
+  sessionId: string | null
+  processState: ProcessState
+  cols: number
+  rows: number
 }
 
 interface TerminalState {
   tabs: TerminalTab[]
   activeTabId: string | null
 
-  addTab: (cwd?: string, title?: string) => void
+  addTab: (cwd?: string, title?: string) => string
   removeTab: (id: string) => void
   setActiveTab: (id: string) => void
+  setSessionId: (tabId: string, sessionId: string) => void
+  setProcessState: (tabId: string, state: ProcessState) => void
+  setDimensions: (tabId: string, cols: number, rows: number) => void
 }
 
 export const useTerminalStore = create<TerminalState>((set, get) => ({
@@ -25,8 +34,13 @@ export const useTerminalStore = create<TerminalState>((set, get) => ({
       id,
       title: title || `终端 ${get().tabs.length + 1}`,
       cwd: cwd || '',
+      sessionId: null,
+      processState: 'running',
+      cols: 80,
+      rows: 24,
     }
     set((s) => ({ tabs: [...s.tabs, tab], activeTabId: id }))
+    return id
   },
 
   removeTab: (id) => {
@@ -40,4 +54,22 @@ export const useTerminalStore = create<TerminalState>((set, get) => ({
   },
 
   setActiveTab: (id) => set({ activeTabId: id }),
+
+  setSessionId: (tabId, sessionId) => {
+    set((s) => ({
+      tabs: s.tabs.map((t) => (t.id === tabId ? { ...t, sessionId } : t)),
+    }))
+  },
+
+  setProcessState: (tabId, processState) => {
+    set((s) => ({
+      tabs: s.tabs.map((t) => (t.id === tabId ? { ...t, processState } : t)),
+    }))
+  },
+
+  setDimensions: (tabId, cols, rows) => {
+    set((s) => ({
+      tabs: s.tabs.map((t) => (t.id === tabId ? { ...t, cols, rows } : t)),
+    }))
+  },
 }))

@@ -1,7 +1,10 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useAppStore } from "@/stores/appStore";
 import { useProjectStore, type Conversation } from "@/stores/projectStore";
 import { cn } from "@/lib/utils";
+import { GitPanel } from "@/components/project/GitPanel"
+import { CheckpointPanel } from "@/components/project/CheckpointPanel"
 import {
   Code2,
   PenSquare,
@@ -37,17 +40,19 @@ function NewConversationPopup({
   projects,
   onSelect,
   onClose,
+  t,
 }: {
   projects: { id: string; name: string }[];
   onSelect: (projectId: string) => void;
   onClose: () => void;
+  t: (key: string) => string;
 }) {
   return (
     <>
       <div className="fixed inset-0 z-40" onClick={onClose} />
       <div className="absolute left-full top-0 z-50 ml-2 w-48 rounded-xl border border-border bg-glass-bg-strong shadow-xl p-1.5 animate-scale-in backdrop-blur-xl">
         <p className="text-[10px] text-text-tertiary px-2.5 py-1.5 uppercase tracking-wider font-medium">
-          选择项目
+          {t("sidebar.selectProject")}
         </p>
         {projects.map((p) => (
           <button
@@ -103,6 +108,7 @@ function ConversationItem({
 }
 
 export function Sidebar() {
+  const { t } = useTranslation();
   const { role, sidebarOpen, mainView, setMainView, requestRoleSwitch } = useAppStore();
   const {
     projects,
@@ -240,7 +246,7 @@ export function Sidebar() {
               className="flex items-center gap-1.5 flex-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-text-secondary hover:text-text-primary hover:bg-bg-hover/40 transition-all duration-150"
             >
               <Plus className="h-3.5 w-3.5" />
-              导入项目
+              {t("sidebar.importProject")}
             </button>
             <div className="relative">
               <button
@@ -248,13 +254,14 @@ export function Sidebar() {
                 className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-text-secondary hover:text-text-primary hover:bg-bg-hover/40 transition-all duration-150"
               >
                 <FolderPlus className="h-3.5 w-3.5" />
-                新对话
+                {t("sidebar.newConversation")}
               </button>
               {showNewConvPopup && (
                 <NewConversationPopup
                   projects={projects}
                   onSelect={handleSelectProjectForConv}
                   onClose={() => setShowNewConvPopup(false)}
+                  t={t}
                 />
               )}
             </div>
@@ -264,14 +271,14 @@ export function Sidebar() {
             <button
               onClick={handleImportProject}
               className="flex items-center justify-center w-full py-1.5 rounded-lg text-text-tertiary hover:text-text-primary hover:bg-bg-hover/40 transition-all duration-150"
-              title="导入项目"
+              title={t("sidebar.importProject")}
             >
               <Plus className="h-4 w-4" />
             </button>
             <button
               onClick={handleNewConversation}
               className="flex items-center justify-center w-full py-1.5 rounded-lg text-text-tertiary hover:text-text-primary hover:bg-bg-hover/40 transition-all duration-150"
-              title="新建对话"
+              title={t("sidebar.newConversation")}
             >
               <FolderPlus className="h-4 w-4" />
             </button>
@@ -288,14 +295,14 @@ export function Sidebar() {
       >
         {dragOver && (
           <div className="absolute inset-2 z-30 rounded-xl border-2 border-dashed border-accent-dev/40 bg-accent-dev/5 flex items-center justify-center pointer-events-none">
-            <span className="text-xs font-medium text-accent-dev">释放以导入项目</span>
+            <span className="text-xs font-medium text-accent-dev">{t("sidebar.dropToImport")}</span>
           </div>
         )}
         {projects.length === 0 ? (
           <div className="px-2.5 py-8 text-center">
-            <p className="text-[10px] text-text-tertiary">暂无项目</p>
+            <p className="text-[10px] text-text-tertiary">{t("common.noResults")}</p>
             {sidebarOpen && (
-              <p className="text-[10px] text-text-tertiary">拖拽文件夹或点击"导入项目"</p>
+              <p className="text-[10px] text-text-tertiary">{t("sidebar.dragHint")}</p>
             )}
           </div>
         ) : (
@@ -370,7 +377,7 @@ export function Sidebar() {
                               e.stopPropagation();
                               handleStartRename(project.id, project.name);
                             }}
-                            title="双击重命名"
+                            title={t("sidebar.renameHint")}
                           >
                             {project.name}
                           </span>
@@ -388,7 +395,7 @@ export function Sidebar() {
                             addConversation(project.id);
                           }}
                           className="p-0.5 opacity-0 group-hover:opacity-100 text-text-tertiary hover:text-accent-dev transition-all duration-150 shrink-0"
-                          title="新建对话"
+                          title={t("sidebar.newConversation")}
                         >
                           <Plus className="h-3 w-3" />
                         </button>
@@ -401,7 +408,7 @@ export function Sidebar() {
                     <div className="ml-3 pl-2.5 border-l border-border/40 space-y-0.5 mt-0.5">
                       {projectConversations.length === 0 ? (
                         <p className="text-[10px] text-text-tertiary px-2 py-1.5 italic">
-                          暂无对话
+                          {t("chat.noMessages")}
                         </p>
                       ) : (
                         projectConversations.map((conv) => (
@@ -427,6 +434,12 @@ export function Sidebar() {
         )}
       </div>
 
+      {/* Git panel */}
+      <GitPanel collapsed={!sidebarOpen} />
+
+      {/* Checkpoint panel */}
+      <CheckpointPanel collapsed={!sidebarOpen} />
+
       {/* Bottom: Role + Settings */}
       <div className="relative p-2 border-t border-border space-y-1">
         {/* Role switcher */}
@@ -443,7 +456,7 @@ export function Sidebar() {
           {isDev ? <Code2 className="h-4 w-4 shrink-0" /> : <PenSquare className="h-4 w-4 shrink-0" />}
           {sidebarOpen && (
             <>
-              <span className="truncate text-xs">{isDev ? "开发者" : "产品"}</span>
+              <span className="truncate text-xs">{isDev ? t("sidebar.roleDev") : t("sidebar.rolePm")}</span>
               <span
                 className={cn(
                   "ml-auto text-[9px] px-1.5 py-0.5 rounded font-mono font-medium tracking-wider uppercase",
@@ -466,10 +479,10 @@ export function Sidebar() {
               ? "bg-accent-dev-soft text-accent-dev"
               : "text-text-tertiary hover:text-text-primary hover:bg-bg-hover/40"
           )}
-          title="设置"
+          title={t("sidebar.settings")}
         >
           <Settings2 className="h-3.5 w-3.5 shrink-0" />
-          {sidebarOpen && <span>设置</span>}
+          {sidebarOpen && <span>{t("sidebar.settings")}</span>}
         </button>
       </div>
     </aside>

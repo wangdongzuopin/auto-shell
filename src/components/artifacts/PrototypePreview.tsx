@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { Download, Maximize2, Minimize2, Copy, Check, Eye, Code2, Smartphone, Monitor, Camera } from "lucide-react";
 
@@ -11,6 +12,7 @@ type ViewMode = "preview" | "code";
 type DeviceSize = "desktop" | "mobile";
 
 export function PrototypePreview({ code, className }: PrototypePreviewProps) {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>("preview");
   const [device, setDevice] = useState<DeviceSize>("desktop");
@@ -125,10 +127,10 @@ export function PrototypePreview({ code, className }: PrototypePreviewProps) {
       <div className="flex items-center justify-between px-3 py-1.5 border-b border-border/30 bg-bg-elevated/50">
         <div className="flex items-center gap-2">
           <span className="text-[10px] font-medium text-text-tertiary uppercase tracking-wider">
-            原型图
+            {t("artifacts.prototype")}
           </span>
           {isIncomplete && (
-            <span className="text-[10px] text-accent-pm animate-pulse">生成中…</span>
+            <span className="text-[10px] text-accent-pm animate-pulse">{t("artifacts.generating")}</span>
           )}
         </div>
         <div className="flex items-center gap-0.5">
@@ -140,7 +142,7 @@ export function PrototypePreview({ code, className }: PrototypePreviewProps) {
                 "p-1 rounded-l-md transition-colors",
                 viewMode === "preview" ? "bg-accent-dev/20 text-accent-dev" : "text-text-tertiary hover:text-text-primary"
               )}
-              title="预览"
+              title={t("artifacts.preview")}
             >
               <Eye className="h-3 w-3" />
             </button>
@@ -150,7 +152,7 @@ export function PrototypePreview({ code, className }: PrototypePreviewProps) {
                 "p-1 rounded-r-md transition-colors",
                 viewMode === "code" ? "bg-accent-dev/20 text-accent-dev" : "text-text-tertiary hover:text-text-primary"
               )}
-              title="代码"
+              title={t("artifacts.code")}
             >
               <Code2 className="h-3 w-3" />
             </button>
@@ -164,7 +166,7 @@ export function PrototypePreview({ code, className }: PrototypePreviewProps) {
                 "p-1 rounded-l-md transition-colors",
                 device === "desktop" ? "bg-accent-pm/20 text-accent-pm" : "text-text-tertiary hover:text-text-primary"
               )}
-              title="桌面端"
+              title={t("artifacts.desktop")}
             >
               <Monitor className="h-3 w-3" />
             </button>
@@ -174,7 +176,7 @@ export function PrototypePreview({ code, className }: PrototypePreviewProps) {
                 "p-1 rounded-r-md transition-colors",
                 device === "mobile" ? "bg-accent-pm/20 text-accent-pm" : "text-text-tertiary hover:text-text-primary"
               )}
-              title="移动端"
+              title={t("artifacts.mobile")}
             >
               <Smartphone className="h-3 w-3" />
             </button>
@@ -183,14 +185,14 @@ export function PrototypePreview({ code, className }: PrototypePreviewProps) {
           <button
             onClick={copyCode}
             className="p-1 rounded text-text-tertiary hover:text-text-primary hover:bg-bg-hover/40 transition-colors"
-            title="复制代码"
+            title={t("artifacts.copyCode")}
           >
             {copied ? <Check className="h-3 w-3 text-success" /> : <Copy className="h-3 w-3" />}
           </button>
           <button
             onClick={downloadHTML}
             className="p-1 rounded text-text-tertiary hover:text-text-primary hover:bg-bg-hover/40 transition-colors"
-            title="下载 HTML"
+            title={t("artifacts.downloadHTML")}
           >
             <Download className="h-3 w-3" />
           </button>
@@ -203,14 +205,14 @@ export function PrototypePreview({ code, className }: PrototypePreviewProps) {
                 ? "text-text-tertiary/50 cursor-wait"
                 : "text-text-tertiary hover:text-text-primary hover:bg-bg-hover/40"
             )}
-            title="截图下载 PNG"
+            title={t("artifacts.screenshotPNG")}
           >
             <Camera className="h-3 w-3" />
           </button>
           <button
             onClick={() => setExpanded(!expanded)}
             className="p-1 rounded text-text-tertiary hover:text-text-primary hover:bg-bg-hover/40 transition-colors"
-            title={expanded ? "收起" : "放大"}
+            title={expanded ? t("artifacts.collapse") : t("artifacts.expand")}
           >
             {expanded ? <Minimize2 className="h-3 w-3" /> : <Maximize2 className="h-3 w-3" />}
           </button>
@@ -239,7 +241,7 @@ export function PrototypePreview({ code, className }: PrototypePreviewProps) {
                 className="w-full h-full border-0"
                 style={{ minHeight: device === "mobile" ? "100%" : expanded ? "560px" : "260px" }}
                 sandbox="allow-scripts allow-same-origin"
-                title="原型预览"
+                title={t("artifacts.prototype")}
               />
             </div>
           </div>
