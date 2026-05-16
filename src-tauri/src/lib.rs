@@ -1,18 +1,18 @@
 mod crypto;
 mod db;
 mod error;
-mod models;
-mod state;
 mod git;
 mod mcp;
+mod models;
+mod state;
 mod terminal;
 
 pub use terminal::TerminalEvent;
 
-mod commands;
-mod tools;
 mod ai;
+mod commands;
 mod indexing;
+mod tools;
 
 use state::AppState;
 use tauri::Manager;
@@ -28,6 +28,7 @@ use commands::mcp_commands;
 use commands::terminal_commands;
 use commands::git_commands;
 use commands::undo_commands;
+use commands::workflow_commands;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -130,6 +131,15 @@ pub fn run() {
             undo_commands::undo_last_edit,
             undo_commands::list_checkpoints,
             undo_commands::clear_checkpoints,
+            // Team workflow commands
+            workflow_commands::list_workspaces,
+            workflow_commands::create_workspace,
+            workflow_commands::list_role_profiles,
+            workflow_commands::list_ideas,
+            workflow_commands::create_idea,
+            workflow_commands::update_idea_status,
+            workflow_commands::list_artifacts,
+            workflow_commands::create_artifact,
         ])
         .run(tauri::generate_context!())
         .expect("error while running pizz");

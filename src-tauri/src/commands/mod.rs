@@ -9,3 +9,4 @@ pub mod mcp_commands;
 pub mod terminal_commands;
 pub mod git_commands;
 pub mod undo_commands;
+pub mod workflow_commands;

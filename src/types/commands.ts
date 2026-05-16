@@ -215,3 +215,92 @@ export interface McpServerInfo {
   tools: McpTool[]
   error_message?: string | null
 }
+
+// --- Team Workflow ---
+export interface Workspace {
+  id: string
+  name: string
+  description: string
+  owner_account_id: string | null
+  edition: 'team' | 'enterprise' | string
+  created_at: number
+  updated_at: number
+}
+
+export interface CreateWorkspacePayload {
+  name: string
+  description?: string
+  owner_account_id?: string | null
+  edition?: 'team' | 'enterprise' | string
+}
+
+export interface RoleProfile {
+  id: string
+  workspace_id: string | null
+  name: string
+  role_key: string
+  description: string
+  skill_category: string
+  is_builtin: number
+  sort_order: number
+  created_at: number
+  updated_at: number
+}
+
+export interface Idea {
+  id: string
+  workspace_id: string | null
+  project_id: string | null
+  title: string
+  content: string
+  source_role_key: string
+  status: string
+  assessment_summary: string
+  current_role_key: string
+  next_role_key: string
+  created_by_account_id: string | null
+  created_at: number
+  updated_at: number
+}
+
+export interface CreateIdeaPayload {
+  workspace_id?: string | null
+  project_id?: string | null
+  title: string
+  content: string
+  source_role_key?: string
+  created_by_account_id?: string | null
+}
+
+export interface UpdateIdeaStatusPayload {
+  id: string
+  status: string
+  assessment_summary?: string
+  current_role_key?: string
+  next_role_key?: string
+  note?: string
+  actor_account_id?: string | null
+}
+
+export interface Artifact {
+  id: string
+  idea_id: string
+  artifact_type: string
+  title: string
+  content: string
+  role_key: string
+  status: string
+  created_by_account_id: string | null
+  created_at: number
+  updated_at: number
+}
+
+export interface CreateArtifactPayload {
+  idea_id: string
+  artifact_type: string
+  title: string
+  content: string
+  role_key: string
+  status?: string
+  created_by_account_id?: string | null
+}

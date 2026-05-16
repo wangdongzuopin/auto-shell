@@ -11,6 +11,10 @@ import type {
   TerminalEvent,
   GitStatus, GitCommit,
   FileCheckpoint,
+  Workspace, CreateWorkspacePayload,
+  RoleProfile,
+  Idea, CreateIdeaPayload, UpdateIdeaStatusPayload,
+  Artifact, CreateArtifactPayload,
 } from '@/types/commands'
 
 // ===== Projects =====
@@ -103,6 +107,25 @@ export const undoIpc = {
   clearCheckpoints: (conversationId: string) => invoke<void>('clear_checkpoints', { conversationId }),
 }
 
+// ===== Team Workflow =====
+export const workflowIpc = {
+  listWorkspaces: () => invoke<Workspace[]>('list_workspaces'),
+  createWorkspace: (payload: CreateWorkspacePayload) =>
+    invoke<Workspace>('create_workspace', { payload }),
+  listRoleProfiles: (workspaceId?: string | null) =>
+    invoke<RoleProfile[]>('list_role_profiles', { workspaceId }),
+  listIdeas: (workspaceId?: string | null, projectId?: string | null) =>
+    invoke<Idea[]>('list_ideas', { workspaceId, projectId }),
+  createIdea: (payload: CreateIdeaPayload) =>
+    invoke<Idea>('create_idea', { payload }),
+  updateIdeaStatus: (payload: UpdateIdeaStatusPayload) =>
+    invoke<Idea>('update_idea_status', { payload }),
+  listArtifacts: (ideaId: string) =>
+    invoke<Artifact[]>('list_artifacts', { ideaId }),
+  createArtifact: (payload: CreateArtifactPayload) =>
+    invoke<Artifact>('create_artifact', { payload }),
+}
+
 // ===== All IPC =====
 export const ipc = {
   projects: projectIpc,
@@ -115,4 +138,5 @@ export const ipc = {
   mcp: mcpIpc,
   git: gitIpc,
   undo: undoIpc,
+  workflow: workflowIpc,
 }

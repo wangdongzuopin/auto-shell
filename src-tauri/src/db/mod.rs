@@ -5,6 +5,7 @@ pub mod skill_repo;
 pub mod search_repo;
 pub mod settings_repo;
 pub mod checkpoint_repo;
+pub mod workflow_repo;
 
 use sqlx::SqlitePool;
 use tauri::{AppHandle, Manager};
@@ -30,6 +31,12 @@ pub fn get_migrations() -> Vec<Migration> {
             sql: include_str!("../../migrations/003_checkpoints.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 4,
+            description: "create team workflow tables",
+            sql: include_str!("../../migrations/004_team_workflows.sql"),
+            kind: MigrationKind::Up,
+        },
     ]
 }
 
@@ -53,6 +60,11 @@ pub async fn init_database(app: &AppHandle) -> Result<SqlitePool, Box<dyn std::e
 
     // Run v3 migration (CREATE TABLE IF NOT EXISTS)
     let _ = sqlx::query(include_str!("../../migrations/003_checkpoints.sql"))
+        .execute(&pool)
+        .await;
+
+    // Run v4 migration (team workflow tables, indexes, built-in role profiles)
+    let _ = sqlx::query(include_str!("../../migrations/004_team_workflows.sql"))
         .execute(&pool)
         .await;
 

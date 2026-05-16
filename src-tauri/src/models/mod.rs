@@ -4,9 +4,11 @@ pub mod message;
 pub mod knowledge;
 pub mod skill;
 pub mod file_entry;
+pub mod workflow;
 
 pub use project::*;
 pub use conversation::*;
 pub use message::*;
 pub use knowledge::*;
 pub use skill::*;
+pub use workflow::*;
