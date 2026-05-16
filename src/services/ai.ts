@@ -26,7 +26,7 @@ export interface StreamCallbacks {
   onError: (err: Error) => void;
   onToolCallStarted?: (data: ToolCallStartedData) => void;
   onToolCallCompleted?: (data: ToolCallCompletedData) => void;
-  onConversationCompressed?: (data: { summary: string; dropped_count: number }) => void;
+  onConversationCompressed?: (data: { summary: string; dropped_count: number; topics: string[] }) => void;
 }
 
 // Tool definitions for OpenAI function calling

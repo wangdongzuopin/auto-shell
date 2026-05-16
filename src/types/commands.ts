@@ -149,7 +149,7 @@ export type StreamEvent =
   | { type: 'TextDelta'; data: string }
   | { type: 'ToolCallStarted'; data: { id: string; name: string; arguments: string } }
   | { type: 'ToolCallCompleted'; data: { id: string; name: string; result: string; success: boolean } }
-  | { type: 'ConversationCompressed'; data: { summary: string; dropped_count: number } }
+  | { type: 'ConversationCompressed'; data: { summary: string; dropped_count: number; topics: string[] } }
   | { type: 'Error'; data: string }
   | { type: 'Done' }
 

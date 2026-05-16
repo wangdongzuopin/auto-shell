@@ -8,7 +8,7 @@ pub async fn handle(args: Value, state: &AppState, conversation_id: Option<Strin
     let content = args["content"].as_str().unwrap_or("");
 
     if path.is_empty() {
-        return ToolResult { success: false, content: "path is required".into() };
+        return ToolResult::error("path is required", "Provide a valid file path to write to.");
     }
 
     // Save checkpoint: read old content before overwriting
@@ -24,7 +24,17 @@ pub async fn handle(args: Value, state: &AppState, conversation_id: Option<Strin
         let _ = tokio::fs::create_dir_all(parent).await;
     }
     match tokio::fs::write(path, content).await {
-        Ok(_) => ToolResult { success: true, content: format!("File written: {}", path) },
-        Err(e) => ToolResult { success: false, content: e.to_string() },
+        Ok(_) => ToolResult::ok(format!("File written: {}", path)),
+        Err(e) => {
+            let msg = e.to_string();
+            let hint = if msg.contains("permission") || msg.contains("denied") {
+                "Permission denied. Check directory write permissions."
+            } else if msg.contains("read-only") || msg.contains("只读") {
+                "File is read-only. Change permissions or pick a different path."
+            } else {
+                ""
+            };
+            ToolResult::error(msg, hint)
+        }
     }
 }

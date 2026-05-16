@@ -27,6 +27,13 @@ import {
   Download,
   Paperclip,
   X,
+  Copy,
+  RotateCcw,
+  Check,
+  Clock,
+  Bug,
+  Search,
+  Palette,
 } from "lucide-react";
 
 type ChatMode = "qa" | "edit";
@@ -55,12 +62,74 @@ function getSkillLabel(name: string): string {
   return `调用技能：${name}`;
 }
 
+function formatToolArgs(name: string, argumentsStr: string): string {
+  try {
+    const args = JSON.parse(argumentsStr);
+    switch (name) {
+      case "read_file":
+      case "write_file":
+        return args.path ? args.path : "";
+      case "list_directory":
+        return args.path ? args.path : "";
+      case "search_code":
+      case "search_knowledge":
+        return args.query ? args.query : "";
+      case "get_knowledge":
+        return args.id ? args.id : "";
+      case "create_knowledge":
+        return args.title ? args.title : "";
+      default: {
+        const firstStr = Object.values(args).find((v) => typeof v === "string") as string | undefined;
+        return firstStr ?? "";
+      }
+    }
+  } catch {
+    return "";
+  }
+}
+
+function truncateResult(text: string, maxLen = 200): string {
+  if (text.length <= maxLen) return text;
+  return text.slice(0, maxLen) + "…";
+}
+
 const pmSuggestions = [
   { text: "帮我设计一个用户积分系统的产品原型", icon: Image },
   { text: "画出用户登录注册的完整流程图", icon: GitBranch },
   { text: "生成一个后台管理仪表盘原型", icon: PenSquare },
   { text: "画出电商下单的状态机流程图", icon: Zap },
 ];
+
+function CompressionDivider({ summary, topics }: { summary: string; topics: string[] }) {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <div className="py-2 animate-fade-in">
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="w-full flex items-center gap-3 group"
+      >
+        <div className="flex-1 h-px bg-border/30 group-hover:bg-border/50 transition-colors" />
+        <div className="flex items-center gap-1.5 text-[10px] text-text-tertiary bg-bg-elevated/60 px-2.5 py-1 rounded-full border border-border/30 group-hover:border-border/50 group-hover:text-text-secondary transition-all">
+          <Zap className="h-2.5 w-2.5 text-accent-dev/60" />
+          {summary}
+        </div>
+        <div className="flex-1 h-px bg-border/30 group-hover:bg-border/50 transition-colors" />
+      </button>
+      {expanded && topics.length > 0 && (
+        <div className="mt-2 mx-4 p-3 rounded-xl bg-bg-elevated/30 border border-border/20 text-[11px] text-text-tertiary space-y-1.5">
+          <p className="text-[10px] font-medium text-text-secondary">已压缩的对话主题：</p>
+          {topics.map((t, i) => (
+            <div key={i} className="flex items-start gap-2">
+              <span className="text-text-tertiary/50 mt-0.5">{i + 1}.</span>
+              <span className="text-text-tertiary">{t}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function ChatPage() {
   const { role } = useAppStore();
@@ -83,8 +152,8 @@ export function ChatPage() {
   const [attachedFiles, setAttachedFiles] = useState<{ name: string; content: string; type: string; size: number }[]>([]);
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [projectContext, setProjectContext] = useState("");
-  const [toolCallBadges, setToolCallBadges] = useState<{id: string, name: string, status: "running"|"done", success?: boolean}[]>([]);
-  const [compressionSummary, setCompressionSummary] = useState<string | null>(null);
+  const [toolCallBadges, setToolCallBadges] = useState<{id: string, name: string, status: "running"|"done", success?: boolean, args?: string, result?: string, expanded?: boolean}[]>([]);
+  const [compressionData, setCompressionData] = useState<{ summary: string; topics: string[] } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const tokenBufferRef = useRef("");
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -138,9 +207,9 @@ export function ChatPage() {
     }
   }, [currentProject?.id, currentProject?.path]);
 
-  const handleSend = useCallback(() => {
-    if ((!input.trim() && attachedFiles.length === 0) || !currentConversationId || sending) return;
-    const text = input.trim();
+  const handleSend = useCallback((overrideText?: string) => {
+    const text = (overrideText ?? input).trim();
+    if ((!text && attachedFiles.length === 0) || !currentConversationId || sending) return;
     setInput("");
     setSending(true);
 
@@ -180,7 +249,7 @@ export function ChatPage() {
     abortRef.current = abort;
     setStreamingContent("");
     setToolCallBadges([]);
-    setCompressionSummary(null);
+    setCompressionData(null);
     toolCallArgsRef.current.clear();
 
     const { addDiff } = useDiffStore.getState();
@@ -194,11 +263,7 @@ export function ChatPage() {
           // Start a steady tick to leak clean tokens from buffer to display
           if (!tickRef.current) {
             tickRef.current = setInterval(() => {
-              let buf = tokenBufferRef.current;
-              if (!buf) return;
-              // Strip <think> blocks and bare </think> from buffer before display
-              buf = buf.replace(/<think>[\s\S]*?(?:<\/think>|$)/gi, "").replace(/<\/think>/gi, "");
-              tokenBufferRef.current = buf;
+              const buf = tokenBufferRef.current;
               if (!buf) return;
               const chunk = buf.slice(0, 3);
               tokenBufferRef.current = buf.slice(3);
@@ -212,12 +277,19 @@ export function ChatPage() {
             clearInterval(tickRef.current);
             tickRef.current = null;
           }
-          // Flush remaining buffered tokens immediately (buffer already clean)
+          // Flush remaining buffered tokens immediately
           if (tokenBufferRef.current) {
             const remaining = tokenBufferRef.current;
             tokenBufferRef.current = "";
             setStreamingContent((prev) => prev + remaining);
           }
+          // Record skill usage from this response
+          const skillRe = /<!--\s*skill:\s*(.+?)\s*-->/g;
+          let sm: RegExpExecArray | null;
+          while ((sm = skillRe.exec(fullText)) !== null) {
+            useSkillStore.getState().recordUsage(sm[1].trim());
+          }
+
           // Let the final render settle before adding to messages
           setTimeout(() => {
             addMessage(currentConversationId, "assistant", fullText);
@@ -234,7 +306,7 @@ export function ChatPage() {
         },
         onToolCallStarted: (data) => {
           toolCallArgsRef.current.set(data.id, { name: data.name, arguments: data.arguments });
-          setToolCallBadges((prev) => [...prev, { id: data.id, name: data.name, status: "running" }]);
+          setToolCallBadges((prev) => [...prev, { id: data.id, name: data.name, status: "running", args: formatToolArgs(data.name, data.arguments) }]);
         },
         onToolCallCompleted: (data) => {
           const stored = toolCallArgsRef.current.get(data.id);
@@ -242,7 +314,7 @@ export function ChatPage() {
           toolCallArgsRef.current.delete(data.id);
 
           setToolCallBadges((prev) => prev.map((b) =>
-            b.id === data.id ? { ...b, status: "done", success: data.success } : b
+            b.id === data.id ? { ...b, status: "done", success: data.success, result: data.result } : b
           ));
 
           if (stored.name === "write_file" && data.success) {
@@ -262,7 +334,7 @@ export function ChatPage() {
           }
         },
         onConversationCompressed: (data) => {
-          setCompressionSummary(data.summary);
+          setCompressionData({ summary: data.summary, topics: data.topics });
         },
       },
       abort.signal,
@@ -533,18 +605,18 @@ export function ChatPage() {
           {showWelcome && (
             <div className="animate-slide-up">
               {/* Greeting */}
-              <div className="flex items-start gap-3 mb-8">
+              <div className="flex items-start gap-3 mb-6">
                 <div
                   className={cn(
-                    "flex h-8 w-8 shrink-0 items-center justify-center rounded-xl",
+                    "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
                     isDev ? "bg-accent-dev/10 text-accent-dev" : "bg-accent-pm/10 text-accent-pm"
                   )}
                 >
-                  <Hammer className="h-4 w-4" />
+                  <Hammer className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-[13px] font-semibold text-text-primary">{currentConversation.title}</p>
-                  <p className="mt-1.5 text-[13px] text-text-secondary leading-relaxed">
+                  <p className="text-sm font-semibold text-text-primary">{currentConversation.title}</p>
+                  <p className="mt-1 text-[12px] text-text-secondary leading-relaxed">
                     你好！{isDev
                       ? "我可以帮你分析代码、回答问题，或在编辑模式下直接修改代码。"
                       : "我可以帮你设计产品原型、绘制流程图，加速你的产品设计。"}
@@ -552,9 +624,76 @@ export function ChatPage() {
                 </div>
               </div>
 
+              {/* Quick actions — role specific */}
+              <div className="mb-6">
+                <p className="text-[10px] font-medium text-text-tertiary mb-2.5 uppercase tracking-wider">快速开始</p>
+                <div className="flex flex-wrap gap-2">
+                  {isDev ? (
+                    <>
+                      <button onClick={() => setInput("请审查当前项目的代码，找出潜在的安全问题和代码质量问题")} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] bg-accent-dev/5 border border-accent-dev/15 text-accent-dev hover:bg-accent-dev/10 transition-all">
+                        <Search className="h-3 w-3" /> 代码审查
+                      </button>
+                      <button onClick={() => setInput("帮我分析这个项目的整体架构，画出架构图")} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] bg-accent-dev/5 border border-accent-dev/15 text-accent-dev hover:bg-accent-dev/10 transition-all">
+                        <GitBranch className="h-3 w-3" /> 架构分析
+                      </button>
+                      <button onClick={() => setInput("请帮我调试以下错误：")} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] bg-accent-dev/5 border border-accent-dev/15 text-accent-dev hover:bg-accent-dev/10 transition-all">
+                        <Bug className="h-3 w-3" /> 调试问题
+                      </button>
+                      <button onClick={() => setInput("为这个项目编写单元测试")} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] bg-accent-dev/5 border border-accent-dev/15 text-accent-dev hover:bg-accent-dev/10 transition-all">
+                        <Code2 className="h-3 w-3" /> 编写测试
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button onClick={() => setInput("帮我设计一个用户注册登录的完整流程")} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] bg-accent-pm/5 border border-accent-pm/15 text-accent-pm hover:bg-accent-pm/10 transition-all">
+                        <GitBranch className="h-3 w-3" /> 流程设计
+                      </button>
+                      <button onClick={() => setInput("生成一个数据仪表盘的管理后台原型")} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] bg-accent-pm/5 border border-accent-pm/15 text-accent-pm hover:bg-accent-pm/10 transition-all">
+                        <Palette className="h-3 w-3" /> 原型设计
+                      </button>
+                      <button onClick={() => setInput("帮我写一份产品需求文档（PRD）")} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] bg-accent-pm/5 border border-accent-pm/15 text-accent-pm hover:bg-accent-pm/10 transition-all">
+                        <PenSquare className="h-3 w-3" /> 需求文档
+                      </button>
+                      <button onClick={() => setInput("帮我分析竞品的功能和用户体验")} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] bg-accent-pm/5 border border-accent-pm/15 text-accent-pm hover:bg-accent-pm/10 transition-all">
+                        <Search className="h-3 w-3" /> 竞品分析
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Recent conversations */}
+              {(() => {
+                const projectConvs = conversations
+                  .filter((c) => c.projectId === currentProjectId && c.id !== currentConversationId)
+                  .sort((a, b) => b.updatedAt - a.updatedAt)
+                  .slice(0, 3);
+                if (projectConvs.length === 0) return null;
+                return (
+                  <div className="mb-6">
+                    <p className="text-[10px] font-medium text-text-tertiary mb-2.5 uppercase tracking-wider">最近对话</p>
+                    <div className="space-y-1.5">
+                      {projectConvs.map((conv) => (
+                        <button
+                          key={conv.id}
+                          onClick={() => setCurrentConversation(conv.id)}
+                          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left text-[11px] text-text-secondary hover:text-text-primary hover:bg-bg-elevated/50 border border-transparent hover:border-border/30 transition-all"
+                        >
+                          <Clock className="h-3 w-3 text-text-tertiary shrink-0" />
+                          <span className="truncate">{conv.title}</span>
+                          <span className="text-text-tertiary/50 text-[10px] shrink-0 ml-auto">
+                            {new Date(conv.updatedAt).toLocaleDateString("zh-CN", { month: "short", day: "numeric" })}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
+
               {/* Suggestions */}
-              <div className="mb-2">
-                <div className="flex items-center gap-2 mb-3 text-xs text-text-tertiary">
+              <div>
+                <div className="flex items-center gap-2 mb-3 text-[10px] font-medium text-text-tertiary uppercase tracking-wider">
                   <Sparkles className="h-3.5 w-3.5" />
                   <span>试试这样问我</span>
                 </div>
@@ -591,16 +730,12 @@ export function ChatPage() {
             </div>
           )}
 
-          {/* Compression divider */}
-          {compressionSummary && (
-            <div className="flex items-center gap-3 py-2 animate-fade-in">
-              <div className="flex-1 h-px bg-border/30" />
-              <div className="flex items-center gap-1.5 text-[10px] text-text-tertiary bg-bg-elevated/60 px-2.5 py-1 rounded-full border border-border/30">
-                <Zap className="h-2.5 w-2.5 text-accent-dev/60" />
-                {compressionSummary}
-              </div>
-              <div className="flex-1 h-px bg-border/30" />
-            </div>
+          {/* Compression divider — expandable */}
+          {compressionData && (
+            <CompressionDivider
+              summary={compressionData.summary}
+              topics={compressionData.topics}
+            />
           )}
 
           {messages.map((msg, i) => (
@@ -629,17 +764,47 @@ export function ChatPage() {
               {/* Bubble */}
               <div
                 className={cn(
-                  "rounded-2xl px-3 py-2 text-xs leading-relaxed shadow-sm select-text",
+                  "group relative rounded-2xl px-3 py-2 text-xs leading-relaxed shadow-sm select-text",
                   msg.role === "user"
                     ? "max-w-[70%] bg-primary text-primary-foreground rounded-tr-md"
                     : cn(
-                        "flex-1 max-w-[90%] glass-card rounded-tl-md",
+                        "flex-1 max-w-[80%] glass-card rounded-tl-md",
                         isDev
                           ? "border-accent-dev/5"
                           : "border-accent-pm/5"
                       )
                 )}
               >
+                {/* Hover action bar — assistant messages only */}
+                {msg.role === "assistant" && (
+                  <div className="absolute -top-2 right-3 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(msg.content);
+                      }}
+                      className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-bg-elevated border border-border/50 text-[10px] text-text-secondary hover:text-text-primary hover:border-border transition-all shadow-sm"
+                      title="复制整条消息"
+                    >
+                      <Copy className="h-3 w-3" />
+                      复制
+                    </button>
+                    {i > 0 && (() => {
+                      const prev = messages.slice(0, i);
+                      const prevUser = prev.filter((m) => m.role === "user").at(-1);
+                      if (!prevUser) return null;
+                      return (
+                        <button
+                          onClick={() => handleSend(prevUser.content)}
+                          className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-bg-elevated border border-border/50 text-[10px] text-text-secondary hover:text-text-primary hover:border-border transition-all shadow-sm"
+                          title="重新生成回复"
+                        >
+                          <RotateCcw className="h-3 w-3" />
+                          重新生成
+                        </button>
+                      );
+                    })()}
+                  </div>
+                )}
                 <MessageContent content={msg.content} />
                 <p
                   className={cn(
@@ -664,7 +829,7 @@ export function ChatPage() {
               </div>
               {streamingContent ? (
                 <div className={cn("flex-1 max-w-[90%] rounded-2xl rounded-tl-md px-3 py-2 text-xs leading-relaxed shadow-sm glass-card select-text", isDev ? "border-accent-dev/5" : "border-accent-pm/5")}>
-                  <MessageContent content={streamingContent} />
+                  <MessageContent content={streamingContent} isStreaming />
                 </div>
               ) : (
                 <div className="glass-card rounded-tl-md rounded-2xl px-3.5 py-2.5">
@@ -692,23 +857,47 @@ export function ChatPage() {
             <div className="flex flex-col gap-1.5 px-1 mt-2">
               {toolCallBadges.map((badge) => {
                 const skillLabel = getSkillLabel(badge.name);
+                const isRunning = badge.status === "running";
+                const isFailed = badge.success === false;
+                const hasResult = badge.result && !isRunning;
                 return (
-                  <div
-                    key={badge.id}
-                    className={cn(
-                      "flex items-center gap-2 py-1.5 px-2.5 rounded-lg text-[11px] transition-all",
-                      badge.status === "running"
-                        ? "bg-accent-dev/5 border border-accent-dev/20 text-accent-dev"
-                        : badge.success === false
-                          ? "bg-danger/5 border border-danger/20 text-danger"
-                          : "bg-success/5 border border-success/20 text-success"
+                  <div key={badge.id}>
+                    <div
+                      className={cn(
+                        "flex items-center gap-2 py-1.5 px-2.5 rounded-lg text-[11px] transition-all",
+                        isRunning
+                          ? "bg-accent-dev/5 border border-accent-dev/20 text-accent-dev"
+                          : isFailed
+                            ? "bg-danger/5 border border-danger/20 text-danger"
+                            : "bg-success/5 border border-success/20 text-success"
+                      )}
+                    >
+                      <span className={cn(
+                        "w-1.5 h-1.5 rounded-full shrink-0",
+                        isRunning ? "bg-accent-dev animate-pulse" : isFailed ? "bg-danger" : "bg-success"
+                      )} />
+                      <span className="text-text-secondary">{skillLabel}</span>
+                      {badge.args && (
+                        <span className="text-text-tertiary truncate max-w-[300px] font-mono text-[10px]">
+                          {badge.args}
+                        </span>
+                      )}
+                      {hasResult && (
+                        <button
+                          onClick={() => setToolCallBadges((prev) => prev.map((b) =>
+                            b.id === badge.id ? { ...b, expanded: !b.expanded } : b
+                          ))}
+                          className="ml-auto shrink-0 text-[10px] text-text-tertiary hover:text-text-secondary transition-colors"
+                        >
+                          {badge.result ? `${badge.result.length} 字符` : ""}
+                        </button>
+                      )}
+                    </div>
+                    {badge.expanded && badge.result && (
+                      <div className="mt-1 ml-4 p-2 rounded-lg bg-bg-elevated/40 border border-border/30 text-[10px] font-mono text-text-tertiary max-h-32 overflow-y-auto whitespace-pre-wrap select-text">
+                        {truncateResult(badge.result)}
+                      </div>
                     )}
-                  >
-                    <span className={cn(
-                      "w-1.5 h-1.5 rounded-full",
-                      badge.status === "running" ? "bg-accent-dev animate-pulse" : "bg-success"
-                    )} />
-                    <span className="text-text-secondary">{skillLabel}</span>
                   </div>
                 );
               })}
@@ -799,25 +988,35 @@ export function ChatPage() {
                     clearInterval(tickRef.current);
                     tickRef.current = null;
                   }
-                  // Flush remaining buffer on stop
+                  // Flush remaining buffered tokens before clearing
                   if (tokenBufferRef.current) {
+                    const remaining = tokenBufferRef.current;
                     tokenBufferRef.current = "";
+                    setStreamingContent((prev) => prev + remaining);
                   }
-                  setSending(false);
-                  if (streamingContent) {
-                    addMessage(currentConversationId!, "assistant", streamingContent);
-                    setStreamingContent("");
-                  }
+                  // Use a microtask to capture the flushed streamingContent
+                  setTimeout(() => {
+                    setStreamingContent((current) => {
+                      if (current) {
+                        addMessage(currentConversationId!, "assistant", current + "\n\n*[已中断]*");
+                      }
+                      return "";
+                    });
+                    setToolCallBadges([]);
+                    setSending(false);
+                    abortRef.current = null;
+                  }, 50);
                 }}
                 size="icon"
                 variant="outline"
                 className="h-9 w-9 shrink-0 rounded-xl border-danger/30 text-danger hover:bg-danger/10 transition-all duration-200"
+                title="停止生成"
               >
                 <Square className="h-3 w-3" />
               </Button>
             ) : (
               <Button
-                onClick={handleSend}
+                onClick={() => handleSend()}
                 disabled={!input.trim()}
                 size="icon"
                 className={cn(

@@ -18,6 +18,7 @@ pub enum StreamEvent {
     ConversationCompressed {
         summary: String,
         dropped_count: usize,
+        topics: Vec<String>,
     },
     #[allow(dead_code)]
     Error(String),

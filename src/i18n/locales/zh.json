@@ -36,7 +36,9 @@
     "aiProvider": "AI 模型",
     "flowchart": "流程图",
     "copy": "复制",
-    "copied": "已复制"
+    "copied": "已复制",
+    "expand": "展开 ({{lines}} 行)",
+    "collapse": "收起"
   },
   "settings": {
     "title": "设置",
@@ -112,13 +114,13 @@
   },
   "roles": {
     "switchTitle": "切换角色",
-    "switchConfirm": "确定要切换到{role}模式吗？",
+    "switchConfirm": "确定要切换到{{role}}模式吗？",
     "devDesc": "开发者模式提供代码分析、编辑和架构工具。",
     "pmDesc": "产品模式提供原型设计、流程图和需求分析工具。",
     "cancel": "取消",
     "confirmSwitch": "确认切换",
-    "switchingTo": "正在切换到{role}模式...",
-    "loadingTools": "正在加载{role}工具..."
+    "switchingTo": "正在切换到{{role}}模式...",
+    "loadingTools": "正在加载{{role}}工具..."
   },
   "commandPalette": {
     "placeholder": "搜索项目、对话、或执行操作...",
@@ -130,7 +132,7 @@
     "toggleTerminal": "切换终端",
     "toggleTheme": "切换主题",
     "openSettings": "打开设置",
-    "switchRole": "切换角色: {role}"
+    "switchRole": "切换角色: {{role}}"
   },
   "mcp": {
     "title": "MCP 服务器",
@@ -159,7 +161,7 @@
     "serverArgs": "命令参数",
     "serverArgsPlaceholder": "-y\n@modelcontextprotocol/server-filesystem\n/tmp",
     "saveServer": "保存",
-    "removeConfirm": "确定要移除服务器 \"{name}\" 吗？"
+    "removeConfirm": "确定要移除服务器 \"{{name}}\" 吗？"
   },
   "common": {
     "cancel": "取消",

@@ -6,13 +6,72 @@ pub struct ToolResult {
     pub content: String,
 }
 
+impl ToolResult {
+    /// Create a success result.
+    pub fn ok(content: String) -> Self {
+        ToolResult { success: true, content }
+    }
+
+    /// Create an error with a hint to help the AI self-correct.
+    pub fn error(message: impl Into<String>, hint: impl Into<String>) -> Self {
+        let msg = message.into();
+        let h = hint.into();
+        let content = if h.is_empty() {
+            format!("❌ Error: {msg}")
+        } else {
+            format!("❌ Error: {msg}\n💡 Hint: {h}")
+        };
+        ToolResult { success: false, content }
+    }
+
+    /// Check if this error is retryable (transient I/O, network, etc.).
+    pub fn is_retryable(&self) -> bool {
+        if self.success { return false; }
+        let lower = self.content.to_lowercase();
+        lower.contains("timeout")
+            || lower.contains("connection refused")
+            || lower.contains("temporarily unavailable")
+            || lower.contains("resource busy")
+            || lower.contains("interrupted")
+            || lower.contains("deadlock")
+    }
+}
+
+/// Max retries for transient tool failures.
+const MAX_RETRIES: u32 = 2;
+
 pub async fn execute_tool(
     name: &str,
     arguments: serde_json::Value,
     state: &AppState,
     conversation_id: Option<String>,
 ) -> ToolResult {
-    // Route MCP tools: names are "mcp:{server_id}:{tool_name}"
+    let mut last_result: Option<ToolResult> = None;
+
+    for attempt in 0..=MAX_RETRIES {
+        if attempt > 0 {
+            tokio::time::sleep(std::time::Duration::from_millis(300 * attempt as u64)).await;
+        }
+
+        let result = execute_tool_once(name, arguments.clone(), state, conversation_id.clone()).await;
+        if result.success || !result.is_retryable() {
+            return result;
+        }
+        last_result = Some(result);
+    }
+
+    // All retries exhausted — return last error with retry note
+    let mut r = last_result.unwrap();
+    r.content = format!("{}. (重试 {} 次后仍然失败)", r.content, MAX_RETRIES);
+    r
+}
+
+async fn execute_tool_once(
+    name: &str,
+    arguments: serde_json::Value,
+    state: &AppState,
+    conversation_id: Option<String>,
+) -> ToolResult {
     if name.starts_with("mcp:") {
         match state.mcp_manager.call_tool(name, arguments).await {
             Some((success, content)) => return ToolResult { success, content },

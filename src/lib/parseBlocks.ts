@@ -4,6 +4,13 @@ export interface ContentBlock {
   language?: string
 }
 
+// Strip partial <think> / </think> tag fragments from end of streaming content
+function stripPartialTags(content: string): string {
+  return content
+    .replace(/<(?:t(?:h(?:i(?:n(?:k)?)?)?)?)?$/i, "")
+    .replace(/<\/(?:t(?:h(?:i(?:n(?:k)?)?)?)?)?$/i, "");
+}
+
 // Split content by <think>...</think> blocks, returning interleaved segments
 function splitThinkBlocks(content: string): ContentBlock[] {
   const blocks: ContentBlock[] = [];
@@ -84,6 +91,53 @@ function splitCodeBlocks(mdContent: string): ContentBlock[] {
   }
 
   return blocks;
+}
+
+// Streaming-aware split: treats unclosed <think> as a think block in progress
+function splitThinkBlocksStreaming(content: string): ContentBlock[] {
+  const blocks: ContentBlock[] = [];
+  const thinkRe = /<think>([\s\S]*?)<\/think>/gi;
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = thinkRe.exec(content)) !== null) {
+    if (match.index > lastIndex) {
+      const text = content.slice(lastIndex, match.index).trim();
+      if (text) blocks.push({ type: "markdown", content: text });
+    }
+    const thinkContent = match[1].trim();
+    if (thinkContent) blocks.push({ type: "think", content: thinkContent });
+    lastIndex = match.index + match[0].length;
+  }
+
+  if (lastIndex < content.length) {
+    const remaining = content.slice(lastIndex).trim();
+    if (remaining) {
+      const unclosedThink = /^<think>([\s\S]*)$/i.exec(remaining);
+      if (unclosedThink) {
+        const thinkContent = unclosedThink[1].trim();
+        if (thinkContent) blocks.push({ type: "think", content: thinkContent });
+      } else {
+        blocks.push({ type: "markdown", content: remaining });
+      }
+    }
+  }
+
+  return blocks;
+}
+
+export function parseBlocksStreaming(content: string): ContentBlock[] {
+  const sanitized = stripPartialTags(content);
+  const thinkBlocks = splitThinkBlocksStreaming(sanitized);
+  const result: ContentBlock[] = [];
+  for (const block of thinkBlocks) {
+    if (block.type === "think") {
+      result.push(block);
+    } else {
+      result.push(...splitCodeBlocks(block.content));
+    }
+  }
+  return result;
 }
 
 export function parseBlocks(content: string): ContentBlock[] {

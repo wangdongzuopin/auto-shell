@@ -36,7 +36,9 @@
     "aiProvider": "AI Model",
     "flowchart": "Flowchart",
     "copy": "Copy",
-    "copied": "Copied"
+    "copied": "Copied",
+    "expand": "Expand ({{lines}} lines)",
+    "collapse": "Collapse"
   },
   "settings": {
     "title": "Settings",
@@ -112,13 +114,13 @@
   },
   "roles": {
     "switchTitle": "Switch Role",
-    "switchConfirm": "Switch to {role} mode?",
+    "switchConfirm": "Switch to {{role}} mode?",
     "devDesc": "Developer mode provides code analysis, editing, and architecture tools.",
     "pmDesc": "Product mode provides prototyping, flowchart, and requirements analysis tools.",
     "cancel": "Cancel",
     "confirmSwitch": "Confirm Switch",
-    "switchingTo": "Switching to {role} mode...",
-    "loadingTools": "Loading {role} tools..."
+    "switchingTo": "Switching to {{role}} mode...",
+    "loadingTools": "Loading {{role}} tools..."
   },
   "commandPalette": {
     "placeholder": "Search projects, conversations, or run commands...",
@@ -130,7 +132,7 @@
     "toggleTerminal": "Toggle Terminal",
     "toggleTheme": "Toggle Theme",
     "openSettings": "Open Settings",
-    "switchRole": "Switch Role: {role}"
+    "switchRole": "Switch Role: {{role}}"
   },
   "mcp": {
     "title": "MCP Servers",
@@ -159,7 +161,7 @@
     "serverArgs": "Arguments",
     "serverArgsPlaceholder": "-y\n@modelcontextprotocol/server-filesystem\n/tmp",
     "saveServer": "Save",
-    "removeConfirm": "Remove server \"{name}\"?"
+    "removeConfirm": "Remove server \"{{name}}\"?"
   },
   "common": {
     "cancel": "Cancel",

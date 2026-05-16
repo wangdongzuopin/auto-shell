@@ -43,7 +43,7 @@ const categoryIcons: Record<string, typeof Code2> = {
 
 
 export function SkillsPanel() {
-  const { skills, isLoading, loadSkills, addSkill, removeSkill, toggleSkill } = useSkillStore()
+  const { skills, isLoading, usageMap, loadSkills, addSkill, removeSkill, toggleSkill } = useSkillStore()
   const currentRole = useAppStore((s) => s.role)
   const [search, setSearch] = useState("")
   const [category, setCategory] = useState("全部")
@@ -292,6 +292,11 @@ export function SkillsPanel() {
                       </button>
                     </div>
                     <p className="text-[11px] text-text-secondary mt-0.5 line-clamp-2">{skill.description}</p>
+                    {usageMap[skill.name] && (
+                      <p className="text-[9px] text-text-tertiary mt-1">
+                        使用 {usageMap[skill.name].count} 次
+                      </p>
+                    )}
                   </div>
                 </div>
               )

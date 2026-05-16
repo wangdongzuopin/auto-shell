@@ -30,10 +30,10 @@ fn total_tokens(messages: &[AiMessage]) -> usize {
 
 // ── Conversation compression ────────────────────────────────────────
 
-fn compress_messages(messages: &mut Vec<AiMessage>) -> usize {
+fn compress_messages(messages: &mut Vec<AiMessage>) -> (usize, Vec<String>) {
     let tokens = total_tokens(messages);
     if tokens <= MAX_CONVERSATION_TOKENS {
-        return 0;
+        return (0, Vec::new());
     }
 
     let system_idx = messages.iter().position(|m| m.role == "system");
@@ -45,7 +45,7 @@ fn compress_messages(messages: &mut Vec<AiMessage>) -> usize {
         .collect();
 
     if non_system.len() <= KEEP_RECENT_MESSAGES + 2 {
-        return 0;
+        return (0, Vec::new());
     }
 
     let keep_last = KEEP_RECENT_MESSAGES.min(non_system.len());
@@ -53,10 +53,26 @@ fn compress_messages(messages: &mut Vec<AiMessage>) -> usize {
     let keep_start_idx = non_system[non_system.len() - keep_last];
 
     if first_user_idx + 1 >= keep_start_idx {
-        return 0;
+        return (0, Vec::new());
     }
 
     let dropped_count = non_system.len() - keep_last - 1;
+
+    // Extract topic previews from dropped messages
+    let topics: Vec<String> = messages[first_user_idx + 1..keep_start_idx]
+        .iter()
+        .filter(|m| m.role == "user")
+        .take(5)
+        .map(|m| {
+            let preview: String = m.content.chars().take(50).collect();
+            if m.content.chars().count() > 50 {
+                format!("{preview}…")
+            } else {
+                preview
+            }
+        })
+        .collect();
+
     let summary = format!(
         "[对话历史已自动压缩] 省略了中间 {} 条消息以控制 token 消耗。如有需要，请基于最近的对话上下文继续回答。",
         dropped_count
@@ -93,7 +109,7 @@ fn compress_messages(messages: &mut Vec<AiMessage>) -> usize {
     );
 
     *messages = rebuilt;
-    dropped_count
+    (dropped_count, topics)
 }
 
 // ── Types ──────────────────────────────────────────────────────────
@@ -141,11 +157,12 @@ pub async fn stream_ai_chat(
     temperature: f64,
     conversation_id: Option<String>,
 ) -> Result<(), String> {
-    let dropped = compress_messages(&mut messages);
+    let (dropped, topics) = compress_messages(&mut messages);
     if dropped > 0 {
         let _ = channel.send(StreamEvent::ConversationCompressed {
             summary: format!("已压缩 {} 条历史消息，保留最近对话上下文。", dropped),
             dropped_count: dropped,
+            topics,
         });
     }
 
@@ -685,7 +702,8 @@ mod tests {
             },
         ];
         let mut msgs = messages.clone();
-        compress_messages(&mut msgs);
+        let (dropped, _topics) = compress_messages(&mut msgs);
+        assert_eq!(dropped, 0);
         // Small conversation should not be compressed
         assert_eq!(msgs.len(), messages.len());
     }
@@ -722,7 +740,9 @@ mod tests {
             });
         }
         let original_len = messages.len();
-        compress_messages(&mut messages);
+        let (dropped, topics) = compress_messages(&mut messages);
+        assert!(dropped > 0, "should have dropped some messages");
+        assert!(!topics.is_empty(), "should have extracted topic previews");
         // Should be compressed: system + first user + summary + KEEP_RECENT_MESSAGES
         assert!(messages.len() < original_len, "large conversation should be compressed");
         assert_eq!(messages[0].role, "system", "first message should be system");
