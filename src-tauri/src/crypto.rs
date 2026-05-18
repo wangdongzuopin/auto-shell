@@ -55,12 +55,12 @@ pub fn decrypt(encoded: &str, key_bytes: &[u8; KEY_LEN]) -> Result<String, Strin
     String::from_utf8(plain.to_vec()).map_err(|e| format!("utf8 error: {e}"))
 }
 
-fn base64_encode(data: &[u8]) -> String {
+pub(crate) fn base64_encode(data: &[u8]) -> String {
     use base64::Engine;
     base64::engine::general_purpose::STANDARD.encode(data)
 }
 
-fn base64_decode(s: &str) -> Result<Vec<u8>, String> {
+pub(crate) fn base64_decode(s: &str) -> Result<Vec<u8>, String> {
     use base64::Engine;
     base64::engine::general_purpose::STANDARD
         .decode(s)
@@ -96,5 +96,65 @@ mod tests {
         tampered[0] ^= 0xff;
         let bad = base64_encode(&tampered);
         assert!(decrypt(&bad, &key).is_err());
+    }
+
+    #[test]
+    fn empty_string_roundtrip() {
+        let key = generate_key();
+        let enc = encrypt("", &key).unwrap();
+        let dec = decrypt(&enc, &key).unwrap();
+        assert_eq!(dec, "");
+    }
+
+    #[test]
+    fn long_text_roundtrip() {
+        let key = generate_key();
+        let text = "x".repeat(10_000);
+        let enc = encrypt(&text, &key).unwrap();
+        let dec = decrypt(&enc, &key).unwrap();
+        assert_eq!(dec, text);
+    }
+
+    #[test]
+    fn unicode_roundtrip() {
+        let key = generate_key();
+        let text = "你好世界 🌍 — émojis and CJK";
+        let enc = encrypt(text, &key).unwrap();
+        let dec = decrypt(&enc, &key).unwrap();
+        assert_eq!(dec, text);
+    }
+
+    #[test]
+    fn reject_short_ciphertext() {
+        let key = generate_key();
+        let short = base64_encode(&[0u8; 5]);
+        assert!(decrypt(&short, &key).is_err());
+    }
+
+    #[test]
+    fn reject_invalid_base64() {
+        let key = generate_key();
+        assert!(decrypt("!!!not-valid-base64!!!", &key).is_err());
+    }
+
+    #[test]
+    fn keys_are_unique() {
+        let k1 = generate_key();
+        let k2 = generate_key();
+        assert_ne!(k1, k2);
+    }
+
+    #[test]
+    fn base64_roundtrip() {
+        let data = [0u8, 1, 2, 255, 254, 128];
+        let encoded = base64_encode(&data);
+        let decoded = base64_decode(&encoded).unwrap();
+        assert_eq!(decoded, data);
+    }
+
+    #[test]
+    fn base64_decode_empty() {
+        let decoded = base64_decode("").unwrap();
+        assert!(decoded.is_empty());
     }
 }

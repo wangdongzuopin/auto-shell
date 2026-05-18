@@ -117,3 +117,59 @@ fn default_edition() -> String {
 fn default_source_role() -> String {
     "operations".into()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn create_workspace_defaults() {
+        let json = r#"{"name":"my ws"}"#;
+        let payload: CreateWorkspacePayload = serde_json::from_str(json).unwrap();
+        assert_eq!(payload.name, "my ws");
+        assert_eq!(payload.edition, "team");
+        assert!(payload.description.is_empty());
+    }
+
+    #[test]
+    fn create_idea_defaults() {
+        let json = r#"{"title":"idea","content":"desc"}"#;
+        let payload: CreateIdeaPayload = serde_json::from_str(json).unwrap();
+        assert_eq!(payload.title, "idea");
+        assert_eq!(payload.source_role_key, "operations");
+        assert!(payload.workspace_id.is_none());
+    }
+
+    #[test]
+    fn update_idea_status() {
+        let json = r#"{"id":"i1","status":"assessed","assessment_summary":"good"}"#;
+        let payload: UpdateIdeaStatusPayload = serde_json::from_str(json).unwrap();
+        assert_eq!(payload.id, "i1");
+        assert_eq!(payload.status, "assessed");
+        assert_eq!(payload.assessment_summary, Some("good".into()));
+    }
+
+    #[test]
+    fn create_artifact_payload() {
+        let json = r#"{"idea_id":"i1","artifact_type":"prd","title":"PRD","content":"doc","role_key":"product_management"}"#;
+        let payload: CreateArtifactPayload = serde_json::from_str(json).unwrap();
+        assert_eq!(payload.artifact_type, "prd");
+        assert_eq!(payload.status, None);
+    }
+
+    #[test]
+    fn workspace_serialize_roundtrip() {
+        let ws = Workspace {
+            id: "w1".into(),
+            name: "Test".into(),
+            description: "desc".into(),
+            owner_account_id: None,
+            edition: "team".into(),
+            created_at: 0,
+            updated_at: 1,
+        };
+        let json = serde_json::to_string(&ws).unwrap();
+        let back: Workspace = serde_json::from_str(&json).unwrap();
+        assert_eq!(back.id, "w1");
+    }
+}

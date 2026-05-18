@@ -1,5 +1,6 @@
 use serde_json::Value;
 use crate::tools::executor::ToolResult;
+use crate::tools::security;
 use std::process::Command;
 use std::time::Duration;
 
@@ -7,12 +8,10 @@ pub async fn handle(args: Value) -> ToolResult {
     let cmd = args["command"].as_str().unwrap_or("");
     let cwd = args["cwd"].as_str().unwrap_or(".");
 
-    if cmd.trim().is_empty() {
-        return ToolResult {
-            success: false,
-            content: "command is empty".into(),
-        };
-    }
+    let cwd = match security::validate_command(cmd, cwd) {
+        Ok(cwd) => cwd,
+        Err(result) => return result,
+    };
 
     let child = Command::new(if cfg!(windows) { "cmd" } else { "sh" })
         .arg(if cfg!(windows) { "/C" } else { "-c" })

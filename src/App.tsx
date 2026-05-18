@@ -17,6 +17,7 @@ import { ToastProvider } from "@/components/ui/toast";
 import { ChatPage } from "@/pages/ChatPage";
 import { SettingsPage } from "@/pages/SettingsPage";
 import { OnboardingPage } from "@/pages/OnboardingPage";
+import { WorkflowPage } from "@/pages/WorkflowPage";
 import { Hammer } from "lucide-react";
 
 type AppPhase = "loading" | "onboarding" | "ready";
@@ -109,7 +110,13 @@ export default function App() {
         <div className="flex flex-1 overflow-hidden">
           <Sidebar />
           <main className="flex-1 overflow-hidden relative bg-bg-base">
-            {mainView === "chat" ? <ChatPage /> : <SettingsPage />}
+            {mainView === "chat" ? (
+              <ChatPage />
+            ) : mainView === "workflow" ? (
+              <WorkflowPage />
+            ) : (
+              <SettingsPage />
+            )}
             <RoleSwitchOverlay />
           </main>
           <RightPanel />

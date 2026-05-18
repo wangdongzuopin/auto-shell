@@ -8,8 +8,8 @@ describe('appStore', () => {
       theme: 'dark',
       sidebarOpen: true,
       mainView: 'chat',
-      roleSwitchPending: false,
-      requestedRole: null,
+      pendingRole: null,
+      isTransitioning: false,
     })
   })
 
@@ -23,10 +23,10 @@ describe('appStore', () => {
     expect(useAppStore.getState().theme).toBe('light')
   })
 
-  it('toggles sidebar', () => {
-    useAppStore.getState().toggleSidebar()
+  it('sets sidebar open', () => {
+    useAppStore.getState().setSidebarOpen(false)
     expect(useAppStore.getState().sidebarOpen).toBe(false)
-    useAppStore.getState().toggleSidebar()
+    useAppStore.getState().setSidebarOpen(true)
     expect(useAppStore.getState().sidebarOpen).toBe(true)
   })
 
@@ -38,8 +38,7 @@ describe('appStore', () => {
   it('requests role switch', () => {
     useAppStore.getState().requestRoleSwitch()
     const state = useAppStore.getState()
-    expect(state.roleSwitchPending).toBe(true)
-    expect(state.requestedRole).toBe('product')
+    expect(state.pendingRole).toBe('product')
   })
 
   it('confirms role switch', () => {
@@ -47,8 +46,7 @@ describe('appStore', () => {
     useAppStore.getState().confirmRoleSwitch()
     const state = useAppStore.getState()
     expect(state.role).toBe('product')
-    expect(state.roleSwitchPending).toBe(false)
-    expect(state.requestedRole).toBeNull()
+    expect(state.isTransitioning).toBe(true)
   })
 
   it('cancels role switch', () => {
@@ -56,7 +54,6 @@ describe('appStore', () => {
     useAppStore.getState().cancelRoleSwitch()
     const state = useAppStore.getState()
     expect(state.role).toBe('developer')
-    expect(state.roleSwitchPending).toBe(false)
-    expect(state.requestedRole).toBeNull()
+    expect(state.pendingRole).toBeNull()
   })
 })

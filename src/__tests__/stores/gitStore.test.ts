@@ -3,7 +3,13 @@ import { useGitStore } from '@/stores/gitStore'
 
 describe('gitStore', () => {
   beforeEach(() => {
-    useGitStore.setState({ status: null, diff: '', loading: false, error: null })
+    useGitStore.setState({
+      status: null,
+      diff: '',
+      commitSuggestion: null,
+      loading: false,
+      error: null,
+    })
   })
 
   it('starts with null status', () => {
@@ -14,9 +20,11 @@ describe('gitStore', () => {
     useGitStore.setState({
       status: { branch: 'main', clean: true, files: [], ahead: 0, behind: 0, recent_commits: [] },
       diff: 'some diff',
+      commitSuggestion: { title: 'feat: update files', body: 'Changed files' },
     })
     useGitStore.getState().clear()
     expect(useGitStore.getState().status).toBeNull()
     expect(useGitStore.getState().diff).toBe('')
+    expect(useGitStore.getState().commitSuggestion).toBeNull()
   })
 })

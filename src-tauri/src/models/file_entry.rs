@@ -33,3 +33,49 @@ pub struct DirEntry {
     pub is_dir: bool,
     pub size: i64,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn file_content_serialize() {
+        let fc = FileContent {
+            path: "/tmp/test.txt".into(),
+            content: "hello".into(),
+            hash: "abc123".into(),
+            size: 5,
+        };
+        let json = serde_json::to_string(&fc).unwrap();
+        let back: FileContent = serde_json::from_str(&json).unwrap();
+        assert_eq!(back.path, "/tmp/test.txt");
+        assert_eq!(back.content, "hello");
+    }
+
+    #[test]
+    fn dir_entry_serialize() {
+        let entry = DirEntry {
+            name: "src".into(),
+            path: "/proj/src".into(),
+            is_dir: true,
+            size: 0,
+        };
+        let json = serde_json::to_string(&entry).unwrap();
+        let back: DirEntry = serde_json::from_str(&json).unwrap();
+        assert!(back.is_dir);
+        assert_eq!(back.name, "src");
+    }
+
+    #[test]
+    fn directory_listing_serialize() {
+        let listing = DirectoryListing {
+            path: "/proj".into(),
+            entries: vec![
+                DirEntry { name: "file.rs".into(), path: "/proj/file.rs".into(), is_dir: false, size: 100 },
+            ],
+        };
+        let json = serde_json::to_string(&listing).unwrap();
+        let back: DirectoryListing = serde_json::from_str(&json).unwrap();
+        assert_eq!(back.entries.len(), 1);
+    }
+}

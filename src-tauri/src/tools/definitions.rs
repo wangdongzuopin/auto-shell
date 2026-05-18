@@ -23,6 +23,21 @@ pub fn all_tools() -> Vec<ToolDefinition> {
             }),
         },
         ToolDefinition {
+            name: "read_many_files".into(),
+            description: "Read several UTF-8 text files in one safe call. Limited to workspace files and small batches.".into(),
+            parameters: serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "paths": {
+                        "type": "array",
+                        "items": { "type": "string" },
+                        "description": "File paths to read"
+                    }
+                },
+                "required": ["paths"]
+            }),
+        },
+        ToolDefinition {
             name: "write_file".into(),
             description: "Write content to a file".into(),
             parameters: serde_json::json!({
@@ -35,6 +50,29 @@ pub fn all_tools() -> Vec<ToolDefinition> {
             }),
         },
         ToolDefinition {
+            name: "apply_patch".into(),
+            description: "Safely apply exact text replacements to existing workspace files. Saves undo checkpoints before writing.".into(),
+            parameters: serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "changes": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "path": { "type": "string", "description": "File path to edit" },
+                                "find": { "type": "string", "description": "Exact text to replace" },
+                                "replace": { "type": "string", "description": "Replacement text" },
+                                "replace_all": { "type": "boolean", "description": "Replace all matches instead of exactly one" }
+                            },
+                            "required": ["path", "find", "replace"]
+                        }
+                    }
+                },
+                "required": ["changes"]
+            }),
+        },
+        ToolDefinition {
             name: "list_directory".into(),
             description: "List files and directories in a given path".into(),
             parameters: serde_json::json!({
@@ -43,6 +81,18 @@ pub fn all_tools() -> Vec<ToolDefinition> {
                     "path": { "type": "string", "description": "The directory path to list" }
                 },
                 "required": ["path"]
+            }),
+        },
+        ToolDefinition {
+            name: "grep_search".into(),
+            description: "Search exact text across workspace files, skipping secrets and build output. Returns path, line, and matching text.".into(),
+            parameters: serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "query": { "type": "string", "description": "Exact text query" },
+                    "root": { "type": "string", "description": "Directory to search, default workspace root" }
+                },
+                "required": ["query"]
             }),
         },
         ToolDefinition {
@@ -147,4 +197,53 @@ pub fn all_tools() -> Vec<ToolDefinition> {
             }),
         },
     ]
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn all_tools_non_empty() {
+        let tools = all_tools();
+        assert!(!tools.is_empty());
+    }
+
+    #[test]
+    fn every_tool_has_name_and_description() {
+        for tool in all_tools() {
+            assert!(!tool.name.is_empty(), "tool has empty name");
+            assert!(!tool.description.is_empty(), "{} has empty description", tool.name);
+        }
+    }
+
+    #[test]
+    fn every_tool_has_valid_parameters() {
+        for tool in all_tools() {
+            let params = &tool.parameters;
+            assert!(params.is_object(), "{} parameters is not an object", tool.name);
+            assert!(params.get("type").is_some(), "{} missing type field", tool.name);
+        }
+    }
+
+    #[test]
+    fn required_tools_exist() {
+        let tools = all_tools();
+        let names: Vec<&str> = tools.iter().map(|t| t.name.as_str()).collect();
+        let expected = [
+            "read_file", "read_many_files", "write_file", "apply_patch",
+            "list_directory", "grep_search", "search_code", "search_knowledge",
+            "get_knowledge", "create_knowledge", "list_skills", "run_command",
+            "git_status", "git_diff", "undo_last_edit",
+        ];
+        for name in expected {
+            assert!(names.contains(&name), "missing tool: {name}");
+        }
+    }
+
+    #[test]
+    fn tool_count_matches_executor() {
+        // executor.rs has 15 tool match arms
+        assert_eq!(all_tools().len(), 15);
+    }
 }

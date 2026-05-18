@@ -40,6 +40,38 @@ fn default_role() -> String {
     "both".into()
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn create_skill_payload_defaults() {
+        let json = r#"{"name":"test","description":"a skill","content":"do x"}"#;
+        let payload: CreateSkillPayload = serde_json::from_str(json).unwrap();
+        assert_eq!(payload.name, "test");
+        assert_eq!(payload.skill_type, "imported");
+        assert_eq!(payload.category, "通用");
+        assert_eq!(payload.role, "both");
+    }
+
+    #[test]
+    fn create_skill_payload_explicit_role() {
+        let json = r#"{"name":"s","description":"d","content":"c","role":"developer"}"#;
+        let payload: CreateSkillPayload = serde_json::from_str(json).unwrap();
+        assert_eq!(payload.role, "developer");
+    }
+
+    #[test]
+    fn update_skill_payload_partial() {
+        let json = r#"{"id":"abc","name":"renamed"}"#;
+        let payload: UpdateSkillPayload = serde_json::from_str(json).unwrap();
+        assert_eq!(payload.id, "abc");
+        assert_eq!(payload.name, Some("renamed".into()));
+        assert!(payload.description.is_none());
+        assert!(payload.content.is_none());
+    }
+}
+
 #[derive(Debug, Deserialize)]
 pub struct UpdateSkillPayload {
     pub id: String,

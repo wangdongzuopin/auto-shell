@@ -176,6 +176,11 @@ export interface GitCommit {
   date: string
 }
 
+export interface GitCommitSuggestion {
+  title: string
+  body: string
+}
+
 // --- Checkpoint ---
 export interface FileCheckpoint {
   id: string

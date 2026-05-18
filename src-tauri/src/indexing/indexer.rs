@@ -42,3 +42,41 @@ async fn walk_dir(state: &AppState, project_id: &str, dir: &Path, count: &mut us
     }
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn should_skip_dot_prefix() {
+        assert!(should_skip(".git"));
+        assert!(should_skip(".github"));
+        assert!(should_skip(".env"));
+        assert!(should_skip(".DS_Store"));
+    }
+
+    #[test]
+    fn should_skip_build_dirs() {
+        assert!(should_skip("node_modules"));
+        assert!(should_skip("target"));
+        assert!(should_skip("dist"));
+        assert!(should_skip("__pycache__"));
+        assert!(should_skip("venv"));
+        assert!(should_skip(".next"));
+    }
+
+    #[test]
+    fn should_not_skip_normal_dirs() {
+        assert!(!should_skip("src"));
+        assert!(!should_skip("components"));
+        assert!(!should_skip("docx"));
+    }
+
+    #[test]
+    fn should_not_skip_normal_files() {
+        assert!(!should_skip("main.rs"));
+        assert!(!should_skip("App.tsx"));
+        assert!(!should_skip("README.md"));
+        assert!(!should_skip("package.json"));
+    }
+}

@@ -3,7 +3,7 @@ import { settingsIpc } from "@/lib/ipc";
 
 export type AppRole = "developer" | "product";
 export type ThemeMode = "dark" | "light";
-export type MainView = "chat" | "settings";
+export type MainView = "chat" | "workflow" | "settings";
 
 interface AppState {
   role: AppRole;

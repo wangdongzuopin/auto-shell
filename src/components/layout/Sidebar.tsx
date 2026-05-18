@@ -16,6 +16,7 @@ import {
   Trash2,
   FileText,
   FolderPlus,
+  Lightbulb,
   Settings2,
 } from "lucide-react";
 
@@ -443,6 +444,21 @@ export function Sidebar() {
       {/* Bottom: Role + Settings */}
       <div className="relative p-2 border-t border-border space-y-1">
         {/* Role switcher */}
+        <button
+          onClick={() => setMainView(mainView === "workflow" ? "chat" : "workflow")}
+          className={cn(
+            "flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs font-medium transition-all duration-150 w-full",
+            sidebarOpen ? "justify-start" : "justify-center",
+            mainView === "workflow"
+              ? "bg-accent-pm-soft text-accent-pm"
+              : "text-text-tertiary hover:text-text-primary hover:bg-bg-hover/40"
+          )}
+          title="想法工作流"
+        >
+          <Lightbulb className="h-3.5 w-3.5 shrink-0" />
+          {sidebarOpen && <span>想法工作流</span>}
+        </button>
+
         <button
           onClick={requestRoleSwitch}
           className={cn(

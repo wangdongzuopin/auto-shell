@@ -30,6 +30,48 @@ use commands::git_commands;
 use commands::undo_commands;
 use commands::workflow_commands;
 
+fn load_encryption_key(legacy_path: &std::path::Path) -> [u8; 32] {
+    // Primary storage: OS credential manager via keyring
+    let kr = keyring::Entry::new("pizz", "encryption-key")
+        .expect("Failed to access system credential manager");
+
+    // 1. Key already in credential manager
+    if let Ok(password) = kr.get_password() {
+        if let Ok(bytes) = crate::crypto::base64_decode(&password) {
+            if let Ok(key) = bytes.try_into() {
+                return key;
+            }
+        }
+        // Corrupt entry — delete and re-create
+        let _ = kr.delete_credential();
+    }
+
+    // 2. Migrate from legacy flat file (v0.1.0)
+    if legacy_path.exists() {
+        if let Ok(bytes) = std::fs::read(legacy_path) {
+            if let Ok(key) = <[u8; 32]>::try_from(bytes) {
+                let encoded = crate::crypto::base64_encode(&key);
+                if kr.set_password(&encoded).is_ok() {
+                    let _ = std::fs::remove_file(legacy_path);
+                    println!("[pizz] Migrated encryption key to system credential manager");
+                }
+                return key;
+            }
+        }
+        // Unreadable legacy file — remove it
+        let _ = std::fs::remove_file(legacy_path);
+    }
+
+    // 3. Fresh key — generate + store in credential manager
+    let key = crate::crypto::generate_key();
+    let encoded = crate::crypto::base64_encode(&key);
+    match kr.set_password(&encoded) {
+        Ok(()) => println!("[pizz] Stored new encryption key in system credential manager"),
+        Err(e) => eprintln!("[pizz] WARNING: Failed to persist key to credential manager ({e}). Key held in memory only for this session."),
+    }
+    key
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let migrations = db::get_migrations();
@@ -46,17 +88,9 @@ pub fn run() {
         .setup(|app| {
             let handle = app.handle().clone();
 
-            // Load or generate encryption key
             let key_path = app.path().app_data_dir().unwrap().join(".pizz_key");
-            let encryption_key = if key_path.exists() {
-                let bytes = std::fs::read(&key_path).expect("Failed to read encryption key");
-                bytes.try_into().expect("Invalid encryption key length")
-            } else {
-                let key = crate::crypto::generate_key();
-                std::fs::write(&key_path, key).expect("Failed to write encryption key");
-                println!("[pizz] Generated new encryption key");
-                key
-            };
+
+            let encryption_key = load_encryption_key(&key_path);
 
             tauri::async_runtime::spawn(async move {
                 match db::init_database(&handle).await {
@@ -127,6 +161,7 @@ pub fn run() {
             git_commands::git_status,
             git_commands::git_diff,
             git_commands::git_log,
+            git_commands::git_commit_suggestion,
             // Undo commands
             undo_commands::undo_last_edit,
             undo_commands::list_checkpoints,

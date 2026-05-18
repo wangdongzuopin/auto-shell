@@ -1,6 +1,9 @@
 pub mod read_file;
+pub mod read_many_files;
 pub mod write_file;
+pub mod apply_patch;
 pub mod list_directory;
+pub mod grep_search;
 pub mod search_code;
 pub mod search_knowledge;
 pub mod manage_knowledge;

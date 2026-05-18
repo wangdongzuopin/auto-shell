@@ -4,9 +4,11 @@ import { useUIStore } from '@/stores/uiStore'
 describe('uiStore', () => {
   beforeEach(() => {
     useUIStore.setState({
+      sidebarOpen: true,
+      rightPanelOpen: false,
+      rightPanelView: 'plan',
       terminalOpen: false,
       commandPaletteOpen: false,
-      toasts: [],
     })
   })
 
@@ -27,12 +29,18 @@ describe('uiStore', () => {
     expect(useUIStore.getState().commandPaletteOpen).toBe(true)
   })
 
-  it('adds and removes toasts', () => {
-    const toast = { id: 't1', title: 'Test', description: 'desc', type: 'info' as const }
-    useUIStore.getState().addToast(toast)
-    expect(useUIStore.getState().toasts).toHaveLength(1)
+  it('toggles right panel', () => {
+    useUIStore.getState().toggleRightPanel()
+    expect(useUIStore.getState().rightPanelOpen).toBe(true)
+  })
 
-    useUIStore.getState().removeToast('t1')
-    expect(useUIStore.getState().toasts).toHaveLength(0)
+  it('sets right panel view', () => {
+    useUIStore.getState().setRightPanelView('artifacts')
+    expect(useUIStore.getState().rightPanelView).toBe('artifacts')
+  })
+
+  it('toggles sidebar', () => {
+    useUIStore.getState().toggleSidebar()
+    expect(useUIStore.getState().sidebarOpen).toBe(false)
   })
 })

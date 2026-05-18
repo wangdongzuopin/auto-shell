@@ -14,3 +14,8 @@ pub async fn git_diff(repo_path: String, staged: bool) -> Result<String, String>
 pub async fn git_log(repo_path: String, count: u32) -> Result<Vec<git::GitCommit>, String> {
     git::get_log(&repo_path, count)
 }
+
+#[tauri::command]
+pub async fn git_commit_suggestion(repo_path: String) -> Result<git::GitCommitSuggestion, String> {
+    git::suggest_commit_message(&repo_path)
+}

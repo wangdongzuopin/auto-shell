@@ -32,6 +32,7 @@ futures-util = "0.3"
 ring = "0.17"
 base64 = "0.22"
 async-trait = "0.1"
+keyring = "3"
 
 [package.metadata]
 tauri-winres = { icon = "icons/icon.ico" }

@@ -84,8 +84,11 @@ async fn execute_tool_once(
 
     match name {
         "read_file" => super::tool_handlers::read_file::handle(arguments).await,
+        "read_many_files" => super::tool_handlers::read_many_files::handle(arguments).await,
         "write_file" => super::tool_handlers::write_file::handle(arguments, state, conversation_id).await,
+        "apply_patch" => super::tool_handlers::apply_patch::handle(arguments, state, conversation_id).await,
         "list_directory" => super::tool_handlers::list_directory::handle(arguments).await,
+        "grep_search" => super::tool_handlers::grep_search::handle(arguments).await,
         "search_code" => super::tool_handlers::search_code::handle(arguments, state).await,
         "search_knowledge" => super::tool_handlers::search_knowledge::handle(arguments, state).await,
         "get_knowledge" => super::tool_handlers::manage_knowledge::handle_get(arguments, state).await,
@@ -99,5 +102,89 @@ async fn execute_tool_once(
             success: false,
             content: format!("Unknown tool: {}", name),
         },
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_tool_result_ok() {
+        let r = ToolResult::ok("hello".into());
+        assert!(r.success);
+        assert_eq!(r.content, "hello");
+    }
+
+    #[test]
+    fn test_tool_result_error_with_hint() {
+        let r = ToolResult::error("bad", "try again");
+        assert!(!r.success);
+        assert!(r.content.contains("Error"));
+        assert!(r.content.contains("bad"));
+        assert!(r.content.contains("Hint"));
+        assert!(r.content.contains("try again"));
+    }
+
+    #[test]
+    fn test_tool_result_error_empty_hint() {
+        let r = ToolResult::error("fail", "");
+        assert!(!r.success);
+        assert!(r.content.contains("Error"));
+        assert!(!r.content.contains("Hint"));
+    }
+
+    #[test]
+    fn test_is_retryable_timeout() {
+        let r = ToolResult { success: false, content: "connection timeout".into() };
+        assert!(r.is_retryable());
+    }
+
+    #[test]
+    fn test_is_retryable_connection_refused() {
+        let r = ToolResult { success: false, content: "Connection refused".into() };
+        assert!(r.is_retryable());
+    }
+
+    #[test]
+    fn test_is_retryable_temporarily_unavailable() {
+        let r = ToolResult { success: false, content: "Temporarily unavailable".into() };
+        assert!(r.is_retryable());
+    }
+
+    #[test]
+    fn test_is_retryable_resource_busy() {
+        let r = ToolResult { success: false, content: "resource busy".into() };
+        assert!(r.is_retryable());
+    }
+
+    #[test]
+    fn test_is_retryable_interrupted() {
+        let r = ToolResult { success: false, content: "interrupted system call".into() };
+        assert!(r.is_retryable());
+    }
+
+    #[test]
+    fn test_is_retryable_deadlock() {
+        let r = ToolResult { success: false, content: "deadlock detected".into() };
+        assert!(r.is_retryable());
+    }
+
+    #[test]
+    fn test_is_not_retryable_for_success() {
+        let r = ToolResult::ok("all good".into());
+        assert!(!r.is_retryable());
+    }
+
+    #[test]
+    fn test_is_not_retryable_for_permanent_error() {
+        let r = ToolResult { success: false, content: "file not found".into() };
+        assert!(!r.is_retryable());
+    }
+
+    #[test]
+    fn test_is_not_retryable_for_permission_denied() {
+        let r = ToolResult { success: false, content: "permission denied".into() };
+        assert!(!r.is_retryable());
     }
 }

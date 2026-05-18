@@ -15,6 +15,7 @@ import {
   Moon,
   Code2,
   PenSquare,
+  Lightbulb,
 } from "lucide-react"
 
 export function CommandPalette() {
@@ -132,6 +133,15 @@ export function CommandPalette() {
                 <PanelRight className="h-4 w-4 text-text-tertiary" />
                 <span>{t("commandPalette.toggleRightPanel")}</span>
                 <CommandShortcut>Ctrl+Shift+P</CommandShortcut>
+              </CommandItem>
+              <CommandItem
+                onSelect={() => {
+                  setMainView("workflow")
+                  setCommandPaletteOpen(false)
+                }}
+              >
+                <Lightbulb className="h-4 w-4 text-text-tertiary" />
+                <span>打开想法工作流</span>
               </CommandItem>
               <CommandItem
                 onSelect={() => {

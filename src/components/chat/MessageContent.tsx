@@ -7,11 +7,13 @@ import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { MermaidDiagram } from "@/components/artifacts/MermaidDiagram";
 import { PrototypePreview } from "@/components/artifacts/PrototypePreview";
 import { ThinkingCard, isThinkingContent } from "@/components/artifacts/ThinkingCard";
+import { ExecutionTrace, type ToolTraceItem } from "@/components/chat/ExecutionTrace";
 import { cn } from "@/lib/utils";
 import { parseBlocks, parseBlocksStreaming } from "@/lib/parseBlocks";
-import { Copy, Check, Brain, ChevronDown, ChevronUp, Zap, FileCode } from "lucide-react";
+import { Copy, Check, Brain, ChevronDown, ChevronUp, FileCode } from "lucide-react";
 
 const FILE_PATH_RE = /(?:(?:\.{0,2}\/)|(?:[a-zA-Z]:\\))[\w\-./\\]+\.\w{1,6}/g;
+const TOOL_TRACE_RE = /<!--\s*pizz-tool-call:([^>]+?)\s*-->/g;
 
 function isFilePath(text: string): boolean {
   return /^(?:(?:\.{0,2}\/)|(?:[a-zA-Z]:\\))[\w\-./\\]+\.\w{1,6}$/.test(text);
@@ -184,8 +186,8 @@ function ThinkBlock({ content, isStreaming }: { content: string; isStreaming?: b
 }
 
 export function MessageContent({ content, className, isStreaming }: MessageContentProps) {
-  // Extract <!-- skill:XXX --> markers from content
-  const { skillNames, cleanContent } = useMemo(() => {
+  // Extract invisible execution markers from persisted assistant messages.
+  const { skillNames, toolTraces, cleanContent } = useMemo(() => {
     const names: string[] = [];
     const skillRe = /<!--\s*skill:\s*(.+?)\s*-->/g;
     let m: RegExpExecArray | null;
@@ -195,8 +197,22 @@ export function MessageContent({ content, className, isStreaming }: MessageConte
         names.push(name);
       }
     }
-    const cleaned = content.replace(skillRe, "").trim();
-    return { skillNames: names, cleanContent: cleaned };
+
+    const traces: ToolTraceItem[] = [];
+    let tm: RegExpExecArray | null;
+    while ((tm = TOOL_TRACE_RE.exec(content)) !== null) {
+      try {
+        const parsed = JSON.parse(decodeURIComponent(tm[1])) as ToolTraceItem;
+        if (parsed.id && parsed.name) {
+          traces.push(parsed);
+        }
+      } catch {
+        // Ignore malformed trace markers from older messages or manual edits.
+      }
+    }
+
+    const cleaned = content.replace(skillRe, "").replace(TOOL_TRACE_RE, "").trim();
+    return { skillNames: names, toolTraces: traces, cleanContent: cleaned };
   }, [content]);
 
   const blocks = useMemo(
@@ -204,7 +220,7 @@ export function MessageContent({ content, className, isStreaming }: MessageConte
     [cleanContent, isStreaming]
   );
 
-  if (blocks.length === 0 && skillNames.length === 0) {
+  if (blocks.length === 0 && skillNames.length === 0 && toolTraces.length === 0) {
     return (
       <div className={cn("text-xs leading-relaxed text-text-secondary prose prose-sm prose-invert max-w-none", className)}>
         <ReactMarkdown
@@ -241,20 +257,7 @@ export function MessageContent({ content, className, isStreaming }: MessageConte
 
   return (
     <div className={cn("space-y-2", className)}>
-      {/* Skill invocation badges */}
-      {skillNames.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 mb-1">
-          {skillNames.map((name) => (
-            <span
-              key={name}
-              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium bg-accent-pm/10 text-accent-pm border border-accent-pm/20"
-            >
-              <Zap className="h-2.5 w-2.5" />
-              {name}
-            </span>
-          ))}
-        </div>
-      )}
+      <ExecutionTrace tools={toolTraces} skills={skillNames} compact />
       {blocks.map((block, i) => {
         switch (block.type) {
           case "think":

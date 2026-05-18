@@ -2,24 +2,42 @@ import { useEffect } from 'react'
 import { useProjectStore } from '@/stores/projectStore'
 import { useGitStore } from '@/stores/gitStore'
 import { cn } from '@/lib/utils'
-import { GitBranch, GitCommit, FileText, Loader2, Check } from 'lucide-react'
+import { GitBranch, GitCommit, Loader2, Check, Copy, FileDiff } from 'lucide-react'
 
 export function GitPanel({ collapsed }: { collapsed: boolean }) {
   const currentProjectId = useProjectStore((s) => s.currentProjectId)
   const projects = useProjectStore((s) => s.projects)
-  const { status, loading, error, loadStatus, clear } = useGitStore()
+  const {
+    status,
+    diff,
+    commitSuggestion,
+    loading,
+    error,
+    loadStatus,
+    loadDiff,
+    loadCommitSuggestion,
+    clear,
+  } = useGitStore()
 
   const currentProject = projects.find((p) => p.id === currentProjectId)
+  const currentProjectPath = currentProject?.path
 
   useEffect(() => {
-    if (currentProject) {
-      loadStatus(currentProject.path)
+    if (currentProjectPath) {
+      loadStatus(currentProjectPath)
+      loadCommitSuggestion(currentProjectPath)
     } else {
       clear()
     }
-  }, [currentProject?.path]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [currentProjectPath]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (!currentProject || collapsed) return null
+  const copyCommitSuggestion = async () => {
+    if (!commitSuggestion) return
+    const text = [commitSuggestion.title, '', commitSuggestion.body].join('\n')
+    await navigator.clipboard?.writeText(text)
+  }
+
+  if (!currentProjectPath || collapsed) return null
   if (error) return null
   if (!status && !loading) return null
 
@@ -71,6 +89,50 @@ export function GitPanel({ collapsed }: { collapsed: boolean }) {
                 </p>
               )}
             </div>
+          )}
+
+          {!status.clean && commitSuggestion && (
+            <div className="mx-2 rounded-md border border-border/40 bg-bg-elevated/40 p-2">
+              <div className="flex items-start gap-1.5">
+                <GitCommit className="mt-0.5 h-3 w-3 shrink-0 text-accent-dev" />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-mono text-[10px] font-medium text-text-secondary">
+                    {commitSuggestion.title}
+                  </p>
+                  <p className="mt-0.5 text-[9px] text-text-tertiary">
+                    {status.files.length} 个文件变更
+                  </p>
+                </div>
+                <button
+                  onClick={copyCommitSuggestion}
+                  className="rounded p-1 text-text-tertiary transition-colors hover:bg-bg-hover/50 hover:text-text-primary"
+                  title="复制提交建议"
+                >
+                  <Copy className="h-3 w-3" />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {!status.clean && (
+            <details className="group px-2">
+              <summary
+                className="flex cursor-pointer items-center gap-1 rounded px-0 py-0.5 text-[10px] text-text-tertiary hover:text-text-secondary"
+                onClick={() => {
+                  if (!diff && currentProjectPath) {
+                    loadDiff(currentProjectPath)
+                  }
+                }}
+              >
+                <FileDiff className="h-2.5 w-2.5 shrink-0" />
+                <span>Git diff</span>
+              </summary>
+              {diff && (
+                <pre className="mt-1 max-h-40 overflow-auto rounded-md bg-bg-base/80 p-2 text-[9px] leading-relaxed text-text-tertiary">
+                  {diff}
+                </pre>
+              )}
+            </details>
           )}
 
           {/* Recent commits */}

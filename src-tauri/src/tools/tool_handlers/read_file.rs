@@ -1,9 +1,14 @@
 use serde_json::Value;
 use crate::tools::executor::ToolResult;
+use crate::tools::security;
 
 pub async fn handle(args: Value) -> ToolResult {
     let path = args["path"].as_str().unwrap_or("");
-    match tokio::fs::read_to_string(path).await {
+    let path = match security::validate_read_path(path) {
+        Ok(path) => path,
+        Err(result) => return result,
+    };
+    match tokio::fs::read_to_string(&path).await {
         Ok(content) => ToolResult::ok(content),
         Err(e) => {
             let msg = e.to_string();

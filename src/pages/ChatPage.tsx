@@ -7,6 +7,7 @@ import { useDiffStore } from "@/stores/diffStore";
 import { Button } from "@/components/ui/button";
 import { MessageContent } from "@/components/chat/MessageContent";
 import { DiffCard } from "@/components/chat/DiffCard";
+import { ExecutionTrace, type ToolTraceItem } from "@/components/chat/ExecutionTrace";
 import { cn } from "@/lib/utils";
 import { streamChat, buildSystemPrompt } from "@/services/ai";
 import { fileIpc } from "@/lib/ipc";
@@ -29,7 +30,6 @@ import {
   X,
   Copy,
   RotateCcw,
-  Check,
   Clock,
   Bug,
   Search,
@@ -37,6 +37,7 @@ import {
 } from "lucide-react";
 
 type ChatMode = "qa" | "edit";
+type ChatToolTraceItem = ToolTraceItem & { expanded?: boolean };
 
 const devSuggestions = [
   { text: "帮我分析这个项目的架构", icon: Code2 },
@@ -47,13 +48,20 @@ const devSuggestions = [
 
 const toolLabels: Record<string, string> = {
   read_file: "读取文件",
+  read_many_files: "批量读取文件",
   write_file: "写入文件",
+  apply_patch: "应用补丁",
   list_directory: "列出目录",
+  grep_search: "精确搜索",
   search_code: "搜索代码",
   search_knowledge: "搜索知识库",
   get_knowledge: "获取知识",
   create_knowledge: "创建知识",
   list_skills: "查询技能",
+  run_command: "运行命令",
+  git_status: "Git 状态",
+  git_diff: "Git 差异",
+  undo_last_edit: "撤销编辑",
 };
 
 function getSkillLabel(name: string): string {
@@ -69,8 +77,16 @@ function formatToolArgs(name: string, argumentsStr: string): string {
       case "read_file":
       case "write_file":
         return args.path ? args.path : "";
+      case "read_many_files":
+        return Array.isArray(args.paths) ? args.paths.join(", ") : "";
+      case "apply_patch":
+        return Array.isArray(args.changes)
+          ? args.changes.map((change: { path?: string }) => change.path).filter(Boolean).join(", ")
+          : "";
       case "list_directory":
         return args.path ? args.path : "";
+      case "grep_search":
+        return args.root ? `${args.query} @ ${args.root}` : args.query ?? "";
       case "search_code":
       case "search_knowledge":
         return args.query ? args.query : "";
@@ -78,6 +94,13 @@ function formatToolArgs(name: string, argumentsStr: string): string {
         return args.id ? args.id : "";
       case "create_knowledge":
         return args.title ? args.title : "";
+      case "run_command":
+        return args.cwd ? `${args.command} @ ${args.cwd}` : args.command ?? "";
+      case "git_status":
+      case "git_diff":
+        return args.repo_path ? args.repo_path : "";
+      case "undo_last_edit":
+        return args.file_path ? args.file_path : "";
       default: {
         const firstStr = Object.values(args).find((v) => typeof v === "string") as string | undefined;
         return firstStr ?? "";
@@ -91,6 +114,10 @@ function formatToolArgs(name: string, argumentsStr: string): string {
 function truncateResult(text: string, maxLen = 200): string {
   if (text.length <= maxLen) return text;
   return text.slice(0, maxLen) + "…";
+}
+
+function serializeToolTrace(trace: ToolTraceItem): string {
+  return `<!-- pizz-tool-call:${encodeURIComponent(JSON.stringify(trace))} -->`;
 }
 
 const pmSuggestions = [
@@ -152,7 +179,7 @@ export function ChatPage() {
   const [attachedFiles, setAttachedFiles] = useState<{ name: string; content: string; type: string; size: number }[]>([]);
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [projectContext, setProjectContext] = useState("");
-  const [toolCallBadges, setToolCallBadges] = useState<{id: string, name: string, status: "running"|"done", success?: boolean, args?: string, result?: string, expanded?: boolean}[]>([]);
+  const [toolCallBadges, setToolCallBadges] = useState<ChatToolTraceItem[]>([]);
   const [compressionData, setCompressionData] = useState<{ summary: string; topics: string[] } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const tokenBufferRef = useRef("");
@@ -161,6 +188,7 @@ export function ChatPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const abortRef = useRef<AbortController | null>(null);
   const toolCallArgsRef = useRef<Map<string, { name: string; arguments: string }>>(new Map());
+  const toolCallTraceRef = useRef<ToolTraceItem[]>([]);
 
   const isDev = role === "developer";
   const conversationDiffs = useDiffStore(
@@ -251,6 +279,7 @@ export function ChatPage() {
     setToolCallBadges([]);
     setCompressionData(null);
     toolCallArgsRef.current.clear();
+    toolCallTraceRef.current = [];
 
     const { addDiff } = useDiffStore.getState();
 
@@ -290,9 +319,15 @@ export function ChatPage() {
             useSkillStore.getState().recordUsage(sm[1].trim());
           }
 
+          const tracePrefix = toolCallTraceRef.current
+            .filter((trace) => trace.status === "done")
+            .map(serializeToolTrace)
+            .join("\n");
+          const persistedText = tracePrefix ? `${tracePrefix}\n${fullText}` : fullText;
+
           // Let the final render settle before adding to messages
           setTimeout(() => {
-            addMessage(currentConversationId, "assistant", fullText);
+            addMessage(currentConversationId, "assistant", persistedText);
             setStreamingContent("");
             setSending(false);
             abortRef.current = null;
@@ -306,27 +341,43 @@ export function ChatPage() {
         },
         onToolCallStarted: (data) => {
           toolCallArgsRef.current.set(data.id, { name: data.name, arguments: data.arguments });
-          setToolCallBadges((prev) => [...prev, { id: data.id, name: data.name, status: "running", args: formatToolArgs(data.name, data.arguments) }]);
+          const trace: ToolTraceItem = {
+            id: data.id,
+            name: data.name,
+            status: "running",
+            args: formatToolArgs(data.name, data.arguments),
+          };
+          toolCallTraceRef.current = [...toolCallTraceRef.current, trace];
+          setToolCallBadges(toolCallTraceRef.current);
         },
         onToolCallCompleted: (data) => {
           const stored = toolCallArgsRef.current.get(data.id);
           if (!stored) return;
           toolCallArgsRef.current.delete(data.id);
 
-          setToolCallBadges((prev) => prev.map((b) =>
-            b.id === data.id ? { ...b, status: "done", success: data.success, result: data.result } : b
-          ));
+          toolCallTraceRef.current = toolCallTraceRef.current.map((trace) =>
+            trace.id === data.id
+              ? { ...trace, status: "done", success: data.success, result: data.result }
+              : trace
+          );
+          setToolCallBadges(toolCallTraceRef.current);
 
           if (stored.name === "write_file" && data.success) {
             try {
               const args = JSON.parse(stored.arguments);
               const filePath = args.path || "";
               const content = args.content || "";
+              if (data.result.includes("Operation: unchanged")) return;
+              const operation = data.result.includes("Operation: add")
+                ? "add"
+                : data.result.includes("Operation: modify")
+                  ? "modify"
+                  : "modify";
               if (filePath && content) {
                 addDiff({
                   path: filePath,
                   content,
-                  operation: "add",
+                  operation,
                   conversationId: currentConversationId,
                 });
               }
@@ -829,10 +880,12 @@ export function ChatPage() {
               </div>
               {streamingContent ? (
                 <div className={cn("flex-1 max-w-[90%] rounded-2xl rounded-tl-md px-3 py-2 text-xs leading-relaxed shadow-sm glass-card select-text", isDev ? "border-accent-dev/5" : "border-accent-pm/5")}>
+                  <ExecutionTrace tools={toolCallBadges} compact />
                   <MessageContent content={streamingContent} isStreaming />
                 </div>
               ) : (
                 <div className="glass-card rounded-tl-md rounded-2xl px-3.5 py-2.5">
+                  <ExecutionTrace tools={toolCallBadges} compact />
                   <div className="flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-text-tertiary animate-bounce" style={{ animationDelay: "0ms" }} />
                     <span className="w-1.5 h-1.5 rounded-full bg-text-tertiary animate-bounce" style={{ animationDelay: "150ms" }} />
@@ -849,58 +902,6 @@ export function ChatPage() {
               {conversationDiffs.map((d) => (
                 <DiffCard key={d.id} diff={d} />
               ))}
-            </div>
-          )}
-
-          {/* Tool call badges */}
-          {toolCallBadges.length > 0 && (
-            <div className="flex flex-col gap-1.5 px-1 mt-2">
-              {toolCallBadges.map((badge) => {
-                const skillLabel = getSkillLabel(badge.name);
-                const isRunning = badge.status === "running";
-                const isFailed = badge.success === false;
-                const hasResult = badge.result && !isRunning;
-                return (
-                  <div key={badge.id}>
-                    <div
-                      className={cn(
-                        "flex items-center gap-2 py-1.5 px-2.5 rounded-lg text-[11px] transition-all",
-                        isRunning
-                          ? "bg-accent-dev/5 border border-accent-dev/20 text-accent-dev"
-                          : isFailed
-                            ? "bg-danger/5 border border-danger/20 text-danger"
-                            : "bg-success/5 border border-success/20 text-success"
-                      )}
-                    >
-                      <span className={cn(
-                        "w-1.5 h-1.5 rounded-full shrink-0",
-                        isRunning ? "bg-accent-dev animate-pulse" : isFailed ? "bg-danger" : "bg-success"
-                      )} />
-                      <span className="text-text-secondary">{skillLabel}</span>
-                      {badge.args && (
-                        <span className="text-text-tertiary truncate max-w-[300px] font-mono text-[10px]">
-                          {badge.args}
-                        </span>
-                      )}
-                      {hasResult && (
-                        <button
-                          onClick={() => setToolCallBadges((prev) => prev.map((b) =>
-                            b.id === badge.id ? { ...b, expanded: !b.expanded } : b
-                          ))}
-                          className="ml-auto shrink-0 text-[10px] text-text-tertiary hover:text-text-secondary transition-colors"
-                        >
-                          {badge.result ? `${badge.result.length} 字符` : ""}
-                        </button>
-                      )}
-                    </div>
-                    {badge.expanded && badge.result && (
-                      <div className="mt-1 ml-4 p-2 rounded-lg bg-bg-elevated/40 border border-border/30 text-[10px] font-mono text-text-tertiary max-h-32 overflow-y-auto whitespace-pre-wrap select-text">
-                        {truncateResult(badge.result)}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
             </div>
           )}
 

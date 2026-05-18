@@ -753,4 +753,53 @@ mod tests {
             messages[2].content
         );
     }
+
+    #[test]
+    fn test_push_openai_tool_messages() {
+        let mut messages = vec![AiMessage {
+            role: "user".into(),
+            content: "Read a file".into(),
+            tool_call_id: None,
+            tool_calls: None,
+        }];
+        let result = StreamResult {
+            text_content: String::new(),
+            tool_calls: vec![ToolCallAccum {
+                index: 0,
+                id: "call_1".into(),
+                name: "read_file".into(),
+                arguments: r#"{"path":"src/App.tsx"}"#.into(),
+            }],
+        };
+        let tool_results = vec![(
+            "call_1".to_string(),
+            "read_file".to_string(),
+            crate::tools::executor::ToolResult::ok("file content".into()),
+        )];
+
+        push_tool_messages(&mut messages, &result, &tool_results, false);
+
+        assert_eq!(messages.len(), 3);
+        assert_eq!(messages[1].role, "assistant");
+        assert!(messages[1].tool_calls.is_some());
+        assert_eq!(messages[2].role, "tool");
+        assert_eq!(messages[2].tool_call_id.as_deref(), Some("call_1"));
+        assert_eq!(messages[2].content, "file content");
+    }
+
+    #[test]
+    fn test_build_openai_tool_message() {
+        let message = AiMessage {
+            role: "tool".into(),
+            content: "done".into(),
+            tool_call_id: Some("call_1".into()),
+            tool_calls: None,
+        };
+
+        let json = build_openai_message(&message);
+
+        assert_eq!(json["role"], "tool");
+        assert_eq!(json["tool_call_id"], "call_1");
+        assert_eq!(json["content"], "done");
+    }
 }

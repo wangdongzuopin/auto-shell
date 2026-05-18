@@ -43,6 +43,22 @@ const TOOL_DEFINITIONS = [
     },
   },
   {
+    name: "read_many_files",
+    description:
+      "Read several UTF-8 text files in one safe call. Use when analyzing related files together.",
+    parameters: {
+      type: "object",
+      properties: {
+        paths: {
+          type: "array",
+          items: { type: "string" },
+          description: "File paths to read",
+        },
+      },
+      required: ["paths"],
+    },
+  },
+  {
     name: "write_file",
     description: "Write content to a file",
     parameters: {
@@ -55,6 +71,30 @@ const TOOL_DEFINITIONS = [
     },
   },
   {
+    name: "apply_patch",
+    description:
+      "Safely apply exact text replacements to existing workspace files. Prefer this over write_file for focused edits.",
+    parameters: {
+      type: "object",
+      properties: {
+        changes: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              path: { type: "string", description: "File path to edit" },
+              find: { type: "string", description: "Exact text to replace" },
+              replace: { type: "string", description: "Replacement text" },
+              replace_all: { type: "boolean", description: "Replace all matches" },
+            },
+            required: ["path", "find", "replace"],
+          },
+        },
+      },
+      required: ["changes"],
+    },
+  },
+  {
     name: "list_directory",
     description: "List files and directories in a given path",
     parameters: {
@@ -63,6 +103,19 @@ const TOOL_DEFINITIONS = [
         path: { type: "string", description: "The directory path to list" },
       },
       required: ["path"],
+    },
+  },
+  {
+    name: "grep_search",
+    description:
+      "Search exact text across workspace files, skipping secrets and build output. Returns path, line, and matching text.",
+    parameters: {
+      type: "object",
+      properties: {
+        query: { type: "string", description: "Exact text query" },
+        root: { type: "string", description: "Directory to search, default workspace root" },
+      },
+      required: ["query"],
     },
   },
   {
@@ -119,6 +172,55 @@ const TOOL_DEFINITIONS = [
     name: "list_skills",
     description: "List all enabled skills",
     parameters: { type: "object", properties: {} },
+  },
+  {
+    name: "run_command",
+    description:
+      "Run a shell command and return stdout/stderr output. Use for tests, type checks, git, and CLI diagnostics. Keep commands non-interactive.",
+    parameters: {
+      type: "object",
+      properties: {
+        command: { type: "string", description: "The shell command to run" },
+        cwd: { type: "string", description: "Working directory for the command" },
+      },
+      required: ["command"],
+    },
+  },
+  {
+    name: "git_status",
+    description:
+      "Get Git repository status, including current branch, changed files, staged state, ahead/behind, and recent commits.",
+    parameters: {
+      type: "object",
+      properties: {
+        repo_path: { type: "string", description: "Path to the git repository" },
+      },
+    },
+  },
+  {
+    name: "git_diff",
+    description:
+      "Get a unified Git diff for staged or unstaged changes. Use before summarizing or proposing a commit.",
+    parameters: {
+      type: "object",
+      properties: {
+        repo_path: { type: "string", description: "Path to the git repository" },
+        staged: { type: "boolean", description: "If true, show staged diff; otherwise unstaged" },
+      },
+    },
+  },
+  {
+    name: "undo_last_edit",
+    description:
+      "Undo the last file edit recorded for a conversation by restoring the checkpoint made before write_file.",
+    parameters: {
+      type: "object",
+      properties: {
+        file_path: { type: "string", description: "Path to the file to restore" },
+        conversation_id: { type: "string", description: "Current conversation ID" },
+      },
+      required: ["file_path", "conversation_id"],
+    },
   },
 ];
 
